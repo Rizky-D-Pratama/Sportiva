@@ -9,6 +9,8 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
   final Color cardBackground;
   final Color textPrimary;
   final Color textSecondary;
+  final Color dangerBackground;
+  final Color dangerForeground;
 
   const AppCustomColors({
     required this.bannerBackground,
@@ -18,6 +20,8 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
     required this.cardBackground,
     required this.textPrimary,
     required this.textSecondary,
+    required this.dangerBackground,
+    required this.dangerForeground,
   });
 
   @override
@@ -29,6 +33,8 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
     Color? cardBackground,
     Color? textPrimary,
     Color? textSecondary,
+    Color? dangerBackground,
+    Color? dangerForeground,
   }) {
     return AppCustomColors(
       bannerBackground: bannerBackground ?? this.bannerBackground,
@@ -38,6 +44,8 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
       cardBackground: cardBackground ?? this.cardBackground,
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
+      dangerBackground: dangerBackground ?? this.dangerBackground,
+      dangerForeground: dangerForeground ?? this.dangerForeground,
     );
   }
 
@@ -54,6 +62,8 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
+      dangerBackground: Color.lerp(dangerBackground, other.dangerBackground, t)!,
+      dangerForeground: Color.lerp(dangerForeground, other.dangerForeground, t)!,
     );
   }
 }
@@ -66,6 +76,8 @@ class AppTheme {
   static const Color textSecondaryColor = Color(0xFF777D75);
   static const Color statusSuccessForeground = Color(0xFF286B24);
   static const Color statusSuccessBackground = Color(0xFFEDF8E8);
+  static const Color statusDangerBackground = Color(0xFFFDEDEE);
+  static const Color statusDangerForeground = Color(0xFFAB3E45);
   static const Color surfaceCard = Color(0xFFFFFFFF);
   static const Color borderDefaultColor = Color(0xFFE8EBDD);
   static const Color primaryIndicatorColor = Color(0xFF59C749);
@@ -88,6 +100,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Inter',
       scaffoldBackgroundColor: baseBackground,
       colorScheme: const ColorScheme.light(
         primary: statusSuccessForeground,
@@ -101,12 +114,14 @@ class AppTheme {
       ),
       textTheme: const TextTheme(
         headlineMedium: TextStyle(
+          fontFamily: 'Poppins',
           fontSize: 20.0,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
           height: 1.25,
         ),
         titleLarge: TextStyle(
+          fontFamily: 'Poppins',
           fontSize: 17.0,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
@@ -172,6 +187,8 @@ class AppTheme {
           cardBackground: surfaceCard,
           textPrimary: textPrimaryColor,
           textSecondary: textSecondaryColor,
+          dangerBackground: statusDangerBackground,
+          dangerForeground: statusDangerForeground,
         ),
       ],
     );
