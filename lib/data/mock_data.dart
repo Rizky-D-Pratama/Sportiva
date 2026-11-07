@@ -1,6 +1,7 @@
 import '../constants/app_icons.dart';
 import '../constants/app_images.dart';
 import '../models/court.dart';
+import '../models/unavailable_time_slot.dart';
 import '../models/venue.dart';
 
 /// Mock Data source containing sample data for Sportiva app
@@ -22,8 +23,32 @@ class MockData {
     location: 'Jl. Ketintang, Surabaya',
   );
 
+  static final List<UnavailableTimeSlot> defaultUnavailableSlots = [
+    const UnavailableTimeSlot(
+      startHour: 19,
+      endHour: 20,
+      statusLabel: 'Dipesan',
+      note: 'Tidak dapat dibooking',
+      statusType: SlotStatusType.booked,
+    ),
+    const UnavailableTimeSlot(
+      startHour: 12,
+      endHour: 13,
+      statusLabel: 'Ditahan Sementara',
+      note: 'Menunggu pembayaran - tidak dapat dipesan',
+      statusType: SlotStatusType.onHold,
+    ),
+    const UnavailableTimeSlot(
+      startHour: 13,
+      endHour: 14,
+      statusLabel: 'Ditutup',
+      note: 'Perawatan',
+      statusType: SlotStatusType.closed,
+    ),
+  ];
+
   static final List<Court> allCourts = [
-    const Court(
+    Court(
       id: 'court_1',
       name: 'Arena Futsal A',
       category: 'Futsal',
@@ -32,8 +57,12 @@ class MockData {
       rating: 4.9,
       reviewCount: 128,
       imageUrl: AppImages.soccer,
+      facilities: const ['Indoor', 'Parkir', 'Toilet', 'Ruang ganti'],
+      description:
+          'Rumput sintetis premium, pencahayaan terang, dan ruang ganti bersih. Cocok untuk latihan maupun pertandingan tim.',
+      unavailableTimeSlots: defaultUnavailableSlots,
     ),
-    const Court(
+    Court(
       id: 'court_2',
       name: 'Arena Voli B',
       category: 'Voli',
@@ -43,8 +72,12 @@ class MockData {
       reviewCount: 128,
       imageUrl: AppImages.volleyball,
       isFullToday: true,
+      facilities: const ['Indoor', 'Parkir', 'Toilet', 'Ruang ganti'],
+      description:
+          'Lapangan voli vinyl berstandar nasional dengan sirkulasi udara yang baik dan tribun penonton.',
+      unavailableTimeSlots: defaultUnavailableSlots,
     ),
-    const Court(
+    Court(
       id: 'court_3',
       name: 'Arena Basket C',
       category: 'Basket',
@@ -53,8 +86,12 @@ class MockData {
       rating: 4.8,
       reviewCount: 128,
       imageUrl: AppImages.basket,
+      facilities: const ['Indoor', 'Parkir', 'Toilet', 'Ruang ganti'],
+      description:
+          'Lantai kayu parquet interlock profesional dengan papan pantul tempered glass.',
+      unavailableTimeSlots: defaultUnavailableSlots,
     ),
-    const Court(
+    Court(
       id: 'court_4',
       name: 'Arena Badminton D',
       category: 'Badminton',
@@ -63,6 +100,10 @@ class MockData {
       rating: 4.9,
       reviewCount: 128,
       imageUrl: AppImages.badminton,
+      facilities: const ['Indoor', 'Parkir', 'Toilet', 'Ruang ganti'],
+      description:
+          'Karpet lapangan badminton berkualitas tinggi dengan pencahayaan anti-silau.',
+      unavailableTimeSlots: defaultUnavailableSlots,
     ),
   ];
 
