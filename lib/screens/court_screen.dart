@@ -141,12 +141,12 @@ class _CourtScreenState extends State<CourtScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+        colors.textSecondary;
 
     final isPriceFiltered = _minPrice != null || _maxPrice != null;
     final isRatingSorted = _ratingSort != null;

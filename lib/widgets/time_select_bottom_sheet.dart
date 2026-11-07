@@ -43,15 +43,15 @@ class TimeSelectBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
+    final cardBg = colors.surfaceCard;
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+        colors.textSecondary;
     final borderColor =
-        customColors?.borderDefault ?? theme.colorScheme.outline;
+        colors.borderDefault;
 
     final List<int> hours = [];
     for (int h = AppConstants.operationalStartHour;

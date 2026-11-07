@@ -20,17 +20,17 @@ class CourtCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
+    final cardBg = colors.surfaceCard;
     final borderColor =
-        customColors?.borderDefault ?? theme.colorScheme.outline;
+        colors.borderDefault;
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+        colors.textSecondary;
     final successForeground =
-        customColors?.successForeground ?? theme.colorScheme.primary;
+        colors.successForeground;
 
     return Container(
       width: double.infinity,
@@ -101,15 +101,13 @@ class CourtCard extends StatelessWidget {
                               vertical: 5.0,
                             ),
                             decoration: BoxDecoration(
-                              color: customColors?.dangerBackground ??
-                                  AppTheme.statusDangerBackground,
+                              color: colors.dangerBackground,
                               borderRadius: BorderRadius.circular(100.0),
                             ),
                             child: Text(
                               'Penuh hari ini',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: customColors?.dangerForeground ??
-                                    AppTheme.statusDangerForeground,
+                                color: colors.dangerForeground,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

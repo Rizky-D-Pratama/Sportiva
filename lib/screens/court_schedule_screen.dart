@@ -60,16 +60,16 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
     final baseBg = theme.scaffoldBackgroundColor;
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
-    final textPrimary = customColors?.textPrimary ?? theme.colorScheme.onSurface;
-    final textSecondary = customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
-    final borderColor = customColors?.borderDefault ?? theme.colorScheme.outline;
+    final cardBg = colors.surfaceCard;
+    final textPrimary = colors.textPrimary;
+    final textSecondary = colors.textSecondary;
+    final borderColor = colors.borderDefault;
     
-    const warningBg = Color(0xFFFFF3D9);
-    const warningFg = Color(0xFF9A6B21);
+    final warningBg = colors.warningBackground;
+    final warningFg = colors.warningForeground;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -321,17 +321,17 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
                           Color badgeBg;
                           Color badgeFg;
                           if (type == 'success') {
-                            badgeBg = const Color(0xFFEDF8E8);
-                            badgeFg = const Color(0xFF286B24);
+                            badgeBg = colors.successBackground;
+                            badgeFg = colors.successForeground;
                           } else if (type == 'danger') {
-                            badgeBg = const Color(0xFFFDEDEE);
-                            badgeFg = const Color(0xFFAB3E45);
+                            badgeBg = colors.dangerBackground;
+                            badgeFg = colors.dangerForeground;
                           } else if (type == 'warning') {
-                            badgeBg = const Color(0xFFFFF3D9);
-                            badgeFg = const Color(0xFF9A6B21);
+                            badgeBg = colors.warningBackground;
+                            badgeFg = colors.warningForeground;
                           } else {
-                            badgeBg = const Color(0xFFF0F2EC);
-                            badgeFg = const Color(0xFF777D75);
+                            badgeBg = colors.neutralBackground;
+                            badgeFg = colors.neutralForeground;
                           }
 
                           final isClickable = type == 'success' && !isPastOrDimmed;

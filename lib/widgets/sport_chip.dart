@@ -18,13 +18,13 @@ class SportChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
-    final border = customColors?.borderDefault ?? theme.colorScheme.outline;
+    final border = colors.borderDefault;
     final surfaceColor =
-        customColors?.cardBackground ?? theme.colorScheme.surface;
+        colors.surfaceCard;
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
 
     return InkWell(
       onTap: onTap,

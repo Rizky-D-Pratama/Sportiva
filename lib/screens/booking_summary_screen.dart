@@ -58,14 +58,14 @@ class BookingSummaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
-    final baseBg = AppTheme.baseBackground;
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
-    final borderColor = customColors?.borderDefault ?? theme.colorScheme.outline;
-    final textPrimary = customColors?.textPrimary ?? theme.colorScheme.onSurface;
-    final textSecondary = customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
-    final primaryColor = theme.colorScheme.secondary;
+    final baseBg = theme.scaffoldBackgroundColor;
+    final cardBg = colors.surfaceCard;
+    final borderColor = colors.borderDefault;
+    final textPrimary = colors.textPrimary;
+    final textSecondary = colors.textSecondary;
+    final primaryColor = theme.colorScheme.primary;
     final onPrimaryColor = textPrimary;
 
     final subtotal = court.pricePerHour * durationHours;

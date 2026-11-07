@@ -48,16 +48,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+        colors.textSecondary;
     final successForeground =
-        customColors?.successForeground ?? theme.colorScheme.primary;
-    final bannerBg = customColors?.bannerBackground ??
-        theme.colorScheme.primaryContainer;
+        colors.successForeground;
+    final bannerBg = colors.successBackground;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),

@@ -19,19 +19,18 @@ class DropdownChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
     final borderDefault =
-        customColors?.borderDefault ?? theme.colorScheme.outline;
+        colors.borderDefault;
     final primaryColor =
-        customColors?.activeIndicator ?? theme.colorScheme.secondary;
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
-    final successBg = customColors?.bannerBackground ??
-        theme.colorScheme.primaryContainer;
+        colors.brandPrimary;
+    final cardBg = colors.surfaceCard;
+    final successBg = colors.successBackground;
     final successFg =
-        customColors?.successForeground ?? theme.colorScheme.primary;
+        colors.successForeground;
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
 
     final bgColor = isActive ? successBg : cardBg;
     final borderColor = isActive ? primaryColor : borderDefault;

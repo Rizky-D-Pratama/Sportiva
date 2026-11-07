@@ -20,14 +20,14 @@ class NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
     final successForeground =
-        customColors?.successForeground ?? theme.colorScheme.primary;
+        colors.successForeground;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+        colors.textSecondary;
     final indicatorColor =
-        customColors?.activeIndicator ?? theme.colorScheme.secondary;
+        colors.brandPrimary;
 
     final color = isActive ? successForeground : textSecondary;
 

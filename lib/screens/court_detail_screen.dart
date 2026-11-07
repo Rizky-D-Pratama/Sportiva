@@ -135,20 +135,19 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
     final baseBg = theme.scaffoldBackgroundColor;
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
+    final cardBg = colors.surfaceCard;
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+        colors.textSecondary;
     final borderColor =
-        customColors?.borderDefault ?? theme.colorScheme.outline;
+        colors.borderDefault;
     final successFg =
-        customColors?.successForeground ?? theme.colorScheme.primary;
-    final successBg = customColors?.bannerBackground ??
-        theme.colorScheme.primaryContainer;
+        colors.successForeground;
+    final successBg = colors.successBackground;
 
     final hasAvailableHours = _hasAvailableStartHours();
     final maxDuration = _selectedStartHour != null
@@ -425,11 +424,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                                   child: _buildUnavailableSlotRow(
                                     slot: slot,
                                     theme: theme,
-                                    customColors: customColors,
-                                    cardBg: cardBg,
-                                    borderColor: borderColor,
-                                    textPrimary: textPrimary,
-                                    textSecondary: textSecondary,
+                                    colors: colors,
                                   ),
                                 );
                               }).toList(),
@@ -484,10 +479,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(
                                             color: !hasAvailableHours
-                                                ? (customColors
-                                                        ?.dangerForeground ??
-                                                    AppTheme
-                                                        .statusDangerForeground)
+                                                ? (colors
+                                                        .dangerForeground)
                                                 : (_selectedStartHour != null
                                                     ? textPrimary
                                                     : textSecondary),
@@ -672,7 +665,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.secondary,
+                        backgroundColor: theme.colorScheme.primary,
                         disabledBackgroundColor:
                             borderColor.withValues(alpha: 0.5),
                         elevation: 0,
@@ -703,38 +696,32 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   Widget _buildUnavailableSlotRow({
     required UnavailableTimeSlot slot,
     required ThemeData theme,
-    required AppCustomColors? customColors,
-    required Color cardBg,
-    required Color borderColor,
-    required Color textPrimary,
-    required Color textSecondary,
+    required AppCustomColors colors,
   }) {
     Color statusBg;
     Color statusFg;
 
     switch (slot.statusType) {
       case SlotStatusType.booked:
-        statusBg =
-            customColors?.dangerBackground ?? AppTheme.statusDangerBackground;
-        statusFg =
-            customColors?.dangerForeground ?? AppTheme.statusDangerForeground;
+        statusBg = colors.dangerBackground;
+        statusFg = colors.dangerForeground;
         break;
       case SlotStatusType.onHold:
-        statusBg = const Color(0xFFFFF3D9);
-        statusFg = const Color(0xFF9A6B21);
+        statusBg = colors.warningBackground;
+        statusFg = colors.warningForeground;
         break;
       case SlotStatusType.closed:
-        statusBg = const Color(0xFFF0F2EC);
-        statusFg = const Color(0xFF777D75);
+        statusBg = colors.neutralBackground;
+        statusFg = colors.neutralForeground;
         break;
     }
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: cardBg,
+        color: colors.surfaceCard,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: borderColor, width: 1.0),
+        border: Border.all(color: colors.borderDefault, width: 1.0),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
       child: Column(
@@ -746,7 +733,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               Text(
                 slot.timeRangeText,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: textPrimary,
+                  color: colors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -773,7 +760,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           Text(
             slot.note,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: textSecondary,
+              color: colors.textSecondary,
             ),
           ),
         ],

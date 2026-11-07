@@ -117,19 +117,18 @@ class _PriceRangeBottomSheetState extends State<PriceRangeBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
+    final cardBg = colors.surfaceCard;
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+        colors.textSecondary;
     final borderColor =
-        customColors?.borderDefault ?? theme.colorScheme.outline;
-    final successBg = customColors?.bannerBackground ??
-        theme.colorScheme.primaryContainer;
+        colors.borderDefault;
+    final successBg = colors.successBackground;
     final successFg =
-        customColors?.successForeground ?? theme.colorScheme.primary;
+        colors.successForeground;
 
     return Container(
       decoration: BoxDecoration(

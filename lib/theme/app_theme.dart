@@ -29,50 +29,78 @@ class SlideRightPageTransitionsBuilder extends PageTransitionsBuilder {
 
 /// Extension for custom colors defined in Figma design system.
 class AppCustomColors extends ThemeExtension<AppCustomColors> {
-  final Color bannerBackground;
+  final Color successBackground;
   final Color successForeground;
   final Color borderDefault;
-  final Color activeIndicator;
-  final Color cardBackground;
+  final Color brandPrimary;
+  final Color surfaceCard;
+  final Color surfaceControl;
+  final Color surfaceNavigation;
   final Color textPrimary;
   final Color textSecondary;
+  final Color textOnPrimary;
   final Color dangerBackground;
   final Color dangerForeground;
+  final Color warningForeground;
+  final Color warningBackground;
+  final Color neutralForeground;
+  final Color neutralBackground;
 
   const AppCustomColors({
-    required this.bannerBackground,
+    required this.successBackground,
     required this.successForeground,
     required this.borderDefault,
-    required this.activeIndicator,
-    required this.cardBackground,
+    required this.brandPrimary,
+    required this.surfaceCard,
+    required this.surfaceControl,
+    required this.surfaceNavigation,
     required this.textPrimary,
     required this.textSecondary,
+    required this.textOnPrimary,
     required this.dangerBackground,
     required this.dangerForeground,
+    required this.warningForeground,
+    required this.warningBackground,
+    required this.neutralForeground,
+    required this.neutralBackground,
   });
 
   @override
   AppCustomColors copyWith({
-    Color? bannerBackground,
+    Color? successBackground,
     Color? successForeground,
     Color? borderDefault,
-    Color? activeIndicator,
-    Color? cardBackground,
+    Color? brandPrimary,
+    Color? surfaceCard,
     Color? textPrimary,
     Color? textSecondary,
     Color? dangerBackground,
     Color? dangerForeground,
+    Color? surfaceControl,
+    Color? surfaceNavigation,
+    Color? textOnPrimary,
+    Color? warningForeground,
+    Color? warningBackground,
+    Color? neutralForeground,
+    Color? neutralBackground,
   }) {
     return AppCustomColors(
-      bannerBackground: bannerBackground ?? this.bannerBackground,
+      successBackground: successBackground ?? this.successBackground,
       successForeground: successForeground ?? this.successForeground,
       borderDefault: borderDefault ?? this.borderDefault,
-      activeIndicator: activeIndicator ?? this.activeIndicator,
-      cardBackground: cardBackground ?? this.cardBackground,
+      brandPrimary: brandPrimary ?? this.brandPrimary,
+      surfaceCard: surfaceCard ?? this.surfaceCard,
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       dangerBackground: dangerBackground ?? this.dangerBackground,
       dangerForeground: dangerForeground ?? this.dangerForeground,
+      surfaceControl: surfaceControl ?? this.surfaceControl,
+      surfaceNavigation: surfaceNavigation ?? this.surfaceNavigation,
+      textOnPrimary: textOnPrimary ?? this.textOnPrimary,
+      warningForeground: warningForeground ?? this.warningForeground,
+      warningBackground: warningBackground ?? this.warningBackground,
+      neutralForeground: neutralForeground ?? this.neutralForeground,
+      neutralBackground: neutralBackground ?? this.neutralBackground,
     );
   }
 
@@ -80,34 +108,55 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
   AppCustomColors lerp(ThemeExtension<AppCustomColors>? other, double t) {
     if (other is! AppCustomColors) return this;
     return AppCustomColors(
-      bannerBackground:
-          Color.lerp(bannerBackground, other.bannerBackground, t)!,
+      successBackground:
+          Color.lerp(successBackground, other.successBackground, t)!,
       successForeground:
           Color.lerp(successForeground, other.successForeground, t)!,
       borderDefault: Color.lerp(borderDefault, other.borderDefault, t)!,
-      activeIndicator: Color.lerp(activeIndicator, other.activeIndicator, t)!,
-      cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
+      brandPrimary: Color.lerp(brandPrimary, other.brandPrimary, t)!,
+      surfaceCard: Color.lerp(surfaceCard, other.surfaceCard, t)!,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       dangerBackground: Color.lerp(dangerBackground, other.dangerBackground, t)!,
       dangerForeground: Color.lerp(dangerForeground, other.dangerForeground, t)!,
+      surfaceControl: Color.lerp(surfaceControl, other.surfaceControl, t)!,
+      surfaceNavigation: Color.lerp(surfaceNavigation, other.surfaceNavigation, t)!,
+      textOnPrimary: Color.lerp(textOnPrimary, other.textOnPrimary, t)!,
+      warningForeground: Color.lerp(warningForeground, other.warningForeground, t)!,
+      warningBackground: Color.lerp(warningBackground, other.warningBackground, t)!,
+      neutralForeground: Color.lerp(neutralForeground, other.neutralForeground, t)!,
+      neutralBackground: Color.lerp(neutralBackground, other.neutralBackground, t)!,
     );
   }
 }
 
 /// AppTheme defines the ThemeData using values extracted from the Figma tokens.
 class AppTheme {
-  // Base Palette Colors from Figma
+  // Base Palette Colors
   static const Color baseBackground = Color(0xFFFFFDF1);
+  static const Color brandPrimary = Color(0xFF59C749);
+  //text
   static const Color textPrimaryColor = Color(0xFF202820);
   static const Color textSecondaryColor = Color(0xFF777D75);
+  static const Color textOnPrimaryColor = Color(0xFF202820);
+  //surface
+  static const Color surfaceCard = Color(0xFFFFFFFF);
+  static const Color surfaceControlColor = Color(0xFFFFFFFF);
+  static const Color surfaceNavigationColor = Color(0xFFFFFFFF);
+  //status succes
   static const Color statusSuccessForeground = Color(0xFF286B24);
   static const Color statusSuccessBackground = Color(0xFFEDF8E8);
+  //status warning
+  static const Color statusWarningForeground = Color(0xFF9A6B21);
+  static const Color statusWarningBackground = Color(0xFFFFF3D9);
+  //status danger
   static const Color statusDangerBackground = Color(0xFFFDEDEE);
   static const Color statusDangerForeground = Color(0xFFAB3E45);
-  static const Color surfaceCard = Color(0xFFFFFFFF);
+  //status neutral
+  static const Color statusNeutralForeground = Color(0xFF777D75);
+  static const Color statusNeutralBackground = Color(0xFFF0F2EC);
+  //border
   static const Color borderDefaultColor = Color(0xFFE8EBDD);
-  static const Color primaryIndicatorColor = Color(0xFF59C749);
 
   // Spacing & Border Radius Tokens
   static const double borderRadiusSmall = 10.4;
@@ -139,8 +188,8 @@ class AppTheme {
         },
       ),
       colorScheme: const ColorScheme.light(
-        primary: statusSuccessForeground,
-        secondary: primaryIndicatorColor,
+        primary: brandPrimary,
+        onPrimary: textOnPrimaryColor,       // Figma: Text/on-primary (#202820)
         surface: surfaceCard,
         onSurface: textPrimaryColor,
         onSurfaceVariant: textSecondaryColor,
@@ -216,17 +265,28 @@ class AppTheme {
       ),
       extensions: const <ThemeExtension<dynamic>>[
         AppCustomColors(
-          bannerBackground: statusSuccessBackground,
+          successBackground: statusSuccessBackground,
           successForeground: statusSuccessForeground,
           borderDefault: borderDefaultColor,
-          activeIndicator: primaryIndicatorColor,
-          cardBackground: surfaceCard,
+          brandPrimary: brandPrimary,
+          surfaceCard: surfaceCard,
           textPrimary: textPrimaryColor,
           textSecondary: textSecondaryColor,
           dangerBackground: statusDangerBackground,
           dangerForeground: statusDangerForeground,
+          surfaceControl: surfaceControlColor,
+          surfaceNavigation: surfaceNavigationColor,
+          textOnPrimary: textOnPrimaryColor,
+          warningForeground: statusWarningForeground,
+          warningBackground: statusWarningBackground,
+          neutralForeground: statusNeutralForeground,
+          neutralBackground: statusNeutralBackground,
         ),
       ],
     );
   }
+}
+
+extension AppColorsContext on BuildContext {
+  AppCustomColors get appColors => Theme.of(this).extension<AppCustomColors>()!;
 }

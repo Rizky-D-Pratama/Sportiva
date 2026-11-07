@@ -84,16 +84,16 @@ class _AppCalendarState extends State<AppCalendar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<AppCustomColors>();
+    final colors = context.appColors;
 
-    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
+    final cardBg = colors.surfaceCard;
     final borderColor =
-        customColors?.borderDefault ?? theme.colorScheme.outline;
+        colors.borderDefault;
     final textPrimary =
-        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+        colors.textPrimary;
     final textSecondary =
-        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
-    final primaryColor = theme.colorScheme.secondary;
+        colors.textSecondary;
+    final primaryColor = theme.colorScheme.primary;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
