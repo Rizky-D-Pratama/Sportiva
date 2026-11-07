@@ -22,7 +22,7 @@ class MockData {
     location: 'Jl. Ketintang, Surabaya',
   );
 
-  static final List<Court> popularCourts = [
+  static final List<Court> allCourts = [
     const Court(
       id: 'court_1',
       name: 'Arena Futsal A',
@@ -35,6 +35,27 @@ class MockData {
     ),
     const Court(
       id: 'court_2',
+      name: 'Arena Voli B',
+      category: 'Voli',
+      venue: sportivaCenter,
+      pricePerHour: 100000,
+      rating: 4.8,
+      reviewCount: 128,
+      imageUrl: AppImages.volleyball,
+      isFullToday: true,
+    ),
+    const Court(
+      id: 'court_3',
+      name: 'Arena Basket C',
+      category: 'Basket',
+      venue: sportivaCenter,
+      pricePerHour: 120000,
+      rating: 4.8,
+      reviewCount: 128,
+      imageUrl: AppImages.basket,
+    ),
+    const Court(
+      id: 'court_4',
       name: 'Arena Badminton D',
       category: 'Badminton',
       venue: sportivaCenter,
@@ -43,6 +64,11 @@ class MockData {
       reviewCount: 128,
       imageUrl: AppImages.badminton,
     ),
+  ];
+
+  static final List<Court> popularCourts = [
+    allCourts[0],
+    allCourts[3],
   ];
 
   static final List<Map<String, dynamic>> sportCategories = [

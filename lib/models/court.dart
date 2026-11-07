@@ -10,6 +10,7 @@ class Court {
   final double rating;
   final int reviewCount;
   final String imageUrl;
+  final bool isFullToday;
 
   const Court({
     required this.id,
@@ -20,6 +21,7 @@ class Court {
     required this.rating,
     required this.reviewCount,
     required this.imageUrl,
+    this.isFullToday = false,
   });
 
   /// Formatted price helper e.g. "Rp150.000 / jam"

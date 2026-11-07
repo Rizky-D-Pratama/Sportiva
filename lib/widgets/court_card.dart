@@ -78,15 +78,44 @@ class CourtCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Court Name
-                    Text(
-                      court.name,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    // Court Name Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            court.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (court.isFullToday) ...[
+                          const SizedBox(width: 8.0),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10.0,
+                              vertical: 5.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: customColors?.dangerBackground ??
+                                  AppTheme.statusDangerBackground,
+                              borderRadius: BorderRadius.circular(100.0),
+                            ),
+                            child: Text(
+                              'Penuh hari ini',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: customColors?.dangerForeground ??
+                                    AppTheme.statusDangerForeground,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 6.0),
 

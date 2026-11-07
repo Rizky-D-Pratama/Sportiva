@@ -3,6 +3,7 @@ import 'mock_data.dart';
 
 /// Abstract repository contract for Court (Lapangan) data operations
 abstract class CourtRepository {
+  Future<List<Court>> getAllCourts();
   Future<List<Court>> getPopularCourts();
   Future<List<Court>> getCourtsByCategory(String category);
   Future<List<Court>> searchCourts(String query);
@@ -13,6 +14,12 @@ abstract class CourtRepository {
 /// Fake implementation of CourtRepository using MockData
 class FakeCourtRepository implements CourtRepository {
   @override
+  Future<List<Court>> getAllCourts() async {
+    await Future.delayed(const Duration(milliseconds: 50));
+    return MockData.allCourts;
+  }
+
+  @override
   Future<List<Court>> getPopularCourts() async {
     await Future.delayed(const Duration(milliseconds: 50));
     return MockData.popularCourts;
@@ -21,7 +28,7 @@ class FakeCourtRepository implements CourtRepository {
   @override
   Future<List<Court>> getCourtsByCategory(String category) async {
     await Future.delayed(const Duration(milliseconds: 50));
-    return MockData.popularCourts
+    return MockData.allCourts
         .where((c) => c.category.toLowerCase() == category.toLowerCase())
         .toList();
   }
@@ -29,8 +36,8 @@ class FakeCourtRepository implements CourtRepository {
   @override
   Future<List<Court>> searchCourts(String query) async {
     await Future.delayed(const Duration(milliseconds: 50));
-    if (query.isEmpty) return MockData.popularCourts;
-    return MockData.popularCourts.where((c) {
+    if (query.isEmpty) return MockData.allCourts;
+    return MockData.allCourts.where((c) {
       final q = query.toLowerCase();
       return c.name.toLowerCase().contains(q) ||
           c.venue.name.toLowerCase().contains(q) ||
