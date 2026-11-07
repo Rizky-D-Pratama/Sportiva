@@ -13,10 +13,14 @@ import '../widgets/time_select_bottom_sheet.dart';
 /// Screen displaying detailed information for a selected Court
 class CourtDetailScreen extends StatefulWidget {
   final Court court;
+  final DateTime? initialDate;
+  final int? initialStartHour;
 
   const CourtDetailScreen({
     super.key,
     required this.court,
+    this.initialDate,
+    this.initialStartHour,
   });
 
   @override
@@ -32,7 +36,17 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _selectedDate = DateTime(now.year, now.month, now.day);
+    final today = DateTime(now.year, now.month, now.day);
+    if (widget.initialDate != null) {
+      _selectedDate = DateTime(
+        widget.initialDate!.year,
+        widget.initialDate!.month,
+        widget.initialDate!.day,
+      );
+    } else {
+      _selectedDate = today;
+    }
+    _selectedStartHour = widget.initialStartHour;
   }
 
   bool _isHourUnavailable(int hour) {
