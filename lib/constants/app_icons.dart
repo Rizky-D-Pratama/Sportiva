@@ -13,4 +13,6 @@ class AppIcons {
   static const String mapPin = 'assets/icons/map_pin.svg';
   static const String building = 'assets/icons/building.svg';
   static const String bell = 'assets/icons/bell.svg';
+  static const String chevronDown = 'assets/icons/chevron_down.svg';
+  static const String cross = 'assets/icons/cross.svg';
 }
