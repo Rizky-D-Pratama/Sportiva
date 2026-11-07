@@ -7,6 +7,7 @@ import '../models/unavailable_time_slot.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_calendar.dart';
 import '../widgets/app_image.dart';
+import 'booking_summary_screen.dart';
 import '../widgets/time_select_bottom_sheet.dart';
 
 /// Screen displaying detailed information for a selected Court
@@ -641,7 +642,21 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     width: double.infinity,
                     height: 48.0,
                     child: ElevatedButton(
-                      onPressed: isBookingValid ? () {} : null,
+                      onPressed: isBookingValid
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BookingSummaryScreen(
+                                    court: widget.court,
+                                    selectedDate: _selectedDate,
+                                    startHour: _selectedStartHour!,
+                                    durationHours: _selectedDurationHours!,
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.secondary,
                         disabledBackgroundColor:
