@@ -11,6 +11,7 @@ import '../widgets/court_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/sport_chip.dart';
 import 'court_detail_screen.dart';
+import 'court_schedule_screen.dart';
 
 /// HomeScreen displaying vertical scrollable content for Sportiva Home
 class HomeScreen extends StatefulWidget {
@@ -236,7 +237,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: SportChip(
                       icon: MockData.sportCategories[4]['icon'],
                       label: MockData.sportCategories[4]['label'],
-                      onTap: () => widget.onNavigateTab?.call(1),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CourtScheduleScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   Expanded(
