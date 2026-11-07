@@ -14,5 +14,9 @@ class AppIcons {
   static const String building = 'assets/icons/building.svg';
   static const String bell = 'assets/icons/bell.svg';
   static const String chevronDown = 'assets/icons/chevron_down.svg';
+  static const String chevronLeft = 'assets/icons/chevron_left.svg';
+  static const String chevronRight = 'assets/icons/chevron_right.svg';
+  static const String arrowLeft = 'assets/icons/arrow_left.svg';
+  static const String clock = 'assets/icons/clock.svg';
   static const String cross = 'assets/icons/cross.svg';
 }
