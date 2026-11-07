@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_button.dart';
 
 /// Bottom sheet widget for filtering Courts by price range
 class PriceRangeBottomSheet extends StatefulWidget {
@@ -342,49 +343,20 @@ class _PriceRangeBottomSheetState extends State<PriceRangeBottomSheet> {
             // Action Buttons (Reset & Terapkan)
             Row(
               children: [
-                SizedBox(
-                  width: 104.0,
-                  height: 48.0,
-                  child: OutlinedButton(
+                Expanded(
+                  flex: 4,
+                  child: AppButton(
+                    label: 'Reset',
+                    variant: AppButtonVariant.secondary,
                     onPressed: _reset,
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: cardBg,
-                      side: BorderSide(color: borderColor, width: 1.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14.0),
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: Text(
-                      'Reset',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 12.0),
                 Expanded(
-                  child: SizedBox(
-                    height: 48.0,
-                    child: ElevatedButton(
-                      onPressed: _apply,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.secondary,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14.0),
-                        ),
-                      ),
-                      child: Text(
-                        'Terapkan',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                  flex: 9,
+                  child: AppButton(
+                    label: 'Terapkan',
+                    onPressed: _apply,
                   ),
                 ),
               ],
@@ -416,7 +388,7 @@ class _PriceRangeBottomSheetState extends State<PriceRangeBottomSheet> {
           color: isSelected ? successBg : cardBg,
           borderRadius: BorderRadius.circular(10.0),
           border: Border.all(
-            color: isSelected ? theme.colorScheme.secondary : borderColor,
+            color: isSelected ? theme.colorScheme.primary : borderColor,
             width: 1.0,
           ),
         ),

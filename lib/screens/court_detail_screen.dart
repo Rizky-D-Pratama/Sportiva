@@ -9,6 +9,7 @@ import '../widgets/app_calendar.dart';
 import '../widgets/app_image.dart';
 import 'booking_summary_screen.dart';
 import '../widgets/time_select_bottom_sheet.dart';
+import '../widgets/app_button.dart';
 
 /// Screen displaying detailed information for a selected Court
 class CourtDetailScreen extends StatefulWidget {
@@ -645,44 +646,23 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8.0),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48.0,
-                    child: ElevatedButton(
-                      onPressed: isBookingValid
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BookingSummaryScreen(
-                                    court: widget.court,
-                                    selectedDate: _selectedDate,
-                                    startHour: _selectedStartHour!,
-                                    durationHours: _selectedDurationHours!,
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        disabledBackgroundColor:
-                            borderColor.withValues(alpha: 0.5),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14.0),
+                  AppButton(
+                    label: 'Booking Sekarang',
+                    onPressed: isBookingValid
+                        ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingSummaryScreen(
+                            court: widget.court,
+                            selectedDate: _selectedDate,
+                            startHour: _selectedStartHour!,
+                            durationHours: _selectedDurationHours!,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        'Booking Sekarang',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: isBookingValid
-                              ? textPrimary
-                              : textSecondary.withValues(alpha: 0.6),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                      );
+                    }
+                    : null,
                   ),
                 ],
               ),

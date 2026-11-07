@@ -4,6 +4,7 @@ import '../constants/app_icons.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_image.dart';
+import '../widgets/app_button.dart';
 
 class BookingSummaryScreen extends StatelessWidget {
   final Court court;
@@ -65,8 +66,6 @@ class BookingSummaryScreen extends StatelessWidget {
     final borderColor = colors.borderDefault;
     final textPrimary = colors.textPrimary;
     final textSecondary = colors.textSecondary;
-    final primaryColor = theme.colorScheme.primary;
-    final onPrimaryColor = textPrimary;
 
     final subtotal = court.pricePerHour * durationHours;
     final totalPayment = subtotal + serviceFee;
@@ -423,40 +422,14 @@ class BookingSummaryScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8.0),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48.0,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Button action: no destination screen yet as per rules
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14.0),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Lanjutkan Pembayaran',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: onPrimaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 8.0),
-                          SvgPicture.asset(
-                            AppIcons.arrowRight,
-                            width: 16.0,
-                            height: 16.0,
-                            colorFilter: ColorFilter.mode(onPrimaryColor, BlendMode.srcIn),
-                          ),
-                        ],
-                      ),
-                    ),
+                  AppButton(
+                    label: 'Lanjutkan Pembayaran',
+                    onPressed: () {
+                      // TODO: nanti membuat booking lalu membuka pembayaran (Midtrans Snap).
+                      // Jika booking belum-bayar untuk slot yang sama sudah ada, buka kembali,
+                      // jangan membuat yang baru.
+                    },
+                    trailingIconPath: AppIcons.arrowRight,
                   ),
                 ],
               ),
