@@ -1,0 +1,16 @@
+/// Constant paths for SVG icons in assets/icons/
+class AppIcons {
+  static const String house = 'assets/icons/house.svg';
+  static const String search = 'assets/icons/search.svg';
+  static const String cart = 'assets/icons/cart.svg';
+  static const String userRound = 'assets/icons/user_round.svg';
+  static const String soccerBall = 'assets/icons/soccer_ball.svg';
+  static const String volleyball = 'assets/icons/volleyball.svg';
+  static const String basketBall = 'assets/icons/basket_ball.svg';
+  static const String shuttlecock = 'assets/icons/shuttlecock.svg';
+  static const String sportField = 'assets/icons/sport_field.svg';
+  static const String timePast = 'assets/icons/time_past.svg';
+  static const String mapPin = 'assets/icons/map_pin.svg';
+  static const String building = 'assets/icons/building.svg';
+  static const String bell = 'assets/icons/bell.svg';
+}
