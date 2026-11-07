@@ -10,6 +10,7 @@ import '../widgets/app_image.dart';
 import '../widgets/court_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/sport_chip.dart';
+import 'court_detail_screen.dart';
 
 /// HomeScreen displaying vertical scrollable content for Sportiva Home
 class HomeScreen extends StatefulWidget {
@@ -307,7 +308,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CourtCard(
                       court: court,
                       onTap: () {
-                        // Action on court card tap
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                CourtDetailScreen(court: court),
+                          ),
+                        );
                       },
                     ),
                   );

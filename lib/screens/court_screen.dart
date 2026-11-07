@@ -10,6 +10,7 @@ import '../widgets/dropdown_chip.dart';
 import '../widgets/price_range_bottom_sheet.dart';
 import '../widgets/rating_bottom_sheet.dart';
 import '../widgets/search_bar_widget.dart';
+import 'court_detail_screen.dart';
 
 /// Screen for Lapangan (Court) catalog/search tab
 class CourtScreen extends StatefulWidget {
@@ -305,7 +306,14 @@ class _CourtScreenState extends State<CourtScreen> {
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: CourtCard(
                       court: court,
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                CourtDetailScreen(court: court),
+                          ),
+                        );
+                      },
                     ),
                   );
                 }).toList(),

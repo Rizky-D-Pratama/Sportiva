@@ -1,5 +1,32 @@
 import 'package:flutter/material.dart';
 
+/// Custom page transition builder that slides pages in from the right and out to the right.
+class SlideRightPageTransitionsBuilder extends PageTransitionsBuilder {
+  const SlideRightPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1.0, 0.0),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOut,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
 /// Extension for custom colors defined in Figma design system.
 class AppCustomColors extends ThemeExtension<AppCustomColors> {
   final Color bannerBackground;
@@ -102,6 +129,15 @@ class AppTheme {
       useMaterial3: true,
       fontFamily: 'Inter',
       scaffoldBackgroundColor: baseBackground,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.iOS: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.windows: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.macOS: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.linux: SlideRightPageTransitionsBuilder(),
+        },
+      ),
       colorScheme: const ColorScheme.light(
         primary: statusSuccessForeground,
         secondary: primaryIndicatorColor,
