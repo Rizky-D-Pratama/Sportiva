@@ -159,7 +159,8 @@ class AppTheme {
   static const Color borderDefaultColor = Color(0xFFE8EBDD);
 
   // Spacing & Border Radius Tokens
-  static const double borderRadiusSmall = 10.4;
+  static const double borderRadiusExtraSmall = 10.4;
+  static const double borderRadiusSmall = 14.0;
   static const double borderRadiusMedium = 16.0;
   static const double borderRadiusLarge = 20.0;
 
@@ -172,6 +173,8 @@ class AppTheme {
   static const double iconSizeMedium = 20.0;
   static const double iconSizeLarge = 24.0;
   static const double shortcutBoxSize = 56.0;
+
+  static const double buttonHeight = 48.0;
 
   static ThemeData get lightTheme {
     return ThemeData(
