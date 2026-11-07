@@ -1,3 +1,4 @@
+import 'unavailable_time_slot.dart';
 import 'venue.dart';
 
 /// Model representing a Court (Lapangan)
@@ -11,6 +12,9 @@ class Court {
   final int reviewCount;
   final String imageUrl;
   final bool isFullToday;
+  final List<String> facilities;
+  final String description;
+  final List<UnavailableTimeSlot> unavailableTimeSlots;
 
   const Court({
     required this.id,
@@ -22,6 +26,10 @@ class Court {
     required this.reviewCount,
     required this.imageUrl,
     this.isFullToday = false,
+    this.facilities = const ['Indoor', 'Parkir', 'Toilet', 'Ruang ganti'],
+    this.description =
+        'Rumput sintetis premium, pencahayaan terang, dan ruang ganti bersih. Cocok untuk latihan maupun pertandingan tim.',
+    this.unavailableTimeSlots = const [],
   });
 
   /// Formatted price helper e.g. "Rp150.000 / jam"
