@@ -98,7 +98,7 @@ class BookingSummaryScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Ringkasan Booking',
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         color: textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 19.0,
@@ -318,7 +318,7 @@ class BookingSummaryScreen extends StatelessWidget {
                         children: [
                           Text(
                             'Rincian biaya',
-                            style: theme.textTheme.titleMedium?.copyWith(
+                            style: theme.textTheme.titleLarge?.copyWith(
                               color: textPrimary,
                               fontWeight: FontWeight.w600,
                               fontSize: 17.0,
