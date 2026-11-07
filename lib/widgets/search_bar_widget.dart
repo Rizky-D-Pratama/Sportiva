@@ -1,0 +1,77 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../constants/app_icons.dart';
+import '../data/mock_data.dart';
+import '../theme/app_theme.dart';
+
+/// Reusable SearchBarWidget based on Sportiva Search Bar component
+class SearchBarWidget extends StatelessWidget {
+  final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap;
+  final bool readOnly;
+
+  const SearchBarWidget({
+    super.key,
+    this.onChanged,
+    this.onTap,
+    this.readOnly = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final customColors = theme.extension<AppCustomColors>();
+
+    final cardBg = customColors?.cardBackground ?? theme.colorScheme.surface;
+    final borderColor =
+        customColors?.borderDefault ?? theme.colorScheme.outline;
+    final textSecondary =
+        customColors?.textSecondary ?? theme.colorScheme.onSurfaceVariant;
+    final textPrimary =
+        customColors?.textPrimary ?? theme.colorScheme.onSurface;
+
+    return Container(
+      height: 42.0,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+        border: Border.all(color: borderColor, width: 0.87),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Row(
+        children: [
+          SvgPicture.asset(
+            AppIcons.search,
+            width: 18.0,
+            height: 18.0,
+            colorFilter: ColorFilter.mode(
+              textSecondary,
+              BlendMode.srcIn,
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: TextField(
+              readOnly: readOnly,
+              onTap: onTap,
+              onChanged: onChanged,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: MockData.searchPlaceholder,
+                hintStyle: theme.textTheme.labelMedium?.copyWith(
+                  color: textSecondary,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
