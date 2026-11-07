@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
+import '../constants/app_images.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
+import 'app_image.dart';
 
 /// Reusable CourtCard widget displaying court details (Lapangan)
 class CourtCard extends StatelessWidget {
@@ -62,34 +64,10 @@ class CourtCard extends StatelessWidget {
                 child: SizedBox(
                   height: 135.0,
                   width: double.infinity,
-                  child: Image.network(
-                    court.imageUrl,
+                  child: AppImage(
+                    imagePath: court.imageUrl,
                     fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: borderColor,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.0,
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: borderColor,
-                        child: Icon(
-                          Icons.image_not_supported_rounded,
-                          color: textSecondary,
-                          size: 32.0,
-                        ),
-                      );
-                    },
+                    defaultFallback: AppImages.soccer,
                   ),
                 ),
               ),

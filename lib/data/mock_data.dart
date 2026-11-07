@@ -1,4 +1,5 @@
 import '../constants/app_icons.dart';
+import '../constants/app_images.dart';
 import '../models/court.dart';
 import '../models/venue.dart';
 
@@ -6,8 +7,7 @@ import '../models/venue.dart';
 class MockData {
   static const String userName = 'Arya Ghiffary Habyantara!';
   static const String welcomeGreeting = 'Selamat Datang 👋';
-  static const String profilePhotoUrl =
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+  static const String profilePhotoUrl = AppImages.blankProfile;
 
   static const String searchPlaceholder =
       'Cari lapangan, lokasi, atau venue...';
@@ -31,8 +31,7 @@ class MockData {
       pricePerHour: 150000,
       rating: 4.9,
       reviewCount: 128,
-      imageUrl:
-          'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=800',
+      imageUrl: AppImages.soccer,
     ),
     const Court(
       id: 'court_2',
@@ -42,8 +41,7 @@ class MockData {
       pricePerHour: 80000,
       rating: 4.9,
       reviewCount: 128,
-      imageUrl:
-          'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=800',
+      imageUrl: AppImages.badminton,
     ),
   ];
 

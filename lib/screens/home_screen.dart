@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
+import '../constants/app_images.dart';
 import '../data/court_repository.dart';
 import '../data/mock_data.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_image.dart';
 import '../widgets/court_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/sport_chip.dart';
@@ -79,18 +81,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: SizedBox(
                       width: 44.0,
                       height: 44.0,
-                      child: Image.network(
-                        MockData.profilePhotoUrl,
+                      child: AppImage(
+                        imagePath: MockData.profilePhotoUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: theme.colorScheme.outline,
-                            child: Icon(
-                              Icons.person_rounded,
-                              color: textSecondary,
-                            ),
-                          );
-                        },
+                        defaultFallback: AppImages.blankProfile,
                       ),
                     ),
                   ),
