@@ -17,6 +17,7 @@ class AppIcons {
   static const String chevronLeft = 'assets/icons/chevron_left.svg';
   static const String chevronRight = 'assets/icons/chevron_right.svg';
   static const String arrowLeft = 'assets/icons/arrow_left.svg';
+  static const String arrowRight = 'assets/icons/arrow_right.svg';
   static const String clock = 'assets/icons/clock.svg';
   static const String cross = 'assets/icons/cross.svg';
 }
