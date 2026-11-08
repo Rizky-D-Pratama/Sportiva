@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../widgets/sheet_action_buttons.dart';
 import '../widgets/app_chip.dart';
+import '../widgets/app_field.dart';
 
 /// Bottom sheet widget for filtering Courts by price range
 class PriceRangeBottomSheet extends StatefulWidget {
@@ -186,63 +186,33 @@ class _PriceInputField extends StatelessWidget {
   });
 
   @override
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.appColors;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppTheme.paddingSmall),
-        Container(
-          constraints: const BoxConstraints(minHeight: AppTheme.inputHeight),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.paddingMedium,
-          ),
-          decoration: BoxDecoration(
-            color: colors.surfaceCard,
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
-            border: Border.all(color: colors.borderDefault),
-          ),
-          child: Row(
-            children: [
-              Text(
-                'Rp  ',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.textPrimary,
-                ),
+    return AppField(
+      label: label,
+      child: Row(
+        children: [
+          const Text('Rp  '),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              style: theme.textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
+              decoration: InputDecoration(
+                hintText: '0',
+                hintStyle: theme.textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
               ),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '0',
-                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                      color: colors.textSecondary,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  onChanged: (_) => onChanged(),
-                ),
-              ),
-            ],
+              onChanged: (_) => onChanged(),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

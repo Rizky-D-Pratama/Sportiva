@@ -5,6 +5,7 @@ import '../models/court.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_image.dart';
 import '../widgets/app_button.dart';
+import '../widgets/app_field.dart';
 
 class BookingSummaryScreen extends StatelessWidget {
   final Court court;
@@ -185,113 +186,15 @@ class BookingSummaryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 15.0),
 
-                    // Date Input (Read-only)
-                    Column(
+                    // Date & Time Input (Read-only)
+                    AppField(label: 'Tanggal booking', child: Text(_formatDate(selectedDate))),
+                    const SizedBox(height: 15.0),
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Tanggal booking',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12.0,
-                          ),
-                        ),
-                        const SizedBox(height: 6.0),
-                        Container(
-                          width: double.infinity,
-                          constraints: const BoxConstraints(minHeight: 46.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                          decoration: BoxDecoration(
-                            color: cardBg,
-                            borderRadius: BorderRadius.circular(12.0),
-                            border: Border.all(color: borderColor, width: 1.0),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _formatDate(selectedDate),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: textPrimary,
-                              fontSize: 13.0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15.0),
-
-                    // Time Input Row (Start time & Duration, Read-only)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Jam mulai',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12.0,
-                                ),
-                              ),
-                              const SizedBox(height: 6.0),
-                              Container(
-                                width: double.infinity,
-                                constraints: const BoxConstraints(minHeight: 46.0),
-                                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                                decoration: BoxDecoration(
-                                  color: cardBg,
-                                  borderRadius: BorderRadius.circular(12.0),
-                                  border: Border.all(color: borderColor, width: 1.0),
-                                ),
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  formattedStartTime,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: textPrimary,
-                                    fontSize: 13.0,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8.0),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Durasi',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12.0,
-                                ),
-                              ),
-                              const SizedBox(height: 6.0),
-                              Container(
-                                width: double.infinity,
-                                constraints: const BoxConstraints(minHeight: 46.0),
-                                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                                decoration: BoxDecoration(
-                                  color: cardBg,
-                                  borderRadius: BorderRadius.circular(12.0),
-                                  border: Border.all(color: borderColor, width: 1.0),
-                                ),
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  '$durationHours jam',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: textPrimary,
-                                    fontSize: 13.0,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        Expanded(child: AppField(label: 'Jam mulai', child: Text(formattedStartTime))),
+                        const SizedBox(width: 12.0),
+                        Expanded(child: AppField(label: 'Durasi', child: Text('$durationHours jam'))),
                       ],
                     ),
                     const SizedBox(height: 15.0),

@@ -10,6 +10,7 @@ import '../widgets/app_image.dart';
 import 'booking_summary_screen.dart';
 import '../widgets/time_select_bottom_sheet.dart';
 import '../widgets/app_button.dart';
+import '../widgets/app_field.dart';
 
 /// Screen displaying detailed information for a selected Court
 class CourtDetailScreen extends StatefulWidget {
@@ -440,152 +441,57 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       children: [
                         // Jam Mulai Input Field
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Jam mulai',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                          child: AppField(
+                            label: 'Jam mulai',
+                            trailingIconPath: AppIcons.clock,
+                            enabled: hasAvailableHours,
+                            onTap: _openTimeSelectBottomSheet,
+                            child: Text(
+                              !hasAvailableHours
+                                  ? 'Tidak ada jam tersedia'
+                                  : _selectedStartHour != null
+                                  ? '${_selectedStartHour!.toString().padLeft(2, '0')}.00'
+                                  : 'Pilih jam',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: !hasAvailableHours
+                                    ? colors.dangerForeground
+                                    : _selectedStartHour != null
+                                    ? colors.textPrimary
+                                    : colors.textSecondary,
                               ),
-                              const SizedBox(height: 6.0),
-                              InkWell(
-                                onTap: hasAvailableHours
-                                    ? _openTimeSelectBottomSheet
-                                    : null,
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: Container(
-                                  height: 46.0,
-                                  decoration: BoxDecoration(
-                                    color: cardBg,
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    border: Border.all(
-                                      color: borderColor,
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14.0),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          !hasAvailableHours
-                                              ? 'Tidak ada jam tersedia'
-                                              : _selectedStartHour != null
-                                                  ? '${_selectedStartHour! < 10 ? '0$_selectedStartHour' : '$_selectedStartHour'}.00'
-                                                  : 'Pilih jam',
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                            color: !hasAvailableHours
-                                                ? (colors
-                                                        .dangerForeground)
-                                                : (_selectedStartHour != null
-                                                    ? textPrimary
-                                                    : textSecondary),
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      SvgPicture.asset(
-                                        AppIcons.clock,
-                                        width: 18.0,
-                                        height: 18.0,
-                                        colorFilter: ColorFilter.mode(
-                                          textSecondary,
-                                          BlendMode.srcIn,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12.0),
 
                         // Durasi Input Field (Dropdown)
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Durasi',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 6.0),
-                              Container(
-                                height: 46.0,
-                                decoration: BoxDecoration(
-                                  color: cardBg,
-                                  borderRadius: BorderRadius.circular(12.0),
-                                  border: Border.all(
-                                    color: borderColor,
-                                    width: 1.0,
-                                  ),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14.0),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<int>(
-                                    isExpanded: true,
-                                    value: _selectedDurationHours,
-                                    hint: Text(
-                                      'Pilih durasi',
-                                      style:
-                                          theme.textTheme.bodyMedium?.copyWith(
-                                        color: textSecondary,
-                                      ),
-                                    ),
-                                    icon: SvgPicture.asset(
-                                      AppIcons.chevronDown,
-                                      width: 18.0,
-                                      height: 18.0,
-                                      colorFilter: ColorFilter.mode(
-                                        _selectedStartHour == null
-                                            ? textSecondary.withValues(alpha: 0.4)
-                                            : textSecondary,
-                                        BlendMode.srcIn,
-                                      ),
-                                    ),
-                                    onChanged: _selectedStartHour == null ||
-                                            maxDuration == 0
-                                        ? null
-                                        : (value) {
-                                            setState(() {
-                                              _selectedDurationHours = value;
-                                            });
-                                          },
-                                    items: maxDuration == 0
-                                        ? []
-                                        : List.generate(
-                                            maxDuration,
-                                            (index) {
-                                              final d = index + 1;
-                                              return DropdownMenuItem<int>(
-                                                value: d,
-                                                child: Text(
-                                                  '$d jam',
-                                                  style: theme
-                                                      .textTheme.bodyMedium
-                                                      ?.copyWith(
-                                                    color: textPrimary,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                  ),
-                                ),
-                              ),
+                          child: PopupMenuButton<int>(
+                            tooltip: '',
+                            position: PopupMenuPosition.under,
+                            enabled: _selectedStartHour != null && maxDuration > 0,
+                            onSelected: (d) => setState(() => _selectedDurationHours = d),
+                            itemBuilder: (context) => [
+                              for (int d = 1; d <= maxDuration; d++)
+                                PopupMenuItem<int>(value: d, child: Text('$d jam')),
                             ],
+                            child: AppField(
+                              label: 'Durasi',
+                              trailingIconPath: AppIcons.chevronDown,
+                              enabled: _selectedStartHour != null && maxDuration > 0,
+                              child: Text(
+                                _selectedDurationHours != null
+                                    ? '$_selectedDurationHours jam'
+                                    : 'Pilih durasi',
+                                style: TextStyle(
+                                  color: _selectedDurationHours != null
+                                      ? colors.textPrimary
+                                      : colors.textSecondary,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
