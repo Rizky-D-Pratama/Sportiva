@@ -24,4 +24,11 @@ class AppIcons {
   static const String wallet = 'assets/icons/wallet.svg';
   static const String circleCheck = 'assets/icons/circle_check.svg';
   static const String circleAlert = 'assets/icons/circle_alert.svg';
+  static const String account = 'assets/icons/account.svg';
+  static const String camera = 'assets/icons/camera.svg';
+  static const String moon = 'assets/icons/moon.svg';
+  static const String questionMark = 'assets/icons/question_mark.svg';
+  static const String logout = 'assets/icons/logout.svg';
+  static const String check = 'assets/icons/check.svg';
+  static const String smartphone = 'assets/icons/smartphone.svg';
 }
