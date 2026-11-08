@@ -11,6 +11,7 @@ import 'booking_summary_screen.dart';
 import '../widgets/time_select_bottom_sheet.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
+import '../widgets/app_badge.dart';
 
 /// Screen displaying detailed information for a selected Court
 class CourtDetailScreen extends StatefulWidget {
@@ -300,27 +301,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
                     // Facility Badges
                     Wrap(
-                      spacing: 8.0,
-                      runSpacing: 8.0,
-                      children: widget.court.facilities.map((facility) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10.0,
-                            vertical: 5.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: successBg,
-                            borderRadius: BorderRadius.circular(100.0),
-                          ),
-                          child: Text(
-                            facility,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: successFg,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      spacing: AppTheme.paddingSmall,
+                      runSpacing: AppTheme.paddingSmall,
+                      children: [
+                        for (final facility in widget.court.facilities)
+                          AppBadge(label: facility, variant: AppBadgeVariant.success),
+                      ],
                     ),
                     const SizedBox(height: 12.0),
 

@@ -5,6 +5,7 @@ import '../constants/app_images.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
 import 'app_image.dart';
+import '../widgets/app_badge.dart';
 
 /// Reusable CourtCard widget displaying court details (Lapangan)
 class CourtCard extends StatelessWidget {
@@ -94,23 +95,10 @@ class CourtCard extends StatelessWidget {
                           ),
                         ),
                         if (court.isFullToday) ...[
-                          const SizedBox(width: 8.0),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10.0,
-                              vertical: 5.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.dangerBackground,
-                              borderRadius: BorderRadius.circular(100.0),
-                            ),
-                            child: Text(
-                              'Penuh hari ini',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colors.dangerForeground,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                          const SizedBox(width: AppTheme.paddingSmall),
+                          const AppBadge(
+                            label: 'Penuh hari ini',
+                            variant: AppBadgeVariant.danger,
                           ),
                         ],
                       ],
