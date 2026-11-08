@@ -163,6 +163,7 @@ class AppTheme {
   static const double borderRadiusSmall = 14.0;
   static const double borderRadiusMedium = 16.0;
   static const double borderRadiusLarge = 20.0;
+  static const double borderRadiusSheet = 28.0;
 
   static const double paddingSmall = 8.0;
   static const double paddingMedium = 14.0;
@@ -175,6 +176,10 @@ class AppTheme {
   static const double shortcutBoxSize = 56.0;
 
   static const double buttonHeight = 48.0;
+  static const double chipHeight = 44.0;
+  static const double chipHeightCompact = 36.0;
+  static const double iconButtonSize = 32.0;
+  static const double inputHeight = 46.0;
 
   static ThemeData get lightTheme {
     return ThemeData(
