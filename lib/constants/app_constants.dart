@@ -11,4 +11,10 @@ class AppConstants {
 
   /// Maximum advance booking days allowed (14 days from today)
   static const int maxAdvanceBookingDays = 14;
+
+  /// App version
+  static const String appVersion = '1.0.0';
+
+  /// Formatted app name and version string
+  static const String appTitleWithVersion = 'Sportiva • Versi $appVersion';
 }
