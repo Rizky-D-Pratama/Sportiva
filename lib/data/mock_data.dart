@@ -1,5 +1,6 @@
 import '../constants/app_icons.dart';
 import '../constants/app_images.dart';
+import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/unavailable_time_slot.dart';
 import '../models/venue.dart';
@@ -143,5 +144,32 @@ class MockData {
       'label': 'Riwayat',
       'icon': AppIcons.timePast,
     },
+  ];
+
+  static final List<Booking> mockBookings = [
+    Booking(
+      id: 'booking_1',
+      bookingCode: 'AFA-261015-003',
+      courtName: 'Arena Futsal A',
+      date: '15 Okt 2026',
+      timeRange: '18.00–20.00',
+      totalPayment: 165000,
+      status: BookingStatus.belumBayar,
+      paymentMethod: 'Transfer bank',
+      paymentDeadline: 'Bayar sebelum 15 Okt 2026, 18.00 WIB',
+      playDateTime: DateTime(2026, 10, 15, 18, 0),
+    ),
+    Booking(
+      id: 'booking_2',
+      bookingCode: 'AVB-261016-008',
+      courtName: 'Arena Voli B',
+      date: '16 Okt 2026',
+      timeRange: '16.00–17.00',
+      totalPayment: 105000,
+      status: BookingStatus.sudahBayar,
+      paymentMethod: null,
+      paymentDeadline: null,
+      playDateTime: DateTime(2026, 10, 16, 16, 0),
+    ),
   ];
 }
