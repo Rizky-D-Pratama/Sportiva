@@ -3,13 +3,42 @@ import '../constants/app_images.dart';
 import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/unavailable_time_slot.dart';
+import '../models/user.dart';
 import '../models/venue.dart';
 
 /// Mock Data source containing sample data for Sportiva app
 class MockData {
-  static const String userName = 'Arya Ghiffary Habyantara!';
+  static const String userName = 'Arya Ghiffary Habyantara';
   static const String welcomeGreeting = 'Selamat Datang 👋';
   static const String profilePhotoUrl = AppImages.blankProfile;
+
+  static final User currentUser = User(
+    id: 'user_1',
+    name: 'Arya Ghiffary Habyantara',
+    email: 'habygantenk@gmail.com',
+    profilePhotoUrl: AppImages.blankProfile,
+    joinedDate: DateTime(2026, 10, 1),
+  );
+
+  /// Helper to format user joined date into Indonesian text: "Sobat Sport sejak {Bulan} {Tahun}"
+  static String formatJoinedDate(DateTime date) {
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    final monthName = months[date.month - 1];
+    return 'Sobat Sport sejak $monthName ${date.year}';
+  }
 
   static const String searchPlaceholder =
       'Cari lapangan, lokasi, atau venue...';
