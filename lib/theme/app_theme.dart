@@ -164,11 +164,14 @@ class AppTheme {
   static const double borderRadiusMedium = 16.0;
   static const double borderRadiusLarge = 20.0;
   static const double borderRadiusSheet = 28.0;
+  static const double borderRadiusPill = 100.0;
 
   static const double paddingSmall = 8.0;
   static const double paddingMedium = 14.0;
   static const double paddingLarge = 16.0;
   static const double paddingXLarge = 24.0;
+  static const EdgeInsets badgePadding =
+  EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0);
 
   static const double iconSizeSmall = 12.0;
   static const double iconSizeMedium = 20.0;
@@ -180,6 +183,7 @@ class AppTheme {
   static const double chipHeightCompact = 36.0;
   static const double iconButtonSize = 32.0;
   static const double inputHeight = 46.0;
+  static const double badgeIconGap = 4.0;
 
   static ThemeData get lightTheme {
     return ThemeData(
