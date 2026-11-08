@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../constants/app_icons.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_button.dart';
+import '../widgets/app_bottom_sheet.dart';
+import '../widgets/sheet_action_buttons.dart';
+import '../widgets/app_chip.dart';
 
 /// Bottom sheet widget for filtering Courts by price range
 class PriceRangeBottomSheet extends StatefulWidget {
@@ -117,290 +118,131 @@ class _PriceRangeBottomSheetState extends State<PriceRangeBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = context.appColors;
-
-    final cardBg = colors.surfaceCard;
-    final textPrimary =
-        colors.textPrimary;
-    final textSecondary =
-        colors.textSecondary;
-    final borderColor =
-        colors.borderDefault;
-    final successBg = colors.successBackground;
-    final successFg =
-        colors.successForeground;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(28.0),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 24.0),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Sheet Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Rentang harga',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+    return AppBottomSheet(
+      title: 'Rentang harga',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppTheme.paddingSmall,
+            runSpacing: AppTheme.paddingSmall,
+            children: [
+              AppChip(
+                label: 'Di bawah Rp100.000',
+                isSelected: _selectedQuickOption == 1,
+                onTap: () => _selectQuickOption(1),
+              ),
+              AppChip(
+                label: 'Rp100.000 – Rp200.000',
+                isSelected: _selectedQuickOption == 2,
+                onTap: () => _selectQuickOption(2),
+              ),
+              AppChip(
+                label: 'Di atas Rp200.000',
+                isSelected: _selectedQuickOption == 3,
+                onTap: () => _selectQuickOption(3),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.paddingMedium),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _PriceInputField(
+                  label: 'Minimum',
+                  controller: _minController,
+                  onChanged: () => setState(_updateQuickOptionFromInputs),
                 ),
-                InkWell(
-                  onTap: () => Navigator.of(context).pop(),
-                  borderRadius: BorderRadius.circular(100.0),
-                  child: Container(
-                    width: 32.0,
-                    height: 32.0,
-                    alignment: Alignment.center,
-                    child: SvgPicture.asset(
-                      AppIcons.cross,
-                      width: 18.0,
-                      height: 18.0,
-                      colorFilter: ColorFilter.mode(
-                        textPrimary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: _PriceInputField(
+                  label: 'Maksimum',
+                  controller: _maxController,
+                  onChanged: () => setState(_updateQuickOptionFromInputs),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-
-            // Quick Choice Options
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: [
-                _buildQuickChip(
-                  optionId: 1,
-                  label: 'Di bawah Rp100.000',
-                  theme: theme,
-                  successBg: successBg,
-                  successFg: successFg,
-                  cardBg: cardBg,
-                  borderColor: borderColor,
-                  textPrimary: textPrimary,
-                ),
-                _buildQuickChip(
-                  optionId: 2,
-                  label: 'Rp100.000 – Rp200.000',
-                  theme: theme,
-                  successBg: successBg,
-                  successFg: successFg,
-                  cardBg: cardBg,
-                  borderColor: borderColor,
-                  textPrimary: textPrimary,
-                ),
-                _buildQuickChip(
-                  optionId: 3,
-                  label: 'Di atas Rp200.000',
-                  theme: theme,
-                  successBg: successBg,
-                  successFg: successFg,
-                  cardBg: cardBg,
-                  borderColor: borderColor,
-                  textPrimary: textPrimary,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-
-            // Custom Range Inputs
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Minimum',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6.0),
-                      Container(
-                        height: 46.0,
-                        decoration: BoxDecoration(
-                          color: cardBg,
-                          borderRadius: BorderRadius.circular(12.0),
-                          border: Border.all(color: borderColor, width: 1.0),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Rp  ',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: textPrimary,
-                              ),
-                            ),
-                            Expanded(
-                              child: TextField(
-                                controller: _minController,
-                                keyboardType: TextInputType.number,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: textPrimary,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: '0',
-                                  hintStyle:
-                                      theme.textTheme.bodyMedium?.copyWith(
-                                    color: textSecondary,
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                onChanged: (_) {
-                                  setState(() {
-                                    _updateQuickOptionFromInputs();
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Maksimum',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6.0),
-                      Container(
-                        height: 46.0,
-                        decoration: BoxDecoration(
-                          color: cardBg,
-                          borderRadius: BorderRadius.circular(12.0),
-                          border: Border.all(color: borderColor, width: 1.0),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Rp  ',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: textPrimary,
-                              ),
-                            ),
-                            Expanded(
-                              child: TextField(
-                                controller: _maxController,
-                                keyboardType: TextInputType.number,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: textPrimary,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: '0',
-                                  hintStyle:
-                                      theme.textTheme.bodyMedium?.copyWith(
-                                    color: textSecondary,
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                onChanged: (_) {
-                                  setState(() {
-                                    _updateQuickOptionFromInputs();
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24.0),
-
-            // Action Buttons (Reset & Terapkan)
-            Row(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: AppButton(
-                    label: 'Reset',
-                    variant: AppButtonVariant.secondary,
-                    onPressed: _reset,
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  flex: 9,
-                  child: AppButton(
-                    label: 'Terapkan',
-                    onPressed: _apply,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.paddingXLarge),
+          SheetActionButtons(onReset: _reset, onApply: _apply)
+        ]
       ),
     );
   }
+}
 
-  Widget _buildQuickChip({
-    required int optionId,
-    required String label,
-    required ThemeData theme,
-    required Color successBg,
-    required Color successFg,
-    required Color cardBg,
-    required Color borderColor,
-    required Color textPrimary,
-  }) {
-    final isSelected = _selectedQuickOption == optionId;
-    return InkWell(
-      onTap: () => _selectQuickOption(optionId),
-      borderRadius: BorderRadius.circular(10.0),
-      child: Container(
-        height: 44.0,
-        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        decoration: BoxDecoration(
-          color: isSelected ? successBg : cardBg,
-          borderRadius: BorderRadius.circular(10.0),
-          border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : borderColor,
-            width: 1.0,
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Text(
+class _PriceInputField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final VoidCallback onChanged;
+
+  const _PriceInputField({
+    required this.label,
+    required this.controller,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = context.appColors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
           label,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: isSelected ? successFg : textPrimary,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
-      ),
+        const SizedBox(height: AppTheme.paddingSmall),
+        Container(
+          constraints: const BoxConstraints(minHeight: AppTheme.inputHeight),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.paddingMedium,
+          ),
+          decoration: BoxDecoration(
+            color: colors.surfaceCard,
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+            border: Border.all(color: colors.borderDefault),
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Rp  ',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.textPrimary,
+                ),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '0',
+                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onChanged: (_) => onChanged(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

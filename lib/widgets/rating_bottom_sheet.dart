@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../constants/app_icons.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_button.dart';
+import '../widgets/app_bottom_sheet.dart';
+import '../widgets/sheet_action_buttons.dart';
+import '../widgets/app_chip.dart';
 
 enum RatingSortType { highest, lowest }
 
@@ -53,152 +53,30 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = context.appColors;
-
-    final cardBg = colors.surfaceCard;
-    final textPrimary =
-        colors.textPrimary;
-    final borderColor =
-        colors.borderDefault;
-    final successBg = colors.successBackground;
-    final successFg =
-        colors.successForeground;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(28.0),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 24.0),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Sheet Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Rating',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                InkWell(
-                  onTap: () => Navigator.of(context).pop(),
-                  borderRadius: BorderRadius.circular(100.0),
-                  child: Container(
-                    width: 32.0,
-                    height: 32.0,
-                    alignment: Alignment.center,
-                    child: SvgPicture.asset(
-                      AppIcons.cross,
-                      width: 18.0,
-                      height: 18.0,
-                      colorFilter: ColorFilter.mode(
-                        textPrimary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-
-            // Rating Sort Options
-            Row(
-              children: [
-                _buildSortChip(
-                  sortType: RatingSortType.highest,
-                  label: 'Tertinggi',
-                  theme: theme,
-                  successBg: successBg,
-                  successFg: successFg,
-                  cardBg: cardBg,
-                  borderColor: borderColor,
-                  textPrimary: textPrimary,
-                ),
-                const SizedBox(width: 8.0),
-                _buildSortChip(
-                  sortType: RatingSortType.lowest,
-                  label: 'Terendah',
-                  theme: theme,
-                  successBg: successBg,
-                  successFg: successFg,
-                  cardBg: cardBg,
-                  borderColor: borderColor,
-                  textPrimary: textPrimary,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24.0),
-
-            // Action Buttons (Reset & Terapkan)
-            Row(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: AppButton(
-                    label: 'Reset',
-                    variant: AppButtonVariant.secondary,
-                    onPressed: _reset,
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  flex: 9,
-                  child: AppButton(
-                    label: 'Terapkan',
-                    onPressed: _apply,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSortChip({
-    required RatingSortType sortType,
-    required String label,
-    required ThemeData theme,
-    required Color successBg,
-    required Color successFg,
-    required Color cardBg,
-    required Color borderColor,
-    required Color textPrimary,
-  }) {
-    final isSelected = _selectedSort == sortType;
-    return InkWell(
-      onTap: () => _selectSort(sortType),
-      borderRadius: BorderRadius.circular(10.0),
-      child: Container(
-        height: 44.0,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: isSelected ? successBg : cardBg,
-          borderRadius: BorderRadius.circular(10.0),
-          border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : borderColor,
-            width: 1.0,
+    return AppBottomSheet(
+      title: 'Rating',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppChip(
+                label: 'Tertinggi',
+                isSelected: _selectedSort == RatingSortType.highest,
+                onTap: () => _selectSort(RatingSortType.highest),
+              ),
+              const SizedBox(width: AppTheme.paddingSmall),
+              AppChip(
+                label: 'Terendah',
+                isSelected: _selectedSort == RatingSortType.lowest,
+                onTap: () => _selectSort(RatingSortType.lowest),
+              ),
+            ],
           ),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: isSelected ? successFg : textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+          const SizedBox(height: AppTheme.paddingXLarge),
+          SheetActionButtons(onReset: _reset, onApply: _apply),
+        ],
       ),
     );
   }

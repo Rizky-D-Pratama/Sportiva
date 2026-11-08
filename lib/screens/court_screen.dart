@@ -11,6 +11,7 @@ import '../widgets/price_range_bottom_sheet.dart';
 import '../widgets/rating_bottom_sheet.dart';
 import '../widgets/search_bar_widget.dart';
 import 'court_detail_screen.dart';
+import '../widgets/app_bottom_sheet.dart';
 
 /// Screen for Lapangan (Court) catalog/search tab
 class CourtScreen extends StatefulWidget {
@@ -76,20 +77,12 @@ class _CourtScreenState extends State<CourtScreen> {
   }
 
   void _openRatingBottomSheet() {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return RatingBottomSheet(
-          initialSort: _ratingSort,
-          onApply: (sortType) {
-            setState(() {
-              _ratingSort = sortType;
-            });
-          },
-        );
-      },
+      builder: (context) => RatingBottomSheet(
+        initialSort: _ratingSort,
+        onApply: (sortType) => setState(() => _ratingSort = sortType),
+      ),
     );
   }
 

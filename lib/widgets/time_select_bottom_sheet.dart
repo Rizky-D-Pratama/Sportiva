@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_constants.dart';
-import '../constants/app_icons.dart';
 import '../models/unavailable_time_slot.dart';
 import '../theme/app_theme.dart';
+import 'app_bottom_sheet.dart';
 
-/// Bottom sheet for selecting booking start time ("Jam mulai")
+/// Bottom sheet untuk memilih jam mulai booking ("Jam mulai").
 class TimeSelectBottomSheet extends StatelessWidget {
   final DateTime selectedDate;
   final List<UnavailableTimeSlot> unavailableSlots;
@@ -18,160 +17,114 @@ class TimeSelectBottomSheet extends StatelessWidget {
     required this.onTimeSelected,
   });
 
+  // TODO: ketersediaan jam nanti dihitung di server.
   bool _isHourUnavailable(int hour) {
-    // 1. Check if past time for today
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final isToday = selectedDate.year == today.year &&
         selectedDate.month == today.month &&
         selectedDate.day == today.day;
 
-    if (isToday && hour <= now.hour) {
-      return true;
-    }
+    if (isToday && hour <= now.hour) return true;
 
-    // 2. Check overlap with unavailable time slots
     for (final slot in unavailableSlots) {
-      if (hour >= slot.startHour && hour < slot.endHour) {
-        return true;
-      }
+      if (hour >= slot.startHour && hour < slot.endHour) return true;
     }
-
     return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = context.appColors;
+    final hours = [
+      for (int h = AppConstants.operationalStartHour;
+      h < AppConstants.operationalEndHour;
+      h++)
+        h,
+    ];
 
-    final cardBg = colors.surfaceCard;
-    final textPrimary =
-        colors.textPrimary;
-    final textSecondary =
-        colors.textSecondary;
-    final borderColor =
-        colors.borderDefault;
-
-    final List<int> hours = [];
-    for (int h = AppConstants.operationalStartHour;
-        h < AppConstants.operationalEndHour;
-        h++) {
-      hours.add(h);
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(28.0),
+    return AppBottomSheet(
+      title: 'Pilih jam mulai',
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.45,
+        ),
+        child: ListView.separated(
+          shrinkWrap: true,
+          itemCount: hours.length,
+          separatorBuilder: (context, index) =>
+          const SizedBox(height: AppTheme.paddingSmall),
+          itemBuilder: (context, index) {
+            final hour = hours[index];
+            return _TimeSlotRow(
+              label: '${hour.toString().padLeft(2, '0')}.00 WIB',
+              isUnavailable: _isHourUnavailable(hour),
+              onTap: () {
+                onTimeSelected(hour);
+                Navigator.of(context).pop();
+              },
+            );
+          },
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 24.0),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
+    );
+  }
+}
+
+class _TimeSlotRow extends StatelessWidget {
+  final String label;
+  final bool isUnavailable;
+  final VoidCallback onTap;
+
+  const _TimeSlotRow({
+    required this.label,
+    required this.isUnavailable,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = context.appColors;
+    final radius = BorderRadius.circular(AppTheme.borderRadiusExtraSmall);
+
+    return Material(
+      color: isUnavailable ? colors.neutralBackground : colors.surfaceCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(color: colors.borderDefault),
+      ),
+      child: InkWell(
+        onTap: isUnavailable ? null : onTap,
+        borderRadius: radius,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppTheme.chipHeight),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.paddingLarge,
+            ),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Pilih jam mulai',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: textPrimary,
-                    fontWeight: FontWeight.w600,
+                  label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: isUnavailable
+                        ? colors.neutralForeground
+                        : colors.textPrimary,
+                    fontWeight:
+                    isUnavailable ? FontWeight.w400 : FontWeight.w600,
                   ),
                 ),
-                InkWell(
-                  onTap: () => Navigator.of(context).pop(),
-                  borderRadius: BorderRadius.circular(100.0),
-                  child: Container(
-                    width: 32.0,
-                    height: 32.0,
-                    alignment: Alignment.center,
-                    child: SvgPicture.asset(
-                      AppIcons.cross,
-                      width: 18.0,
-                      height: 18.0,
-                      colorFilter: ColorFilter.mode(
-                        textPrimary,
-                        BlendMode.srcIn,
-                      ),
+                if (isUnavailable)
+                  Text(
+                    'Tidak tersedia',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.neutralForeground,
                     ),
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 16.0),
-
-            // Time Slots List
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.45,
-              ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: hours.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8.0),
-                itemBuilder: (context, index) {
-                  final hour = hours[index];
-                  final isUnavailable = _isHourUnavailable(hour);
-                  final formattedHour =
-                      hour < 10 ? '0$hour.00 WIB' : '$hour.00 WIB';
-
-                  return InkWell(
-                    onTap: isUnavailable
-                        ? null
-                        : () {
-                            onTimeSelected(hour);
-                            Navigator.of(context).pop();
-                          },
-                    borderRadius: BorderRadius.circular(10.0),
-                    child: Container(
-                      height: 44.0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      decoration: BoxDecoration(
-                        color: isUnavailable
-                            ? borderColor.withValues(alpha: 0.3)
-                            : cardBg,
-                        borderRadius: BorderRadius.circular(10.0),
-                        border: Border.all(
-                          color: borderColor,
-                          width: 1.0,
-                        ),
-                      ),
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            formattedHour,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: isUnavailable
-                                  ? textSecondary.withValues(alpha: 0.4)
-                                  : textPrimary,
-                              fontWeight: isUnavailable
-                                  ? FontWeight.w400
-                                  : FontWeight.w600,
-                            ),
-                          ),
-                          if (isUnavailable)
-                            Text(
-                              'Tidak tersedia',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: textSecondary.withValues(alpha: 0.5),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
