@@ -122,37 +122,43 @@ class _OrderScreenState extends State<OrderScreen> {
           // Filter pembayaran chips
           Row(
             children: [
-              AppChip(
-                label: 'Semua',
-                isSelected: _selectedFilter == 'Semua',
-                onTap: () {
-                  setState(() {
-                    _selectedFilter = 'Semua';
-                  });
-                },
-                size: AppChipSize.compact,
+              Expanded(
+                child: AppChip(
+                  label: 'Semua',
+                  isSelected: _selectedFilter == 'Semua',
+                  onTap: () {
+                    setState(() {
+                      _selectedFilter = 'Semua';
+                    });
+                  },
+                  size: AppChipSize.compact,
+                ),
               ),
               const SizedBox(width: 6.0),
-              AppChip(
-                label: 'Belum bayar',
-                isSelected: _selectedFilter == 'Belum bayar',
-                onTap: () {
-                  setState(() {
-                    _selectedFilter = 'Belum bayar';
-                  });
-                },
-                size: AppChipSize.compact,
+              Expanded(
+                child: AppChip(
+                  label: 'Belum bayar',
+                  isSelected: _selectedFilter == 'Belum bayar',
+                  onTap: () {
+                    setState(() {
+                      _selectedFilter = 'Belum bayar';
+                    });
+                  },
+                  size: AppChipSize.compact,
+                ),
               ),
               const SizedBox(width: 6.0),
-              AppChip(
-                label: 'Sudah bayar',
-                isSelected: _selectedFilter == 'Sudah bayar',
-                onTap: () {
-                  setState(() {
-                    _selectedFilter = 'Sudah bayar';
-                  });
-                },
-                size: AppChipSize.compact,
+              Expanded(
+                child: AppChip(
+                  label: 'Sudah bayar',
+                  isSelected: _selectedFilter == 'Sudah bayar',
+                  onTap: () {
+                    setState(() {
+                      _selectedFilter = 'Sudah bayar';
+                    });
+                  },
+                  size: AppChipSize.compact,
+                ),
               ),
             ],
           ),
