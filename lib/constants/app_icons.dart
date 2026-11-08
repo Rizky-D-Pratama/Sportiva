@@ -20,4 +20,8 @@ class AppIcons {
   static const String arrowRight = 'assets/icons/arrow_right.svg';
   static const String clock = 'assets/icons/clock.svg';
   static const String cross = 'assets/icons/cross.svg';
+  static const String calendar = 'assets/icons/calendar.svg';
+  static const String wallet = 'assets/icons/wallet.svg';
+  static const String circleCheck = 'assets/icons/circle_check.svg';
+  static const String circleAlert = 'assets/icons/circle_alert.svg';
 }
