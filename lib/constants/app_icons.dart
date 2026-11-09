@@ -34,4 +34,6 @@ class AppIcons {
   static const String star = 'assets/icons/star.svg';
   static const String starYellow = 'assets/icons/star_yellow.svg';
   static const String starOutline = 'assets/icons/star_outline.svg';
+  static const String ticket = 'assets/icons/ticket.svg';
+  static const String download = 'assets/icons/download.svg';
 }
