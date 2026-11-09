@@ -150,7 +150,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
         colors.borderDefault;
     final successFg =
         colors.successForeground;
-    final successBg = colors.successBackground;
 
     final hasAvailableHours = _hasAvailableStartHours();
     final maxDuration = _selectedStartHour != null
