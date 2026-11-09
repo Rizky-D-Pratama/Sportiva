@@ -8,6 +8,7 @@ class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed; // null = nonaktif
   final AppButtonVariant variant;
+  final String? leadingIconPath;
   final String? trailingIconPath;
 
   const AppButton({
@@ -15,6 +16,7 @@ class AppButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.variant = AppButtonVariant.primary,
+    this.leadingIconPath,
     this.trailingIconPath,
   });
 
@@ -48,6 +50,15 @@ class AppButton extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (leadingIconPath != null) ...[
+            SvgPicture.asset(
+              leadingIconPath!,
+              width: AppTheme.iconSizeMedium,
+              height: AppTheme.iconSizeMedium,
+              colorFilter: ColorFilter.mode(shownFg, BlendMode.srcIn),
+            ),
+            const SizedBox(width: AppTheme.paddingSmall),
+          ],
           Text(label),
           if (trailingIconPath != null) ...[
             const SizedBox(width: AppTheme.paddingSmall),
