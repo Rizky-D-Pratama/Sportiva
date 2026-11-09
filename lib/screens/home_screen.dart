@@ -10,6 +10,7 @@ import '../widgets/app_image.dart';
 import '../widgets/court_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/sport_chip.dart';
+import 'booking_history_screen.dart';
 import 'court_detail_screen.dart';
 import 'court_schedule_screen.dart';
 
@@ -250,7 +251,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: SportChip(
                       icon: MockData.sportCategories[5]['icon'],
                       label: MockData.sportCategories[5]['label'],
-                      onTap: () => widget.onNavigateTab?.call(2), // Pesanan/Riwayat
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const BookingHistoryScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],

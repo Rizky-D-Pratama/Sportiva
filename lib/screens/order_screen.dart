@@ -8,6 +8,7 @@ import '../widgets/app_badge.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_chip.dart';
 import '../widgets/app_modal.dart';
+import 'booking_history_screen.dart';
 
 /// Screen for Pesanan (Order) & Riwayat (History) tab
 class OrderScreen extends StatefulWidget {
@@ -492,7 +493,12 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Buka layar Riwayat Booking (belum ada)
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const BookingHistoryScreen(),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
         child: Padding(

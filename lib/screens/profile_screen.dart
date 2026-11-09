@@ -11,6 +11,8 @@ import '../widgets/app_menu_tile.dart';
 import '../widgets/app_modal.dart';
 import '../widgets/theme_select_bottom_sheet.dart';
 
+import 'booking_history_screen.dart';
+
 /// Screen for User Profile tab
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -111,7 +113,14 @@ class ProfileScreen extends StatelessWidget {
                   iconPath: AppIcons.timePast,
                   label: 'Riwayat Booking',
                   showChevron: true,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BookingHistoryScreen(),
+                      ),
+                    );
+                  },
                 ),
                 AppMenuTile(
                   iconPath: AppIcons.moon,
