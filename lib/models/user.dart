@@ -4,6 +4,7 @@ class User {
   final String name;
   final String email;
   final String? profilePhotoUrl;
+  final String? phoneNumber;
   final DateTime joinedDate;
 
   const User({
@@ -11,6 +12,7 @@ class User {
     required this.name,
     required this.email,
     this.profilePhotoUrl,
+    this.phoneNumber,
     required this.joinedDate,
   });
 }

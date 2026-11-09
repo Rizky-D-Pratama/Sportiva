@@ -22,6 +22,20 @@ class Booking {
   final DateTime playDateTime; // Used for sorting by closest play date
   final int? rating; // 1 to 5 rating if finished and rated, null otherwise
 
+  // Extended fields for Detail & Ticket views
+  final int pricePerHour;
+  final int serviceFee;
+  final int durationHours;
+  final String? createdDateText;
+  final String? paymentStatusText;
+  final String? userName;
+  final String? userPhone;
+  final String venueName;
+  final String? facilitiesText;
+  final String? courtImageUrl;
+  final String? fullDateText;
+  final String? ticketDateText;
+
   const Booking({
     required this.id,
     required this.bookingCode,
@@ -34,12 +48,27 @@ class Booking {
     this.paymentDeadline,
     required this.playDateTime,
     this.rating,
+    this.pricePerHour = 100000,
+    this.serviceFee = 5000,
+    this.durationHours = 1,
+    this.createdDateText,
+    this.paymentStatusText,
+    this.userName,
+    this.userPhone,
+    this.venueName = 'Sportiva Center',
+    this.facilitiesText,
+    this.courtImageUrl,
+    this.fullDateText,
+    this.ticketDateText,
   });
 
   /// Formatted price helper e.g. "Rp165.000"
-  String get formattedTotalPayment {
+  String get formattedTotalPayment => formatPrice(totalPayment);
+
+  /// Helper to format arbitrary integer to "RpXXX.XXX"
+  static String formatPrice(int amount) {
     final buffer = StringBuffer();
-    final priceStr = totalPayment.toString();
+    final priceStr = amount.toString();
     for (int i = 0; i < priceStr.length; i++) {
       if (i > 0 && (priceStr.length - i) % 3 == 0) {
         buffer.write('.');
@@ -48,6 +77,8 @@ class Booking {
     }
     return 'Rp${buffer.toString()}';
   }
+
+  int get subtotal => pricePerHour * durationHours;
 
   Booking copyWith({
     String? id,
@@ -61,6 +92,18 @@ class Booking {
     String? paymentDeadline,
     DateTime? playDateTime,
     int? rating,
+    int? pricePerHour,
+    int? serviceFee,
+    int? durationHours,
+    String? createdDateText,
+    String? paymentStatusText,
+    String? userName,
+    String? userPhone,
+    String? venueName,
+    String? facilitiesText,
+    String? courtImageUrl,
+    String? fullDateText,
+    String? ticketDateText,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -74,6 +117,18 @@ class Booking {
       paymentDeadline: paymentDeadline ?? this.paymentDeadline,
       playDateTime: playDateTime ?? this.playDateTime,
       rating: rating ?? this.rating,
+      pricePerHour: pricePerHour ?? this.pricePerHour,
+      serviceFee: serviceFee ?? this.serviceFee,
+      durationHours: durationHours ?? this.durationHours,
+      createdDateText: createdDateText ?? this.createdDateText,
+      paymentStatusText: paymentStatusText ?? this.paymentStatusText,
+      userName: userName ?? this.userName,
+      userPhone: userPhone ?? this.userPhone,
+      venueName: venueName ?? this.venueName,
+      facilitiesText: facilitiesText ?? this.facilitiesText,
+      courtImageUrl: courtImageUrl ?? this.courtImageUrl,
+      fullDateText: fullDateText ?? this.fullDateText,
+      ticketDateText: ticketDateText ?? this.ticketDateText,
     );
   }
 }
