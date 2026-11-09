@@ -10,6 +10,7 @@ import '../widgets/app_chip.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_star_rating.dart';
 import '../widgets/give_rating_bottom_sheet.dart';
+import 'booking_detail_screen.dart';
 
 /// Screen for Riwayat Booking (Booking History)
 class BookingHistoryScreen extends StatefulWidget {
@@ -268,7 +269,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
               ),
               InkWell(
                 onTap: () {
-                  // Link yet to be implemented
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookingDetailScreen(booking: booking),
+                    ),
+                  );
                 },
                 child: Text(
                   'Lihat Detail →',
