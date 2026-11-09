@@ -3,9 +3,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_image.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
+import '../widgets/app_image.dart';
+import '../widgets/app_info_row.dart';
+import '../widgets/app_sticky_bottom_bar.dart';
 
 class BookingSummaryScreen extends StatelessWidget {
   final Court court;
@@ -78,7 +80,7 @@ class BookingSummaryScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Custom App Header (without bell icon as requested)
+            // Custom App Header
             Container(
               height: 56.0,
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -98,11 +100,7 @@ class BookingSummaryScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Ringkasan Booking',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        color: textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 19.0,
-                      ),
+                      style: theme.textTheme.headlineMedium,
                     ),
                   ),
                 ],
@@ -227,46 +225,31 @@ class BookingSummaryScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12.0),
-                          _buildSummaryRow(
-                            theme,
-                            'Harga per jam',
-                            'Rp${_formatNumber(court.pricePerHour)}',
-                            textSecondary,
-                            textPrimary,
+                          AppInfoRow(
+                            label: 'Harga per jam',
+                            value: 'Rp${_formatNumber(court.pricePerHour)}',
                           ),
                           const SizedBox(height: 8.0),
-                          _buildSummaryRow(
-                            theme,
-                            'Durasi',
-                            '$durationHours jam × Rp${_formatNumber(court.pricePerHour)}',
-                            textSecondary,
-                            textPrimary,
+                          AppInfoRow(
+                            label: 'Durasi',
+                            value: '$durationHours jam × Rp${_formatNumber(court.pricePerHour)}',
                           ),
                           const SizedBox(height: 8.0),
-                          _buildSummaryRow(
-                            theme,
-                            'Subtotal',
-                            'Rp${_formatNumber(subtotal)}',
-                            textSecondary,
-                            textPrimary,
+                          AppInfoRow(
+                            label: 'Subtotal',
+                            value: 'Rp${_formatNumber(subtotal)}',
                           ),
                           const SizedBox(height: 8.0),
-                          _buildSummaryRow(
-                            theme,
-                            'Biaya layanan',
-                            'Rp${_formatNumber(serviceFee)}',
-                            textSecondary,
-                            textPrimary,
+                          AppInfoRow(
+                            label: 'Biaya layanan',
+                            value: 'Rp${_formatNumber(serviceFee)}',
                           ),
                           const SizedBox(height: 12.0),
                           Divider(color: borderColor, height: 1.0),
                           const SizedBox(height: 12.0),
-                          _buildSummaryRow(
-                            theme,
-                            'Total pembayaran',
-                            'Rp${_formatNumber(totalPayment)}',
-                            textSecondary,
-                            textPrimary,
+                          AppInfoRow(
+                            label: 'Total pembayaran',
+                            value: 'Rp${_formatNumber(totalPayment)}',
                             isBoldValue: true,
                           ),
                         ],
@@ -291,17 +274,7 @@ class BookingSummaryScreen extends StatelessWidget {
             ),
 
             // Sticky Bottom Actions Bar
-            Container(
-              decoration: BoxDecoration(
-                color: baseBg,
-                border: Border(
-                  top: BorderSide(
-                    color: borderColor,
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            AppStickyBottomBar(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,36 +313,6 @@ class BookingSummaryScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSummaryRow(
-    ThemeData theme,
-    String label,
-    String value,
-    Color labelColor,
-    Color valueColor, {
-    bool isBoldValue = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: labelColor,
-            fontSize: 12.0,
-          ),
-        ),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: valueColor,
-            fontSize: 12.0,
-            fontWeight: isBoldValue ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ],
     );
   }
 }

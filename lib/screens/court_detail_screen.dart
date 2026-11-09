@@ -12,6 +12,7 @@ import '../widgets/time_select_bottom_sheet.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
 import '../widgets/app_badge.dart';
+import '../widgets/app_sticky_bottom_bar.dart';
 
 /// Screen displaying detailed information for a selected Court
 class CourtDetailScreen extends StatefulWidget {
@@ -488,20 +489,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             ),
 
             // Sticky Bottom Actions Bar
-            Container(
-              decoration: BoxDecoration(
-                color: baseBg,
-                border: Border(
-                  top: BorderSide(
-                    color: borderColor,
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.paddingXLarge,
-                vertical: 12.0,
-              ),
+            AppStickyBottomBar(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
