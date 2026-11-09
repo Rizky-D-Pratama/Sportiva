@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
 import '../theme/app_theme.dart';
+import 'app_notification_bell.dart';
 
 /// Reusable App Header matching Figma component "Sportiva / App Header" (520:2597)
 class AppHeader extends StatelessWidget {
   final String title;
   final bool showBackButton;
+  final bool showNotificationBell;
   final VoidCallback? onBackTap;
   final Widget? action;
 
@@ -14,6 +16,7 @@ class AppHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.showBackButton = false,
+    this.showNotificationBell = false,
     this.onBackTap,
     this.action,
   });
@@ -56,7 +59,11 @@ class AppHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (action != null) ...[action!],
+          if (action != null) ...[
+            action!,
+          ] else if (showNotificationBell) ...[
+            const AppNotificationBell(),
+          ],
         ],
       ),
     );
