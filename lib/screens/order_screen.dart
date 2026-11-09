@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_badge.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_chip.dart';
+import '../widgets/app_header.dart';
 import '../widgets/app_modal.dart';
 import 'booking_detail_screen.dart';
 import 'booking_history_screen.dart';
@@ -86,35 +87,15 @@ class _OrderScreenState extends State<OrderScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.paddingXLarge,
-        vertical: 12.0,
+        vertical: AppTheme.paddingSmall,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // App Header
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Pesanan',
-                  style: theme.textTheme.headlineMedium,
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  // Notification bell action (if any)
-                },
-                child: SvgPicture.asset(
-                  AppIcons.bell,
-                  width: 20.0,
-                  height: 20.0,
-                  colorFilter: ColorFilter.mode(
-                    colors.textPrimary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ],
+          const AppHeader(
+            title: 'Pesanan',
+            showNotificationBell: true,
           ),
           const SizedBox(height: 16.0),
 

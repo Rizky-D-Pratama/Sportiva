@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../constants/app_icons.dart';
 import '../constants/app_images.dart';
 import '../data/court_repository.dart';
 import '../data/mock_data.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_image.dart';
+import '../widgets/app_notification_bell.dart';
 import '../widgets/court_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/sport_chip.dart';
@@ -118,20 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   // Bell Notification Icon
-                  IconButton(
-                    onPressed: () {},
-                    icon: SvgPicture.asset(
-                      AppIcons.bell,
-                      width: AppTheme.iconSizeMedium,
-                      height: AppTheme.iconSizeMedium,
-                      colorFilter: ColorFilter.mode(
-                        textPrimary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
+                  const AppNotificationBell(),
                 ],
               );
             },

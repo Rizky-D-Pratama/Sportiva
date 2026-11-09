@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_constants.dart';
 import '../constants/app_icons.dart';
 import '../data/mock_data.dart';
@@ -11,6 +10,7 @@ import '../widgets/app_menu_tile.dart';
 import '../widgets/app_modal.dart';
 import '../widgets/theme_select_bottom_sheet.dart';
 
+import 'account_screen.dart';
 import 'booking_history_screen.dart';
 
 /// Screen for User Profile tab
@@ -25,35 +25,17 @@ class ProfileScreen extends StatelessWidget {
     final user = MockData.currentUser;
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.paddingXLarge,
-        12.0,
-        AppTheme.paddingXLarge,
-        AppTheme.paddingXLarge,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.paddingXLarge,
+        vertical: AppTheme.paddingSmall,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 1. App Header
-          AppHeader(
+          const AppHeader(
             title: 'Profil',
-            action: InkWell(
-              onTap: () {},
-              borderRadius: BorderRadius.circular(100.0),
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.paddingSmall),
-                child: SvgPicture.asset(
-                  AppIcons.bell,
-                  width: AppTheme.iconSizeMedium,
-                  height: AppTheme.iconSizeMedium,
-                  colorFilter: ColorFilter.mode(
-                    colors.textPrimary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
+            showNotificationBell: true,
           ),
           const SizedBox(height: 16.0),
 
@@ -107,7 +89,14 @@ class ProfileScreen extends StatelessWidget {
                   iconPath: AppIcons.account,
                   label: 'Akun',
                   showChevron: true,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AccountScreen(),
+                      ),
+                    );
+                  },
                 ),
                 AppMenuTile(
                   iconPath: AppIcons.timePast,

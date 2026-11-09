@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
 import '../data/court_repository.dart';
 import '../models/court.dart';
@@ -12,6 +11,7 @@ import '../widgets/rating_bottom_sheet.dart';
 import '../widgets/search_bar_widget.dart';
 import 'court_detail_screen.dart';
 import '../widgets/app_bottom_sheet.dart';
+import '../widgets/app_header.dart';
 
 /// Screen for Lapangan (Court) catalog/search tab
 class CourtScreen extends StatefulWidget {
@@ -136,8 +136,6 @@ class _CourtScreenState extends State<CourtScreen> {
     final theme = Theme.of(context);
     final colors = context.appColors;
 
-    final textPrimary =
-        colors.textPrimary;
     final textSecondary =
         colors.textSecondary;
 
@@ -155,37 +153,15 @@ class _CourtScreenState extends State<CourtScreen> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.paddingXLarge,
-        vertical: AppTheme.paddingLarge,
+        vertical: AppTheme.paddingSmall,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 1. App Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Temukan Lapangan',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  color: textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: SvgPicture.asset(
-                  AppIcons.bell,
-                  width: AppTheme.iconSizeMedium,
-                  height: AppTheme.iconSizeMedium,
-                  colorFilter: ColorFilter.mode(
-                    textPrimary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
+          const AppHeader(
+            title: 'Temukan Lapangan',
+            showNotificationBell: true,
           ),
           const SizedBox(height: 16.0),
 
