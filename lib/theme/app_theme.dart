@@ -157,6 +157,8 @@ class AppTheme {
   static const Color statusNeutralBackground = Color(0xFFF0F2EC);
   //border
   static const Color borderDefaultColor = Color(0xFFE8EBDD);
+  //star
+  static const Color starYellow = Color(0xFFF7C049);
 
   // Spacing & Border Radius Tokens
   static const double borderRadiusExtraSmall = 10.4;
