@@ -7,6 +7,8 @@ import '../theme/app_theme.dart';
 class AppMenuTile extends StatelessWidget {
   final String iconPath;
   final String label;
+  final String? caption;
+  final FontWeight? valueFontWeight;
   final bool isDanger;
   final bool showChevron;
   final VoidCallback onTap;
@@ -15,6 +17,8 @@ class AppMenuTile extends StatelessWidget {
     super.key,
     required this.iconPath,
     required this.label,
+    this.caption,
+    this.valueFontWeight,
     this.isDanger = false,
     this.showChevron = true,
     required this.onTap,
@@ -32,8 +36,11 @@ class AppMenuTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
       child: Container(
-        height: 56.0,
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingLarge),
+        constraints: const BoxConstraints(minHeight: 56.0),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.paddingLarge,
+          vertical: AppTheme.paddingSmall,
+        ),
         child: Row(
           children: [
             SvgPicture.asset(
@@ -47,17 +54,45 @@ class AppMenuTile extends StatelessWidget {
             ),
             const SizedBox(width: 12.0),
             Expanded(
-              child: Text(
-                label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: foregroundColor,
-                  fontWeight: FontWeight.w400,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: caption != null
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          caption!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.textSecondary,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2.0),
+                        Text(
+                          label,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: foregroundColor,
+                            fontWeight: valueFontWeight ?? FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    )
+                  : Text(
+                      label,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: foregroundColor,
+                        fontWeight: valueFontWeight ?? FontWeight.w400,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
             ),
-            if (showChevron)
+            if (showChevron) ...[
+              const SizedBox(width: 8.0),
               SvgPicture.asset(
                 AppIcons.chevronRight,
                 width: 16.0,
@@ -67,6 +102,7 @@ class AppMenuTile extends StatelessWidget {
                   BlendMode.srcIn,
                 ),
               ),
+            ],
           ],
         ),
       ),
