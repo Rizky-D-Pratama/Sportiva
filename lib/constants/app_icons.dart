@@ -36,4 +36,9 @@ class AppIcons {
   static const String starOutline = 'assets/icons/star_outline.svg';
   static const String ticket = 'assets/icons/ticket.svg';
   static const String download = 'assets/icons/download.svg';
+  static const String info = 'assets/icons/info.svg';
+  static const String phone = 'assets/icons/phone.svg';
+  static const String mail = 'assets/icons/mail.svg';
+  static const String lockKeyhole = 'assets/icons/lock_keyhole.svg';
+  static const String calendarX = 'assets/icons/calendar_x.svg';
 }
