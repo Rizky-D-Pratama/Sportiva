@@ -20,6 +20,7 @@ class Booking {
   final String? paymentMethod;
   final String? paymentDeadline;
   final DateTime playDateTime; // Used for sorting by closest play date
+  final int? rating; // 1 to 5 rating if finished and rated, null otherwise
 
   const Booking({
     required this.id,
@@ -32,6 +33,7 @@ class Booking {
     this.paymentMethod,
     this.paymentDeadline,
     required this.playDateTime,
+    this.rating,
   });
 
   /// Formatted price helper e.g. "Rp165.000"
@@ -58,6 +60,7 @@ class Booking {
     String? paymentMethod,
     String? paymentDeadline,
     DateTime? playDateTime,
+    int? rating,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -70,6 +73,7 @@ class Booking {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentDeadline: paymentDeadline ?? this.paymentDeadline,
       playDateTime: playDateTime ?? this.playDateTime,
+      rating: rating ?? this.rating,
     );
   }
 }
