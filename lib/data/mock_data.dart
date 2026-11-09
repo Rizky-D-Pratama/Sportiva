@@ -2,6 +2,7 @@ import '../constants/app_icons.dart';
 import '../constants/app_images.dart';
 import '../models/booking.dart';
 import '../models/court.dart';
+import '../models/notification_item.dart';
 import '../models/unavailable_time_slot.dart';
 import '../models/user.dart';
 import '../models/venue.dart';
@@ -299,4 +300,78 @@ class MockData {
       ticketDateText: 'Senin, 5 Okt 2026',
     ),
   ];
+
+  /// Helper to format notification DateTime into: "15 Okt 2026, 09.35 WIB"
+  static String formatNotificationDateTime(DateTime dt) {
+    const shortMonths = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agt',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    final day = dt.day;
+    final month = shortMonths[dt.month - 1];
+    final year = dt.year;
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$day $month $year, $hour.$minute WIB';
+  }
+
+  /// Sample notifications list as per Figma design
+  static final List<NotificationItem> mockNotifications = [
+    NotificationItem(
+      id: 'notif_1',
+      type: NotificationType.pembayaranDikonfirmasi,
+      title: 'Pembayaran dikonfirmasi',
+      content:
+          'AVB-261016-008 · Arena Voli B. Pembayaran diterima, booking terkonfirmasi.',
+      timestamp: DateTime(2026, 10, 15, 9, 35),
+      isRead: false,
+    ),
+    NotificationItem(
+      id: 'notif_2',
+      type: NotificationType.bookingMenungguPembayaran,
+      title: 'Booking menunggu pembayaran',
+      content:
+          'ABD-261016-012 · Arena Badminton D. Status booking: belum bayar.',
+      timestamp: DateTime(2026, 10, 15, 9, 20),
+      isRead: false,
+    ),
+    NotificationItem(
+      id: 'notif_3',
+      type: NotificationType.jamOperasionalBerubah,
+      title: 'Jam operasional berubah',
+      content:
+          'Arena Futsal A buka pukul 10.00 – 21.00 pada 17 Okt 2026 karena perawatan.',
+      timestamp: DateTime(2026, 10, 15, 8, 0),
+      isRead: false,
+    ),
+    NotificationItem(
+      id: 'notif_4',
+      type: NotificationType.pesananOtomatisDibatalkan,
+      title: 'Pesanan otomatis dibatalkan',
+      content:
+          'ABC-261015-006 · Belum dibayar dalam 2 jam sejak pemesanan. Tenggat berakhir; pesanan otomatis batal dan slot dilepas.',
+      timestamp: DateTime(2026, 10, 14, 16, 0),
+      isRead: true,
+    ),
+    NotificationItem(
+      id: 'notif_5',
+      type: NotificationType.informasiLayanan,
+      title: 'Informasi layanan',
+      content:
+          'Layanan bantuan Sportiva tersedia setiap hari pukul 08.00 – 21.00 WIB.',
+      timestamp: DateTime(2026, 10, 14, 10, 0),
+      isRead: true,
+    ),
+  ];
 }
+
