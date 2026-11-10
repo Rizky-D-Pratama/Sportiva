@@ -2,22 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
 import '../data/mock_data.dart';
+import '../models/user.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_menu_tile.dart';
 
 /// Screen for Account Info & Security ("Akun")
 class AccountScreen extends StatelessWidget {
-  const AccountScreen({super.key});
+  final User? user;
+
+  const AccountScreen({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.appColors;
 
-    final user = MockData.currentUser;
-    final phoneText = (user.phoneNumber != null && user.phoneNumber!.isNotEmpty)
-        ? user.phoneNumber!
+    final targetUser = user ?? MockData.currentUser;
+    final phoneText = (targetUser.phoneNumber != null && targetUser.phoneNumber!.isNotEmpty)
+        ? targetUser.phoneNumber!
         : 'Belum ditambahkan';
 
     return Scaffold(
@@ -69,7 +72,7 @@ class AccountScreen extends StatelessWidget {
                     AppMenuTile(
                       iconPath: AppIcons.account,
                       caption: 'Nama',
-                      label: user.name,
+                      label: targetUser.name,
                       valueFontWeight: FontWeight.w500,
                       showChevron: true,
                       onTap: () {
@@ -89,7 +92,7 @@ class AccountScreen extends StatelessWidget {
                     AppMenuTile(
                       iconPath: AppIcons.mail,
                       caption: 'Email',
-                      label: user.email,
+                      label: targetUser.email,
                       valueFontWeight: FontWeight.w500,
                       showChevron: false,
                       onTap: () {
