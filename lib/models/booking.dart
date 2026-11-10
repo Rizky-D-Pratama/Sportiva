@@ -30,6 +30,7 @@ class Booking {
   final String? paymentStatusText;
   final String? userName;
   final String? userPhone;
+  final String? userEmail;
   final String venueName;
   final String? facilitiesText;
   final String? courtImageUrl;
@@ -55,6 +56,7 @@ class Booking {
     this.paymentStatusText,
     this.userName,
     this.userPhone,
+    this.userEmail,
     this.venueName = 'Sportiva Center',
     this.facilitiesText,
     this.courtImageUrl,
@@ -99,6 +101,7 @@ class Booking {
     String? paymentStatusText,
     String? userName,
     String? userPhone,
+    String? userEmail,
     String? venueName,
     String? facilitiesText,
     String? courtImageUrl,
@@ -124,6 +127,7 @@ class Booking {
       paymentStatusText: paymentStatusText ?? this.paymentStatusText,
       userName: userName ?? this.userName,
       userPhone: userPhone ?? this.userPhone,
+      userEmail: userEmail ?? this.userEmail,
       venueName: venueName ?? this.venueName,
       facilitiesText: facilitiesText ?? this.facilitiesText,
       courtImageUrl: courtImageUrl ?? this.courtImageUrl,

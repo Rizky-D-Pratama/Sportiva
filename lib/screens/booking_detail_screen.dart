@@ -14,10 +14,12 @@ import 'booking_ticket_screen.dart';
 /// Read-only Booking Detail Screen
 class BookingDetailScreen extends StatelessWidget {
   final Booking booking;
+  final bool isAdminView;
 
   const BookingDetailScreen({
     super.key,
     required this.booking,
+    this.isAdminView = false,
   });
 
   @override
@@ -249,6 +251,13 @@ class BookingDetailScreen extends StatelessWidget {
                             label: 'Nama pemesan',
                             value: userNameText,
                           ),
+                          if (isAdminView) ...[
+                            const SizedBox(height: 12.0),
+                            AppInfoRow(
+                              label: 'Email',
+                              value: booking.userEmail ?? 'shendy@gmail.com',
+                            ),
+                          ],
                           const SizedBox(height: 12.0),
                           AppInfoRow(
                             label: 'Nomor telepon',
@@ -327,8 +336,8 @@ class BookingDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Sticky actions for Sudah Bayar status ONLY
-            if (isSudahBayar)
+            // Sticky actions for Sudah Bayar status ONLY in User View
+            if (isSudahBayar && !isAdminView)
               AppStickyBottomBar(
                 child: AppButton(
                   label: 'Lihat Tiket Booking',
