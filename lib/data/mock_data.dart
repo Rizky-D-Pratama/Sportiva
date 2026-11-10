@@ -1,17 +1,22 @@
+import 'package:flutter/material.dart';
 import '../constants/app_icons.dart';
 import '../constants/app_images.dart';
 import '../models/admin_dashboard_stats.dart';
+import '../models/admin_report.dart';
 import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/notification_item.dart';
 import '../models/unavailable_time_slot.dart';
 import '../models/user.dart';
 import '../models/venue.dart';
+import '../utils/date_format_helper.dart';
 
 /// Mock Data source containing sample data for Sportiva app
 class MockData {
   static const String userName = 'Arya Ghiffary Habyantara';
   static const String adminName = 'Rizky';
+  static const String adminFullName = 'Rizky Doni Pratama';
+  static const String adminEmail = 'zydon@sportiva.id';
   static const String welcomeGreeting = 'Selamat Datang 👋';
   static const String profilePhotoUrl = AppImages.blankProfile;
   static const String userPhone = '0812 3456 7890';
@@ -27,8 +32,8 @@ class MockData {
 
   static final User adminUser = User(
     id: 'admin_1',
-    name: 'Rizky',
-    email: 'admin@sportiva.com',
+    name: adminFullName,
+    email: adminEmail,
     profilePhotoUrl: AppImages.blankProfile,
     phoneNumber: '0812 9999 8888',
     joinedDate: DateTime(2026, 1, 1),
@@ -452,5 +457,170 @@ class MockData {
       ticketDateText: 'Kamis, 15 Okt 2026',
     ),
   ];
+
+  /// Generates deterministic mock report data for any given date range.
+  static AdminReportSummary getAdminReport(DateTimeRange range) {
+    final start = DateTime(range.start.year, range.start.month, range.start.day);
+    final end = DateTime(range.end.year, range.end.month, range.end.day);
+
+    int totalDibayar = 0;
+    int totalMenunggu = 0;
+    int totalBatal = 0;
+    double totalRevenueJuta = 0.0;
+
+    int futsalCount = 0;
+    double futsalRev = 0.0;
+    int voliCount = 0;
+    double voliRev = 0.0;
+    int basketCount = 0;
+    double basketRev = 0.0;
+    int badmintonCount = 0;
+    double badmintonRev = 0.0;
+
+    final List<Map<String, dynamic>> dailyEntries = [];
+
+    DateTime curr = start;
+    while (!curr.isAfter(end)) {
+      final day = curr.day;
+      final weekday = curr.weekday;
+
+      final dibayar = 3 + ((day * 7 + weekday * 3) % 3);
+      final menunggu = (day % 5 == 0) ? 1 : 0;
+      final batal = (day % 15 == 0) ? 1 : 0;
+
+      final dailyRevenue = dibayar * 0.12;
+
+      totalDibayar += dibayar;
+      totalMenunggu += menunggu;
+      totalBatal += batal;
+      totalRevenueJuta += dailyRevenue;
+
+      final fCount = (dibayar * 0.40).round();
+      final vCount = (dibayar * 0.25).round();
+      final bCount = (dibayar * 0.20).round();
+      final dCount = (dibayar - fCount - vCount - bCount).clamp(0, 999);
+
+      futsalCount += fCount;
+      futsalRev += fCount * 0.15;
+
+      voliCount += vCount;
+      voliRev += vCount * 0.10;
+
+      basketCount += bCount;
+      basketRev += bCount * 0.12;
+
+      badmintonCount += dCount;
+      badmintonRev += dCount * 0.08;
+
+      dailyEntries.add({
+        'date': curr,
+        'revenue': dailyRevenue,
+        'dibayar': dibayar,
+      });
+
+      curr = curr.add(const Duration(days: 1));
+    }
+
+    final totalBooking = totalDibayar + totalMenunggu + totalBatal;
+    final dayCount = end.difference(start).inDays + 1;
+
+    String chartTitle;
+    List<double> chartValues = [];
+    List<String> chartValueLabels = [];
+    List<String> chartLabels = [];
+
+    if (dayCount <= 7) {
+      chartTitle = 'Pendapatan harian';
+      for (final entry in dailyEntries) {
+        final d = entry['date'] as DateTime;
+        final rev = entry['revenue'] as double;
+        chartValues.add(rev);
+        chartValueLabels.add(DateFormatHelper.formatChartValueLabel(rev));
+        chartLabels.add(DateFormatHelper.dayNames[d.weekday - 1].substring(0, 3));
+      }
+    } else if (dayCount <= 49) {
+      chartTitle = 'Pendapatan mingguan';
+      int weekIdx = 1;
+      for (int i = 0; i < dailyEntries.length; i += 7) {
+        final chunk = dailyEntries.sublist(
+          i,
+          (i + 7 > dailyEntries.length) ? dailyEntries.length : i + 7,
+        );
+        final chunkRev = chunk.fold<double>(
+          0.0,
+          (sum, item) => sum + (item['revenue'] as double),
+        );
+        chartValues.add(chunkRev);
+        chartValueLabels.add(DateFormatHelper.formatChartValueLabel(chunkRev));
+        chartLabels.add('M$weekIdx');
+        weekIdx++;
+      }
+    } else {
+      chartTitle = 'Pendapatan bulanan';
+      final Map<int, double> monthRevenues = {};
+      final Map<int, int> monthNamesMap = {};
+
+      for (final entry in dailyEntries) {
+        final d = entry['date'] as DateTime;
+        final key = d.year * 100 + d.month;
+        monthRevenues[key] = (monthRevenues[key] ?? 0.0) + (entry['revenue'] as double);
+        monthNamesMap[key] = d.month;
+      }
+
+      monthRevenues.forEach((key, rev) {
+        final m = monthNamesMap[key]!;
+        chartValues.add(rev);
+        chartValueLabels.add(DateFormatHelper.formatChartValueLabel(rev));
+        chartLabels.add(DateFormatHelper.shortMonthNames[m - 1]);
+      });
+    }
+
+    final rangeStr = DateFormatHelper.formatDateRangeInputText(start, end);
+    final chartDateRangeText = '$rangeStr • dalam juta rupiah';
+
+    final popularCourts = [
+      PopularCourtEntry(
+        courtName: 'Arena Futsal A',
+        bookingCount: futsalCount,
+        revenueJuta: futsalRev,
+      ),
+      PopularCourtEntry(
+        courtName: 'Arena Voli B',
+        bookingCount: voliCount,
+        revenueJuta: voliRev,
+      ),
+      PopularCourtEntry(
+        courtName: 'Arena Basket C',
+        bookingCount: basketCount,
+        revenueJuta: basketRev,
+      ),
+      PopularCourtEntry(
+        courtName: 'Arena Badminton D',
+        bookingCount: badmintonCount,
+        revenueJuta: badmintonRev,
+      ),
+    ];
+
+    popularCourts.sort((a, b) {
+      final cmp = b.bookingCount.compareTo(a.bookingCount);
+      if (cmp != 0) return cmp;
+      return b.revenueJuta.compareTo(a.revenueJuta);
+    });
+
+    return AdminReportSummary(
+      totalBooking: totalBooking,
+      totalRevenueJuta: totalRevenueJuta,
+      dibayarCount: totalDibayar,
+      menungguCount: totalMenunggu,
+      batalCount: totalBatal,
+      chartTitle: chartTitle,
+      chartValues: chartValues,
+      chartValueLabels: chartValueLabels,
+      chartLabels: chartLabels,
+      chartDateRangeText: chartDateRangeText,
+      popularCourts: popularCourts,
+    );
+  }
 }
+
 
