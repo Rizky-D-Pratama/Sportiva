@@ -4,15 +4,28 @@ import '../constants/app_constants.dart';
 import '../constants/app_icons.dart';
 import '../theme/app_theme.dart';
 
-/// Reusable AppCalendar widget for selecting a booking date
+/// Reusable AppCalendar widget supporting single date selection and range date selection.
 class AppCalendar extends StatefulWidget {
-  final DateTime selectedDate;
-  final ValueChanged<DateTime> onDateSelected;
+  final DateTime? selectedDate;
+  final ValueChanged<DateTime>? onDateSelected;
+
+  final bool isRangeMode;
+  final DateTimeRange? selectedRange;
+  final ValueChanged<DateTimeRange>? onRangeSelected;
+  final DateTime? minDate;
+  final DateTime? maxDate;
+  final int maxRangeDays;
 
   const AppCalendar({
     super.key,
-    required this.selectedDate,
-    required this.onDateSelected,
+    this.selectedDate,
+    this.onDateSelected,
+    this.isRangeMode = false,
+    this.selectedRange,
+    this.onRangeSelected,
+    this.minDate,
+    this.maxDate,
+    this.maxRangeDays = 180,
   });
 
   @override
@@ -21,6 +34,8 @@ class AppCalendar extends StatefulWidget {
 
 class _AppCalendarState extends State<AppCalendar> {
   late DateTime _displayedMonth;
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
 
   static const List<String> _monthNames = [
     'Januari',
@@ -50,11 +65,37 @@ class _AppCalendarState extends State<AppCalendar> {
   @override
   void initState() {
     super.initState();
+    final initialRefDate = widget.isRangeMode
+        ? (widget.selectedRange?.start ?? DateTime.now())
+        : (widget.selectedDate ?? DateTime.now());
+
     _displayedMonth = DateTime(
-      widget.selectedDate.year,
-      widget.selectedDate.month,
+      initialRefDate.year,
+      initialRefDate.month,
       1,
     );
+
+    if (widget.isRangeMode && widget.selectedRange != null) {
+      _rangeStart = widget.selectedRange!.start;
+      _rangeEnd = widget.selectedRange!.end;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AppCalendar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRangeMode && widget.selectedRange != oldWidget.selectedRange) {
+      final newStart = widget.selectedRange?.start;
+      final newEnd = widget.selectedRange?.end;
+      if (_rangeEnd == null && newStart == _rangeStart && newEnd == newStart) {
+        // Preserve active start-date selection state while waiting for end-date tap
+      } else {
+        setState(() {
+          _rangeStart = newStart;
+          _rangeEnd = newEnd;
+        });
+      }
+    }
   }
 
   void _previousMonth() {
@@ -81,30 +122,61 @@ class _AppCalendarState extends State<AppCalendar> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  void _handleDateTap(DateTime cellDate) {
+    if (!widget.isRangeMode) {
+      widget.onDateSelected?.call(cellDate);
+      return;
+    }
+
+    setState(() {
+      if (_rangeStart == null || _rangeEnd != null) {
+        _rangeStart = cellDate;
+        _rangeEnd = null;
+        widget.onRangeSelected?.call(DateTimeRange(start: cellDate, end: cellDate));
+      } else {
+        if (cellDate.isBefore(_rangeStart!)) {
+          _rangeStart = cellDate;
+          _rangeEnd = null;
+          widget.onRangeSelected?.call(DateTimeRange(start: cellDate, end: cellDate));
+        } else {
+          DateTime endToSet = cellDate;
+          final daysDiff = cellDate.difference(_rangeStart!).inDays + 1;
+          if (daysDiff > widget.maxRangeDays) {
+            endToSet = _rangeStart!.add(Duration(days: widget.maxRangeDays - 1));
+          }
+          _rangeEnd = endToSet;
+          widget.onRangeSelected?.call(DateTimeRange(start: _rangeStart!, end: endToSet));
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.appColors;
 
     final cardBg = colors.surfaceCard;
-    final borderColor =
-        colors.borderDefault;
-    final textPrimary =
-        colors.textPrimary;
-    final textSecondary =
-        colors.textSecondary;
+    final borderColor = colors.borderDefault;
+    final textPrimary = colors.textPrimary;
+    final textSecondary = colors.textSecondary;
     final primaryColor = theme.colorScheme.primary;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final maxDate = today.add(
-      const Duration(days: AppConstants.maxAdvanceBookingDays),
-    );
+
+    final effectiveMinDate = widget.minDate ??
+        (widget.isRangeMode
+            ? null
+            : today);
+    final effectiveMaxDate = widget.maxDate ??
+        (widget.isRangeMode
+            ? today
+            : today.add(const Duration(days: AppConstants.maxAdvanceBookingDays)));
 
     final monthTitle =
         '${_monthNames[_displayedMonth.month - 1]} ${_displayedMonth.year}';
 
-    // Calendar grid calculations
     final firstDayOfMonth =
         DateTime(_displayedMonth.year, _displayedMonth.month, 1);
     final daysInMonth =
@@ -215,28 +287,52 @@ class _AppCalendarState extends State<AppCalendar> {
                 dayNumber,
               );
 
-              final isSelectable =
-                  !cellDate.isBefore(today) && !cellDate.isAfter(maxDate);
-              final isSelected = _isSameDay(cellDate, widget.selectedDate);
+              final isBeforeMin = effectiveMinDate != null && cellDate.isBefore(effectiveMinDate);
+              final isAfterMax = cellDate.isAfter(effectiveMaxDate);
+              final isSelectable = !isBeforeMin && !isAfterMax;
 
               Color cellBg = Colors.transparent;
               Color textCol = textSecondary;
+              FontWeight fontWeight = FontWeight.w400;
 
-              if (isSelected) {
-                cellBg = primaryColor;
-                textCol = textPrimary;
-              } else if (isSelectable) {
-                textCol = textPrimary;
+              if (widget.isRangeMode) {
+                final isStart = _rangeStart != null && _isSameDay(cellDate, _rangeStart!);
+                final isEnd = _rangeEnd != null && _isSameDay(cellDate, _rangeEnd!);
+                final isInRange = _rangeStart != null &&
+                    _rangeEnd != null &&
+                    cellDate.isAfter(_rangeStart!) &&
+                    cellDate.isBefore(_rangeEnd!);
+
+                if (isStart || isEnd) {
+                  cellBg = primaryColor;
+                  textCol = textPrimary;
+                  fontWeight = FontWeight.w600;
+                } else if (isInRange) {
+                  cellBg = colors.successBackground;
+                  textCol = colors.successForeground;
+                  fontWeight = FontWeight.w500;
+                } else if (isSelectable) {
+                  textCol = textPrimary;
+                } else {
+                  textCol = textSecondary.withValues(alpha: 0.35);
+                }
               } else {
-                textCol = textSecondary.withValues(alpha: 0.35);
+                final isSelected = widget.selectedDate != null &&
+                    _isSameDay(cellDate, widget.selectedDate!);
+
+                if (isSelected) {
+                  cellBg = primaryColor;
+                  textCol = textPrimary;
+                  fontWeight = FontWeight.w600;
+                } else if (isSelectable) {
+                  textCol = textPrimary;
+                } else {
+                  textCol = textSecondary.withValues(alpha: 0.35);
+                }
               }
 
               return InkWell(
-                onTap: isSelectable
-                    ? () {
-                        widget.onDateSelected(cellDate);
-                      }
-                    : null,
+                onTap: isSelectable ? () => _handleDateTap(cellDate) : null,
                 borderRadius: BorderRadius.circular(7.0),
                 child: Container(
                   decoration: BoxDecoration(
@@ -249,8 +345,7 @@ class _AppCalendarState extends State<AppCalendar> {
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: textCol,
                       fontSize: 10.0,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: fontWeight,
                     ),
                   ),
                 ),
