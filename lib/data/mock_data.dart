@@ -1,5 +1,6 @@
 import '../constants/app_icons.dart';
 import '../constants/app_images.dart';
+import '../models/admin_dashboard_stats.dart';
 import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/notification_item.dart';
@@ -10,6 +11,7 @@ import '../models/venue.dart';
 /// Mock Data source containing sample data for Sportiva app
 class MockData {
   static const String userName = 'Arya Ghiffary Habyantara';
+  static const String adminName = 'Rizky';
   static const String welcomeGreeting = 'Selamat Datang 👋';
   static const String profilePhotoUrl = AppImages.blankProfile;
   static const String userPhone = '0812 3456 7890';
@@ -21,6 +23,15 @@ class MockData {
     profilePhotoUrl: AppImages.blankProfile,
     phoneNumber: '0812 3456 7890',
     joinedDate: DateTime(2026, 10, 1),
+  );
+
+  static final User adminUser = User(
+    id: 'admin_1',
+    name: 'Rizky',
+    email: 'admin@sportiva.com',
+    profilePhotoUrl: AppImages.blankProfile,
+    phoneNumber: '0812 9999 8888',
+    joinedDate: DateTime(2026, 1, 1),
   );
 
   /// Helper to format user joined date into Indonesian text: "Sobat Sport sejak {Bulan} {Tahun}"
@@ -371,6 +382,74 @@ class MockData {
           'Layanan bantuan Sportiva tersedia setiap hari pukul 08.00 – 21.00 WIB.',
       timestamp: DateTime(2026, 10, 14, 10, 0),
       isRead: true,
+    ),
+  ];
+
+  /// Mock statistics data for Admin Dashboard
+  /// TODO: Connect to backend API.
+  static final AdminDashboardStats mockAdminDashboardStats = AdminDashboardStats(
+    totalBookingMonth: 128,
+    monthName: 'Oktober',
+    todayBookingCount: 4,
+    totalCourtsCount: 4,
+    monthlyRevenueJuta: 14.4,
+    weeklyBookingCounts: const [8.0, 12.0, 10.0, 14.0, 16.0, 18.0, 6.0],
+    weekDayLabels: const ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+    weekDateRangeText: '5–11 Oktober 2026',
+  );
+
+  /// Mock recent bookings list for Admin Dashboard
+  /// TODO: Connect to backend API.
+  static final List<Booking> mockAdminRecentBookings = [
+    Booking(
+      id: 'admin_booking_1',
+      bookingCode: 'ABSC-261015-004',
+      courtName: 'Arena Basket C',
+      date: '15 Okt 2026',
+      timeRange: '19.00 – 21.00 WIB',
+      totalPayment: 245000,
+      status: BookingStatus.sudahBayar,
+      paymentMethod: 'Transfer BCA',
+      paymentDeadline: null,
+      playDateTime: DateTime(2026, 10, 15, 19, 0),
+      pricePerHour: 120000,
+      serviceFee: 5000,
+      durationHours: 2,
+      createdDateText: '15 Oktober 2026, 14.00 WIB',
+      paymentStatusText: '15 Oktober 2026, 14.05 WIB',
+      userName: 'Shendy',
+      userEmail: 'shendy@gmail.com',
+      userPhone: '0812 3456 7890',
+      venueName: 'Sportiva Center',
+      facilitiesText: 'Basket • Indoor • Parquet • Toilet',
+      courtImageUrl: AppImages.basket,
+      fullDateText: '15 Oktober 2026',
+      ticketDateText: 'Kamis, 15 Okt 2026',
+    ),
+    Booking(
+      id: 'admin_booking_2',
+      bookingCode: 'AVB-261015-003',
+      courtName: 'Arena Voli B',
+      date: '15 Okt 2026',
+      timeRange: '18.00 – 20.00 WIB',
+      totalPayment: 305000,
+      status: BookingStatus.belumBayar,
+      paymentMethod: 'Transfer Bank',
+      paymentDeadline: 'Bayar sebelum 15 Okt 2026, 18.00 WIB',
+      playDateTime: DateTime(2026, 10, 15, 18, 0),
+      pricePerHour: 150000,
+      serviceFee: 5000,
+      durationHours: 2,
+      createdDateText: '15 Oktober 2026, 13.00 WIB',
+      paymentStatusText: 'Belum bayar',
+      userName: 'Arya Ghiffary Habyantara',
+      userEmail: 'habygantenk@gmail.com',
+      userPhone: '0812 3456 7890',
+      venueName: 'Sportiva Center',
+      facilitiesText: 'Voli • Indoor • Net standar • Toilet',
+      courtImageUrl: AppImages.volleyball,
+      fullDateText: '15 Oktober 2026',
+      ticketDateText: 'Kamis, 15 Okt 2026',
     ),
   ];
 }
