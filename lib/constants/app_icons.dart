@@ -41,4 +41,9 @@ class AppIcons {
   static const String mail = 'assets/icons/mail.svg';
   static const String lockKeyhole = 'assets/icons/lock_keyhole.svg';
   static const String calendarX = 'assets/icons/calendar_x.svg';
+  static const String shieldCheck = 'assets/icons/shield_check.svg';
+  static const String calendarCheck = 'assets/icons/calendar_check.svg';
+  static const String imagePlus = 'assets/icons/image_plus.svg';
+  static const String eyeOff = 'assets/icons/eye_off.svg';
+  static const String eye = 'assets/icons/eye.svg';
 }
