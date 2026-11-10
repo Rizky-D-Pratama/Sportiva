@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'data/court_repository.dart';
-import 'screens/main_shell.dart';
+import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -12,13 +11,11 @@ class SportivaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courtRepository = FakeCourtRepository();
-
     return MaterialApp(
       title: 'Sportiva',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: MainShell(repository: courtRepository),
+      home: const SplashScreen(),
     );
   }
 }
