@@ -3,6 +3,8 @@ import '../../constants/app_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/nav_item.dart';
 import 'admin_dashboard_screen.dart';
+import 'admin_profile_screen.dart';
+import 'admin_report_screen.dart';
 
 /// AdminShell manages the persistent bottom navigation bar and page switching for Admin side.
 class AdminShell extends StatefulWidget {
@@ -26,10 +28,8 @@ class _AdminShellState extends State<AdminShell> {
       _buildPlaceholderPage('Manajemen Lapangan'),
       // TODO: Replace with real Booking management screen in future sessions.
       _buildPlaceholderPage('Manajemen Booking'),
-      // TODO: Replace with real Laporan screen in future sessions.
-      _buildPlaceholderPage('Laporan Admin'),
-      // TODO: Replace with real Profil Admin screen in future sessions.
-      _buildPlaceholderPage('Profil Admin'),
+      const AdminReportScreen(),
+      const AdminProfileScreen(),
     ];
   }
 
