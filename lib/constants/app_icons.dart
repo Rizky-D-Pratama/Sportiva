@@ -46,4 +46,8 @@ class AppIcons {
   static const String imagePlus = 'assets/icons/image_plus.svg';
   static const String eyeOff = 'assets/icons/eye_off.svg';
   static const String eye = 'assets/icons/eye.svg';
+  static const String plus = 'assets/icons/plus.svg';
+  static const String layoutDashboard = 'assets/icons/layout_dashboard.svg';
+  static const String soccerField = 'assets/icons/soccer_field.svg';
+  static const String chart = 'assets/icons/chart.svg';
 }
