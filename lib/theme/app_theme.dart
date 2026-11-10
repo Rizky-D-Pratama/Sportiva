@@ -212,6 +212,13 @@ class AppTheme {
         onPrimaryContainer: statusSuccessForeground,
       ),
       textTheme: const TextTheme(
+        headlineLarge: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 30.0,
+          fontWeight: FontWeight.w600,
+          color: textPrimaryColor,
+          height: 1.25,
+        ),
         headlineMedium: TextStyle(
           fontFamily: 'Poppins',
           fontSize: 20.0,
