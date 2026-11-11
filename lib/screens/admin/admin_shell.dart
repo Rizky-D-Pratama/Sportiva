@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../constants/app_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/nav_item.dart';
+import 'admin_bookings_screen.dart';
+import 'admin_courts_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'admin_profile_screen.dart';
 import 'admin_report_screen.dart';
@@ -24,29 +26,11 @@ class _AdminShellState extends State<AdminShell> {
     super.initState();
     _pages = [
       const AdminDashboardScreen(),
-      // TODO: Replace with real Lapangan management screen in future sessions.
-      _buildPlaceholderPage('Manajemen Lapangan'),
-      // TODO: Replace with real Booking management screen in future sessions.
-      _buildPlaceholderPage('Manajemen Booking'),
+      const AdminCourtsScreen(),
+      const AdminBookingsScreen(),
       const AdminReportScreen(),
       const AdminProfileScreen(),
     ];
-  }
-
-  Widget _buildPlaceholderPage(String title) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          '$title\n(Segera Hadir)',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 16.0,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondaryColor,
-          ),
-        ),
-      ),
-    );
   }
 
   void _onTabTapped(int index) {
