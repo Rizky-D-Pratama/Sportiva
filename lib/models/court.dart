@@ -12,6 +12,7 @@ class Court {
   final int reviewCount;
   final String imageUrl;
   final bool isFullToday;
+  final bool isActive;
   final List<String> facilities;
   final String description;
   final List<UnavailableTimeSlot> unavailableTimeSlots;
@@ -26,6 +27,7 @@ class Court {
     required this.reviewCount,
     required this.imageUrl,
     this.isFullToday = false,
+    this.isActive = true,
     this.facilities = const ['Indoor', 'Parkir', 'Toilet', 'Ruang ganti'],
     this.description =
         'Rumput sintetis premium, pencahayaan terang, dan ruang ganti bersih. Cocok untuk latihan maupun pertandingan tim.',
@@ -49,5 +51,37 @@ class Court {
   String get formattedRating {
     final ratingStr = rating.toString().replaceAll('.', ',');
     return '★ $ratingStr ($reviewCount)';
+  }
+
+  Court copyWith({
+    String? id,
+    String? name,
+    String? category,
+    Venue? venue,
+    int? pricePerHour,
+    double? rating,
+    int? reviewCount,
+    String? imageUrl,
+    bool? isFullToday,
+    bool? isActive,
+    List<String>? facilities,
+    String? description,
+    List<UnavailableTimeSlot>? unavailableTimeSlots,
+  }) {
+    return Court(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      venue: venue ?? this.venue,
+      pricePerHour: pricePerHour ?? this.pricePerHour,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isFullToday: isFullToday ?? this.isFullToday,
+      isActive: isActive ?? this.isActive,
+      facilities: facilities ?? this.facilities,
+      description: description ?? this.description,
+      unavailableTimeSlots: unavailableTimeSlots ?? this.unavailableTimeSlots,
+    );
   }
 }
