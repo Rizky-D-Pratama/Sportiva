@@ -9,12 +9,14 @@ class SearchBarWidget extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final bool readOnly;
+  final String? hintText;
 
   const SearchBarWidget({
     super.key,
     this.onChanged,
     this.onTap,
     this.readOnly = false,
+    this.hintText,
   });
 
   @override
@@ -60,7 +62,7 @@ class SearchBarWidget extends StatelessWidget {
                 color: textPrimary,
               ),
               decoration: InputDecoration(
-                hintText: MockData.searchPlaceholder,
+                hintText: hintText ?? MockData.searchPlaceholder,
                 hintStyle: theme.textTheme.labelMedium?.copyWith(
                   color: textSecondary,
                 ),
