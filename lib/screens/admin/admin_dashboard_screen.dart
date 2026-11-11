@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_icons.dart';
 import '../../constants/app_images.dart';
+import '../../data/court_repository.dart';
 import '../../data/mock_data.dart';
 import '../../models/booking.dart';
 import '../../theme/app_theme.dart';
@@ -25,11 +26,21 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   late List<Booking> _recentBookings;
+  int _totalCourtsCount = MockData.mockAdminDashboardStats.totalCourtsCount;
 
   @override
   void initState() {
     super.initState();
     _recentBookings = List.from(MockData.mockAdminRecentBookings);
+    _loadCourtCount();
+  }
+
+  Future<void> _loadCourtCount() async {
+    final courts = await FakeCourtRepository().getAdminCourts();
+    if (!mounted) return;
+    setState(() {
+      _totalCourtsCount = courts.length;
+    });
   }
 
   void _showCancelConfirmationModal(Booking booking) {
@@ -154,7 +165,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               Expanded(
                 child: AdminStatCard(
-                  value: stats.totalCourtsCount.toString(),
+                  value: _totalCourtsCount.toString(),
                   label: 'Total Lapangan',
                   iconPath: AppIcons.volleyball,
                 ),
