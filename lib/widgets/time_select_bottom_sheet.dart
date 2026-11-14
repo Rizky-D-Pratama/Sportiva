@@ -4,20 +4,27 @@ import '../models/unavailable_time_slot.dart';
 import '../theme/app_theme.dart';
 import 'app_bottom_sheet.dart';
 
-/// Bottom sheet untuk memilih jam mulai booking ("Jam mulai").
+/// Bottom sheet untuk memilih jam (mulai / selesai).
 class TimeSelectBottomSheet extends StatelessWidget {
   final DateTime selectedDate;
   final List<UnavailableTimeSlot> unavailableSlots;
   final ValueChanged<int> onTimeSelected;
+  final String title;
+  final int minHour;
+  final int maxHour;
+  final int? restrictAfterHour; // If specified, only hours strictly AFTER this hour can be selected
 
   const TimeSelectBottomSheet({
     super.key,
     required this.selectedDate,
     required this.unavailableSlots,
     required this.onTimeSelected,
+    this.title = 'Pilih jam mulai',
+    this.minHour = AppConstants.operationalStartHour,
+    this.maxHour = AppConstants.operationalEndHour,
+    this.restrictAfterHour,
   });
 
-  // TODO: ketersediaan jam nanti dihitung di server.
   bool _isHourUnavailable(int hour) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -25,7 +32,13 @@ class TimeSelectBottomSheet extends StatelessWidget {
         selectedDate.month == today.month &&
         selectedDate.day == today.day;
 
-    if (isToday && hour <= now.hour) return true;
+    if (restrictAfterHour != null && hour <= restrictAfterHour!) {
+      return true;
+    }
+
+    if (isToday && hour <= now.hour && restrictAfterHour == null) {
+      return true;
+    }
 
     for (final slot in unavailableSlots) {
       if (hour >= slot.startHour && hour < slot.endHour) return true;
@@ -36,14 +49,11 @@ class TimeSelectBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hours = [
-      for (int h = AppConstants.operationalStartHour;
-      h < AppConstants.operationalEndHour;
-      h++)
-        h,
+      for (int h = minHour; h <= maxHour; h++) h,
     ];
 
     return AppBottomSheet(
-      title: 'Pilih jam mulai',
+      title: title,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.45,
@@ -52,12 +62,15 @@ class TimeSelectBottomSheet extends StatelessWidget {
           shrinkWrap: true,
           itemCount: hours.length,
           separatorBuilder: (context, index) =>
-          const SizedBox(height: AppTheme.paddingSmall),
+              const SizedBox(height: AppTheme.paddingSmall),
           itemBuilder: (context, index) {
             final hour = hours[index];
+            final hourText = hour < 10 ? '0$hour.00 WIB' : '$hour.00 WIB';
+            final isUnavailable = _isHourUnavailable(hour);
+
             return _TimeSlotRow(
-              label: '${hour.toString().padLeft(2, '0')}.00 WIB',
-              isUnavailable: _isHourUnavailable(hour),
+              label: hourText,
+              isUnavailable: isUnavailable,
               onTap: () {
                 onTimeSelected(hour);
                 Navigator.of(context).pop();
@@ -112,7 +125,7 @@ class _TimeSlotRow extends StatelessWidget {
                         ? colors.neutralForeground
                         : colors.textPrimary,
                     fontWeight:
-                    isUnavailable ? FontWeight.w400 : FontWeight.w600,
+                        isUnavailable ? FontWeight.w400 : FontWeight.w600,
                   ),
                 ),
                 if (isUnavailable)
