@@ -12,6 +12,12 @@ class AppConstants {
   /// Maximum advance booking days allowed (14 days from today)
   static const int maxAdvanceBookingDays = 14;
 
+  /// Maximum advance venue/court closure days allowed (90 days from today)
+  static const int maxVenueClosureAdvanceDays = 90;
+
+  /// Maximum character length allowed for closure reason
+  static const int maxClosureReasonLength = 40;
+
   /// App version
   static const String appVersion = '1.0.0';
 
