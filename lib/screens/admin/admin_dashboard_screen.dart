@@ -14,6 +14,8 @@ import '../../widgets/app_modal.dart';
 import '../../widgets/app_notification_bell.dart';
 import '../../widgets/weekly_bar_chart_card.dart';
 import '../booking_detail_screen.dart';
+import 'admin_bookings_screen.dart';
+import 'admin_court_form_screen.dart';
 
 /// Admin Dashboard Screen displaying greeting header, summary stat cards,
 /// weekly booking chart, quick actions, and recent bookings.
@@ -65,6 +67,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       secondaryButtonLabel: 'Kembali',
       onSecondaryPressed: () => Navigator.pop(context),
     );
+  }
+
+  Future<void> _openAddCourtForm() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminCourtFormScreen(),
+      ),
+    );
+
+    if (result == true && mounted) {
+      _loadCourtCount();
+    }
   }
 
   @override
@@ -211,7 +226,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {}, // TODO: Manage Courts screen
+                  onTap: _openAddCourtForm,
                   borderRadius: BorderRadius.circular(AppTheme.borderRadiusPill),
                   child: const AppBadge(
                     label: 'Lapangan',
@@ -252,7 +267,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
               InkWell(
-                onTap: () {}, // TODO: Booking Management tab
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdminBookingsScreen(),
+                    ),
+                  );
+                },
                 child: Text(
                   'Lihat Semua',
                   style: theme.textTheme.labelLarge?.copyWith(

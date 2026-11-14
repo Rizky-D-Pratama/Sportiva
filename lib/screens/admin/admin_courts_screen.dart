@@ -8,6 +8,8 @@ import '../../widgets/app_button.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/app_modal.dart';
+import '../../widgets/app_sticky_bottom_bar.dart';
+import 'admin_court_form_screen.dart';
 
 enum CourtFilter { semua, aktif, nonaktif }
 
@@ -74,6 +76,22 @@ class _AdminCourtsScreenState extends State<AdminCourtsScreen> {
       secondaryButtonLabel: 'Kembali',
       onSecondaryPressed: () => Navigator.pop(context),
     );
+  }
+
+  Future<void> _navigateToForm({Court? court}) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdminCourtFormScreen(
+          court: court,
+          courtRepository: _repository,
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      _loadCourts();
+    }
   }
 
   @override
@@ -189,9 +207,7 @@ class _AdminCourtsScreenState extends State<AdminCourtsScreen> {
                               padding: const EdgeInsets.only(bottom: 12.0),
                               child: AdminCourtCard(
                                 court: court,
-                                onEdit: () {
-                                  // Edit does nothing (screen not built yet)
-                                },
+                                onEdit: () => _navigateToForm(court: court),
                                 onDelete: () => _showDeleteConfirmationModal(court),
                               ),
                             );
@@ -201,26 +217,11 @@ class _AdminCourtsScreenState extends State<AdminCourtsScreen> {
             ),
 
             // Sticky Bottom Button: Tambah Lapangan
-            Container(
-              decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor,
-                border: Border(
-                  top: BorderSide(
-                    color: colors.borderDefault,
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.paddingXLarge,
-                vertical: 12.0,
-              ),
+            AppStickyBottomBar(
               child: AppButton(
                 label: 'Tambah Lapangan',
                 leadingIconPath: AppIcons.plus,
-                onPressed: () {
-                  // Tambah Lapangan does nothing (screen not built yet)
-                },
+                onPressed: () => _navigateToForm(),
               ),
             ),
           ],
