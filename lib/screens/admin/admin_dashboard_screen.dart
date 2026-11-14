@@ -16,6 +16,7 @@ import '../../widgets/weekly_bar_chart_card.dart';
 import '../booking_detail_screen.dart';
 import 'admin_bookings_screen.dart';
 import 'admin_court_form_screen.dart';
+import 'admin_schedule_screen.dart';
 
 /// Admin Dashboard Screen displaying greeting header, summary stat cards,
 /// weekly booking chart, quick actions, and recent bookings.
@@ -241,7 +242,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {}, // TODO: Schedule management screen
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminScheduleScreen(),
+                      ),
+                    );
+                  },
                   borderRadius: BorderRadius.circular(AppTheme.borderRadiusPill),
                   child: const AppBadge(
                     label: 'Atur jadwal',
