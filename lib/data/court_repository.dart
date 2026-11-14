@@ -8,6 +8,8 @@ abstract class CourtRepository {
   Future<List<Court>> getCourtsByCategory(String category);
   Future<List<Court>> searchCourts(String query);
   Future<List<Court>> getAdminCourts();
+  Future<void> addCourt(Court court);
+  Future<void> updateCourt(Court court);
   Future<void> deleteCourt(String courtId);
   Future<String> getUserName();
   Future<String> getGreeting();
@@ -56,6 +58,23 @@ class FakeCourtRepository implements CourtRepository {
   Future<List<Court>> getAdminCourts() async {
     await Future.delayed(const Duration(milliseconds: 50));
     return List.from(_adminCourts);
+  }
+
+  @override
+  Future<void> addCourt(Court court) async {
+    await Future.delayed(const Duration(milliseconds: 50));
+    // TODO: Di server ini disimpan di database dan foto di storage.
+    _adminCourts.add(court);
+  }
+
+  @override
+  Future<void> updateCourt(Court court) async {
+    await Future.delayed(const Duration(milliseconds: 50));
+    // TODO: Di server ini disimpan di database dan foto di storage.
+    final index = _adminCourts.indexWhere((c) => c.id == court.id);
+    if (index != -1) {
+      _adminCourts[index] = court;
+    }
   }
 
   @override
