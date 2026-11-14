@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
 
 /// Kolom berlabel: label di atas, kotak berborder di bawah.
-/// - Read-only: isi [child] saja.
+/// - Read-only / Custom child: isi [child] saja.
 /// - Bisa diketuk: isi [onTap] dan biasanya [trailingIconPath].
-/// - Input: [child] berisi TextField.
+/// - Input Teks: isi [controller], [hintText], [keyboardType], dll. (tanpa [child]).
 /// [enabled] false = tampil nonaktif dan tidak bisa diketuk.
 class AppField extends StatelessWidget {
   final String label;
-  final Widget child;
+  final Widget? child;
   final String? trailingIconPath;
   final VoidCallback? onTap;
   final bool enabled;
@@ -18,10 +19,24 @@ class AppField extends StatelessWidget {
   final Widget? trailingWidget;
   final VoidCallback? onTrailingTap;
 
+  // Text input properties (when child is omitted)
+  final TextEditingController? controller;
+  final String? hintText;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLines;
+  final int? minLines;
+  final int? maxLength;
+  final FocusNode? focusNode;
+  final bool readOnly;
+  final ValueChanged<String>? onChanged;
+  final TextCapitalization textCapitalization;
+  final TextInputAction? textInputAction;
+
   const AppField({
     super.key,
     required this.label,
-    required this.child,
+    this.child,
     this.trailingIconPath,
     this.onTap,
     this.enabled = true,
@@ -29,6 +44,18 @@ class AppField extends StatelessWidget {
     this.helperText,
     this.trailingWidget,
     this.onTrailingTap,
+    this.controller,
+    this.hintText,
+    this.keyboardType,
+    this.inputFormatters,
+    this.maxLines = 1,
+    this.minLines,
+    this.maxLength,
+    this.focusNode,
+    this.readOnly = false,
+    this.onChanged,
+    this.textCapitalization = TextCapitalization.sentences,
+    this.textInputAction,
   });
 
   @override
@@ -40,6 +67,35 @@ class AppField extends StatelessWidget {
     final borderColor = hasError
         ? colors.dangerForeground
         : (enabled ? colors.borderDefault : colors.neutralBackground);
+
+    final Widget contentWidget = child ??
+        TextField(
+          controller: controller,
+          focusNode: focusNode,
+          enabled: enabled,
+          readOnly: readOnly,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          maxLines: maxLines,
+          minLines: minLines,
+          maxLength: maxLength,
+          onChanged: onChanged,
+          textCapitalization: textCapitalization,
+          textInputAction: textInputAction,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.textSecondary,
+            ),
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
+            border: InputBorder.none,
+            counterText: '',
+          ),
+        );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +136,7 @@ class AppField extends StatelessWidget {
                         style: theme.textTheme.bodyMedium!.copyWith(
                           color: colors.textPrimary,
                         ),
-                        child: child,
+                        child: contentWidget,
                       ),
                     ),
                     if (trailingWidget != null) ...[
@@ -89,7 +145,7 @@ class AppField extends StatelessWidget {
                     ] else if (trailingIconPath != null) ...[
                       const SizedBox(width: AppTheme.paddingSmall),
                       InkWell(
-                        onTap: onTrailingTap,
+                        onTap: onTrailingTap ?? (enabled ? onTap : null),
                         borderRadius: BorderRadius.circular(100.0),
                         child: Padding(
                           padding: const EdgeInsets.all(2.0),
