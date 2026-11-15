@@ -29,7 +29,7 @@ class _AdminShellState extends State<AdminShell> {
       const AdminCourtsScreen(),
       const AdminBookingsScreen(),
       const AdminReportScreen(),
-      const AdminProfileScreen(),
+      AdminProfileScreen(),
     ];
   }
 

@@ -38,7 +38,7 @@ class _MainShellState extends State<MainShell> {
         repository: widget.repository,
       ),
       const OrderScreen(),
-      const ProfileScreen(),
+      ProfileScreen(),
     ];
   }
 
