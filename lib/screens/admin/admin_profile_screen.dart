@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_icons.dart';
 import '../../data/mock_data.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import '../../widgets/app_badge.dart';
 import '../../widgets/profile_content.dart';
 import '../../widgets/theme_select_bottom_sheet.dart';
@@ -9,15 +11,20 @@ import '../notification_screen.dart';
 
 /// Admin Profile screen tab for Admin shell
 class AdminProfileScreen extends StatelessWidget {
-  const AdminProfileScreen({super.key});
+  final AuthRepository authRepository;
+
+  AdminProfileScreen({
+    super.key,
+    AuthRepository? authRepository,
+  }) : authRepository = authRepository ?? FakeAuthRepository();
 
   @override
   Widget build(BuildContext context) {
-    final adminUser = MockData.adminUser;
+    final adminUser = authRepository.currentUser ?? FakeAuthRepository.seedAdmin;
 
     return ProfileContentWidget(
-      name: MockData.adminFullName,
-      email: MockData.adminEmail,
+      name: adminUser.name,
+      email: adminUser.email,
       avatarPath: MockData.profilePhotoUrl,
       badgeLabel: 'Admin',
       badgeVariant: AppBadgeVariant.success,
@@ -38,7 +45,10 @@ class AdminProfileScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AccountScreen(user: adminUser),
+                builder: (context) => AccountScreen(
+                  user: adminUser,
+                  authRepository: authRepository,
+                ),
               ),
             );
           },
@@ -60,7 +70,10 @@ class AdminProfileScreen extends StatelessWidget {
           label: 'Keluar',
           isDanger: true,
           onTap: () {
-            ProfileContentWidget.showLogoutModal(context);
+            ProfileContentWidget.showLogoutModal(
+              context,
+              authRepository: authRepository,
+            );
           },
         ),
       ],

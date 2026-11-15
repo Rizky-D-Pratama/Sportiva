@@ -3,6 +3,7 @@ import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/unavailable_time_slot.dart';
 import '../models/venue_closure.dart';
+import 'repositories/auth_repository_impl.dart';
 import 'mock_data.dart';
 
 /// Abstract repository contract for Court (Lapangan) & Schedule Closure data operations
@@ -176,7 +177,8 @@ class FakeCourtRepository implements CourtRepository {
 
   @override
   Future<String> getUserName() async {
-    return MockData.userName;
+    final active = FakeAuthRepository().currentUser ?? FakeAuthRepository.seedUser;
+    return active.name;
   }
 
   @override

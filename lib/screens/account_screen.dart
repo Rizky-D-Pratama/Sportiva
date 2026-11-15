@@ -1,26 +1,141 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
-import '../data/mock_data.dart';
+import '../data/repositories/auth_repository.dart';
+import '../data/repositories/auth_repository_impl.dart';
 import '../models/user.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_button.dart';
+import '../widgets/app_field.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_menu_tile.dart';
 
 /// Screen for Account Info & Security ("Akun")
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   final User? user;
+  final AuthRepository authRepository;
 
-  const AccountScreen({super.key, this.user});
+  AccountScreen({
+    super.key,
+    this.user,
+    AuthRepository? authRepository,
+  }) : authRepository = authRepository ?? FakeAuthRepository();
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  late User _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser = widget.user ?? widget.authRepository.currentUser ?? FakeAuthRepository.seedUser;
+  }
+
+  void _showEditNameDialog() {
+    final controller = TextEditingController(text: _currentUser.name);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Edit Nama'),
+          content: AppField(
+            label: 'Nama Lengkap',
+            child: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Batal'),
+            ),
+            AppButton(
+              label: 'Simpan',
+              onPressed: () async {
+                final newName = controller.text.trim();
+                if (newName.isNotEmpty) {
+                  final updated = await widget.authRepository.updateProfile(
+                    name: newName,
+                    phoneNumber: _currentUser.phoneNumber ?? '',
+                  );
+                  if (!mounted) return;
+                  if (updated != null) {
+                    setState(() {
+                      _currentUser = updated;
+                    });
+                  }
+                }
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditPhoneDialog() {
+    final controller = TextEditingController(text: _currentUser.phoneNumber ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Edit Nomor Telepon'),
+          content: AppField(
+            label: 'Nomor Telepon',
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Batal'),
+            ),
+            AppButton(
+              label: 'Simpan',
+              onPressed: () async {
+                final newPhone = controller.text.trim();
+                if (newPhone.isNotEmpty) {
+                  final updated = await widget.authRepository.updateProfile(
+                    name: _currentUser.name,
+                    phoneNumber: newPhone,
+                  );
+                  if (!mounted) return;
+                  if (updated != null) {
+                    setState(() {
+                      _currentUser = updated;
+                    });
+                  }
+                }
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.appColors;
 
-    final targetUser = user ?? MockData.currentUser;
-    final phoneText = (targetUser.phoneNumber != null && targetUser.phoneNumber!.isNotEmpty)
-        ? targetUser.phoneNumber!
+    final phoneText = (_currentUser.phoneNumber != null && _currentUser.phoneNumber!.isNotEmpty)
+        ? _currentUser.phoneNumber!
         : 'Belum ditambahkan';
 
     return Scaffold(
@@ -72,12 +187,10 @@ class AccountScreen extends StatelessWidget {
                     AppMenuTile(
                       iconPath: AppIcons.account,
                       caption: 'Nama',
-                      label: targetUser.name,
+                      label: _currentUser.name,
                       valueFontWeight: FontWeight.w500,
                       showChevron: true,
-                      onTap: () {
-                        // Belum ada layar edit nama
-                      },
+                      onTap: _showEditNameDialog,
                     ),
                     AppMenuTile(
                       iconPath: AppIcons.phone,
@@ -85,14 +198,12 @@ class AccountScreen extends StatelessWidget {
                       label: phoneText,
                       valueFontWeight: FontWeight.w500,
                       showChevron: true,
-                      onTap: () {
-                        // Belum ada layar edit telepon
-                      },
+                      onTap: _showEditPhoneDialog,
                     ),
                     AppMenuTile(
                       iconPath: AppIcons.mail,
                       caption: 'Email',
-                      label: targetUser.email,
+                      label: _currentUser.email,
                       valueFontWeight: FontWeight.w500,
                       showChevron: false,
                       onTap: () {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../constants/app_icons.dart';
 import '../data/mock_data.dart';
+import '../data/repositories/auth_repository.dart';
+import '../data/repositories/auth_repository_impl.dart';
 import '../widgets/profile_content.dart';
 import '../widgets/theme_select_bottom_sheet.dart';
 import 'account_screen.dart';
@@ -8,11 +10,16 @@ import 'booking_history_screen.dart';
 
 /// Screen for User Profile tab
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final AuthRepository authRepository;
+
+  ProfileScreen({
+    super.key,
+    AuthRepository? authRepository,
+  }) : authRepository = authRepository ?? FakeAuthRepository();
 
   @override
   Widget build(BuildContext context) {
-    final user = MockData.currentUser;
+    final user = authRepository.currentUser ?? FakeAuthRepository.seedUser;
 
     return ProfileContentWidget(
       name: user.name,
@@ -28,7 +35,10 @@ class ProfileScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const AccountScreen(),
+                builder: (context) => AccountScreen(
+                  user: user,
+                  authRepository: authRepository,
+                ),
               ),
             );
           },
@@ -62,7 +72,10 @@ class ProfileScreen extends StatelessWidget {
           label: 'Keluar',
           isDanger: true,
           onTap: () {
-            ProfileContentWidget.showLogoutModal(context);
+            ProfileContentWidget.showLogoutModal(
+              context,
+              authRepository: authRepository,
+            );
           },
         ),
       ],
