@@ -400,8 +400,9 @@ class MockData {
     weekDateRangeText: '5–11 Oktober 2026',
   );
 
-  /// Shared admin bookings list generated dynamically relative to today
-  static List<Booking> get mockAdminBookings {
+  // TODO: dua daftar ini sementara (mockBookings & mockAdminBookings), akan disatukan di sesi sinkronisasi.
+  static final List<Booking> mockAdminBookings = _initMockAdminBookings();
+  static List<Booking> _initMockAdminBookings() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
