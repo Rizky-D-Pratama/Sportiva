@@ -11,33 +11,20 @@ import '../models/user.dart';
 import '../models/venue.dart';
 import '../utils/date_format_helper.dart';
 
+import 'repositories/auth_repository_impl.dart';
+
 /// Mock Data source containing sample data for Sportiva app
 class MockData {
-  static const String userName = 'Arya Ghiffary Habyantara';
-  static const String adminName = 'Rizky';
-  static const String adminFullName = 'Rizky Doni Pratama';
-  static const String adminEmail = 'zydon@sportiva.id';
+  static String get userName => FakeAuthRepository.seedUser.name;
+  static String get adminName => FakeAuthRepository.seedAdmin.name.split(' ').first;
+  static String get adminFullName => FakeAuthRepository.seedAdmin.name;
+  static String get adminEmail => FakeAuthRepository.seedAdmin.email;
   static const String welcomeGreeting = 'Selamat Datang 👋';
   static const String profilePhotoUrl = AppImages.blankProfile;
-  static const String userPhone = '0812 3456 7890';
+  static String get userPhone => FakeAuthRepository.seedUser.phoneNumber ?? '';
 
-  static final User currentUser = User(
-    id: 'user_1',
-    name: 'Arya Ghiffary Habyantara',
-    email: 'habygantenk@gmail.com',
-    profilePhotoUrl: AppImages.blankProfile,
-    phoneNumber: '0812 3456 7890',
-    joinedDate: DateTime(2026, 10, 1),
-  );
-
-  static final User adminUser = User(
-    id: 'admin_1',
-    name: adminFullName,
-    email: adminEmail,
-    profilePhotoUrl: AppImages.blankProfile,
-    phoneNumber: '0812 9999 8888',
-    joinedDate: DateTime(2026, 1, 1),
-  );
+  static User get currentUser => FakeAuthRepository.seedUser;
+  static User get adminUser => FakeAuthRepository.seedAdmin;
 
   /// Helper to format user joined date into Indonesian text: "Sobat Sport sejak {Bulan} {Tahun}"
   static String formatJoinedDate(DateTime date) {
