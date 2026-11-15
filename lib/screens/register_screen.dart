@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_icons.dart';
+import '../data/repositories/auth_repository.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../theme/app_theme.dart';
 import '../utils/validators.dart';
@@ -9,7 +10,12 @@ import '../widgets/app_header.dart';
 import '../widgets/app_info_notice.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final AuthRepository authRepository;
+
+  RegisterScreen({
+    super.key,
+    AuthRepository? authRepository,
+  }) : authRepository = authRepository ?? FakeAuthRepository();
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -36,8 +42,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _phoneError;
   String? _passwordError;
   String? _confirmError;
-
-  final _authRepo = FakeAuthRepository();
 
   @override
   void dispose() {
@@ -71,8 +75,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _phoneError == null &&
         _passwordError == null &&
         _confirmError == null) {
-      // TODO: Replace with Supabase authentication sign-up
-      await _authRepo.signUp(
+      final isRegistered = await widget.authRepository.isEmailRegistered(_emailController.text);
+      if (!mounted) return;
+
+      if (isRegistered) {
+        setState(() {
+          _emailError = 'Email sudah terdaftar.';
+        });
+        return;
+      }
+
+      final user = await widget.authRepository.signUp(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _phoneController.text.trim(),
@@ -80,21 +93,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       if (!mounted) return;
 
-      final messenger = ScaffoldMessenger.of(context);
-      messenger.showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          padding: EdgeInsets.zero,
-          margin: const EdgeInsets.all(AppTheme.paddingLarge), // sesuaikan nama konstanta
-          content: const AppInfoNotice(
-            message: 'Akun berhasil dibuat. Silakan masuk.',
+      if (user != null) {
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            padding: EdgeInsets.zero,
+            margin: const EdgeInsets.all(AppTheme.paddingLarge),
+            content: const AppInfoNotice(
+              message: 'Akun berhasil dibuat. Silakan masuk.',
+            ),
           ),
-        ),
-      );
+        );
 
-      Navigator.pop(context);
+        Navigator.pop(context);
+      }
     }
   }
 

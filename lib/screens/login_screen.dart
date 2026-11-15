@@ -2,16 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
 import '../data/court_repository.dart';
+import '../data/repositories/auth_repository.dart';
 import '../data/repositories/auth_repository_impl.dart';
+import '../models/user.dart';
 import '../theme/app_theme.dart';
 import '../utils/validators.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
+import 'admin/admin_shell.dart';
 import 'main_shell.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final AuthRepository authRepository;
+
+  LoginScreen({
+    super.key,
+    AuthRepository? authRepository,
+  }) : authRepository = authRepository ?? FakeAuthRepository();
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -28,8 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String? _emailError;
   String? _passwordError;
-
-  final _authRepo = FakeAuthRepository();
 
   @override
   void dispose() {
@@ -51,14 +57,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (_emailError == null && _passwordError == null) {
-      // TODO: Replace with Supabase authentication sign-in
-      await _authRepo.signIn(_emailController.text.trim(), _passwordController.text);
+      final user = await widget.authRepository.signIn(
+        _emailController.text,
+        _passwordController.text,
+      );
       if (!mounted) return;
+
+      if (user == null) {
+        setState(() {
+          _passwordError = 'Email atau kata sandi salah.';
+        });
+        return;
+      }
+
+      final targetScreen = user.role == UserRole.admin
+          ? const AdminShell()
+          : MainShell(repository: FakeCourtRepository());
 
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (_) => MainShell(repository: FakeCourtRepository()),
+          builder: (_) => targetScreen,
         ),
         (route) => false,
       );
@@ -222,7 +241,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => const RegisterScreen(),
+                                      builder: (_) => RegisterScreen(
+                                        authRepository: widget.authRepository,
+                                      ),
                                     ),
                                   );
                                 },

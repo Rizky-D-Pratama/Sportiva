@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../constants/app_icons.dart';
+import '../data/repositories/auth_repository.dart';
+import '../data/repositories/auth_repository_impl.dart';
 import '../screens/login_screen.dart';
 import '../theme/app_theme.dart';
 import 'app_avatar.dart';
@@ -50,8 +52,10 @@ class ProfileContentWidget extends StatelessWidget {
   });
 
   /// Static helper for showing standard sign-out confirmation modal
-  static void showLogoutModal(BuildContext context) {
+  static void showLogoutModal(BuildContext context, {AuthRepository? authRepository}) {
     final colors = context.appColors;
+    final authRepo = authRepository ?? FakeAuthRepository();
+
     AppModal.show(
       context: context,
       iconPath: AppIcons.circleAlert,
@@ -60,12 +64,13 @@ class ProfileContentWidget extends StatelessWidget {
       message:
           'Anda akan keluar dari akun ini. Anda dapat masuk kembali kapan saja.',
       primaryButtonLabel: 'Ya, Keluar',
-      onPrimaryPressed: () {
-        // TODO: Call server sign-out API.
+      onPrimaryPressed: () async {
+        await authRepo.signOut();
+        if (!context.mounted) return;
         Navigator.pop(context); // Close modal first
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => LoginScreen(authRepository: authRepo)),
           (route) => false,
         );
       },
