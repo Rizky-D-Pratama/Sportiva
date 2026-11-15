@@ -23,6 +23,7 @@ class Booking {
   final int? rating; // 1 to 5 rating if finished and rated, null otherwise
 
   // Extended fields for Detail & Ticket views
+  final String? userId;
   final int pricePerHour;
   final int serviceFee;
   final int durationHours;
@@ -49,6 +50,7 @@ class Booking {
     this.paymentDeadline,
     required this.playDateTime,
     this.rating,
+    this.userId,
     this.pricePerHour = 100000,
     this.serviceFee = 5000,
     this.durationHours = 1,
@@ -94,6 +96,7 @@ class Booking {
     String? paymentDeadline,
     DateTime? playDateTime,
     int? rating,
+    String? userId,
     int? pricePerHour,
     int? serviceFee,
     int? durationHours,
@@ -120,6 +123,7 @@ class Booking {
       paymentDeadline: paymentDeadline ?? this.paymentDeadline,
       playDateTime: playDateTime ?? this.playDateTime,
       rating: rating ?? this.rating,
+      userId: userId ?? this.userId,
       pricePerHour: pricePerHour ?? this.pricePerHour,
       serviceFee: serviceFee ?? this.serviceFee,
       durationHours: durationHours ?? this.durationHours,

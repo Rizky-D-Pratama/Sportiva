@@ -184,6 +184,7 @@ class MockData {
   static final List<Booking> mockBookings = [
     Booking(
       id: 'booking_1',
+      userId: 'user_1',
       bookingCode: 'AFA-261015-003',
       courtName: 'Arena Futsal A',
       date: '15 Okt 2026',
@@ -200,6 +201,7 @@ class MockData {
       paymentStatusText: 'Belum bayar',
       userName: userName,
       userPhone: userPhone,
+      userEmail: FakeAuthRepository.seedUser.email,
       venueName: 'Sportiva Center',
       facilitiesText: 'Futsal • Indoor • Sintetis • Toilet',
       courtImageUrl: AppImages.soccer,
@@ -208,6 +210,7 @@ class MockData {
     ),
     Booking(
       id: 'booking_2',
+      userId: 'user_1',
       bookingCode: 'AVB-261016-008',
       courtName: 'Arena Voli B',
       date: '16 Okt 2026',
@@ -224,6 +227,7 @@ class MockData {
       paymentStatusText: '13 Oktober 2026, 09.35 WIB',
       userName: userName,
       userPhone: userPhone,
+      userEmail: FakeAuthRepository.seedUser.email,
       venueName: 'Sportiva Center',
       facilitiesText: 'Voli • Indoor • Net standar • Toilet',
       courtImageUrl: AppImages.volleyball,
@@ -232,6 +236,7 @@ class MockData {
     ),
     Booking(
       id: 'booking_3',
+      userId: 'user_1',
       bookingCode: 'ABDD-261010-001',
       courtName: 'Arena Badminton D',
       date: '10 Okt 2026',
@@ -248,6 +253,7 @@ class MockData {
       paymentStatusText: '9 Oktober 2026, 14.05 WIB',
       userName: userName,
       userPhone: userPhone,
+      userEmail: FakeAuthRepository.seedUser.email,
       venueName: 'Sportiva Center',
       facilitiesText: 'Badminton • Indoor • Karpet • Toilet',
       courtImageUrl: AppImages.badminton,
@@ -256,6 +262,7 @@ class MockData {
     ),
     Booking(
       id: 'booking_4',
+      userId: 'user_1',
       bookingCode: 'ABSC-261008-012',
       courtName: 'Arena Basket C',
       date: '8 Okt 2026',
@@ -272,6 +279,7 @@ class MockData {
       paymentStatusText: 'Dibatalkan',
       userName: userName,
       userPhone: userPhone,
+      userEmail: FakeAuthRepository.seedUser.email,
       venueName: 'Sportiva Center',
       facilitiesText: 'Basket • Indoor • Parquet • Toilet',
       courtImageUrl: AppImages.basket,
@@ -280,6 +288,7 @@ class MockData {
     ),
     Booking(
       id: 'booking_5',
+      userId: 'user_1',
       bookingCode: 'AFAB-261005-005',
       courtName: 'Arena Futsal A',
       date: '5 Okt 2026',
@@ -296,6 +305,7 @@ class MockData {
       paymentStatusText: '4 Oktober 2026, 11.25 WIB',
       userName: userName,
       userPhone: userPhone,
+      userEmail: FakeAuthRepository.seedUser.email,
       venueName: 'Sportiva Center',
       facilitiesText: 'Futsal • Indoor • Sintetis • Toilet',
       courtImageUrl: AppImages.soccer,
@@ -414,6 +424,7 @@ class MockData {
       // --- HARI INI (4 Booking sesuai desain) ---
       Booking(
         id: 'admin_booking_today_1',
+        userId: 'user_1',
         bookingCode: 'AFA-$todayCode-003',
         courtName: 'Arena Futsal A',
         date: DateFormatHelper.formatShortDate(today),
@@ -429,7 +440,7 @@ class MockData {
         createdDateText: '${today.day} ${DateFormatHelper.monthNames[today.month - 1]} ${today.year}, 09.30 WIB',
         paymentStatusText: 'Belum bayar',
         userName: 'Arya Ghiffary Habyantara',
-        userEmail: 'habygantenk@gmail.com',
+        userEmail: FakeAuthRepository.seedUser.email,
         userPhone: '0812 3456 7890',
         venueName: 'Sportiva Center',
         facilitiesText: 'Futsal • Rumput sintetis • Parkir • Toilet',

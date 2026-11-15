@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
+import '../data/mock_data.dart';
+import '../data/repositories/auth_repository_impl.dart';
+import '../models/booking.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
 import '../widgets/app_image.dart';
+import '../widgets/app_info_notice.dart';
 import '../widgets/app_info_row.dart';
 import '../widgets/app_sticky_bottom_bar.dart';
 
@@ -301,9 +305,54 @@ class BookingSummaryScreen extends StatelessWidget {
                   AppButton(
                     label: 'Lanjutkan Pembayaran',
                     onPressed: () {
-                      // TODO: nanti membuat booking lalu membuka pembayaran (Midtrans Snap).
-                      // Jika booking belum-bayar untuk slot yang sama sudah ada, buka kembali,
-                      // jangan membuat yang baru.
+                      final activeUser = FakeAuthRepository().currentUser ?? FakeAuthRepository.seedUser;
+                      final endHour = startHour + durationHours;
+                      final now = DateTime.now();
+
+                      final newBooking = Booking(
+                        id: 'booking_${now.millisecondsSinceEpoch}',
+                        userId: activeUser.id,
+                        bookingCode: 'ABK-${(now.millisecondsSinceEpoch % 90000) + 10000}',
+                        courtName: court.name,
+                        date: '${selectedDate.day} ${_formatDate(selectedDate).split(' ')[2]} ${selectedDate.year}',
+                        timeRange: '${startHour.toString().padLeft(2, '0')}.00 – ${endHour.toString().padLeft(2, '0')}.00 WIB',
+                        totalPayment: totalPayment,
+                        status: BookingStatus.belumBayar,
+                        paymentMethod: 'Transfer BCA',
+                        paymentDeadline: 'Bayar sebelum ${_formatDate(selectedDate)}, ${startHour.toString().padLeft(2, '0')}.00 WIB',
+                        playDateTime: DateTime(selectedDate.year, selectedDate.month, selectedDate.day, startHour),
+                        pricePerHour: court.pricePerHour,
+                        serviceFee: serviceFee,
+                        durationHours: durationHours,
+                        createdDateText: '${now.day} ${_formatDate(now).split(' ')[2]} ${now.year}, ${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')} WIB',
+                        paymentStatusText: 'Belum bayar',
+                        userName: activeUser.name,
+                        userPhone: activeUser.phoneNumber ?? '0812 3456 7890',
+                        userEmail: activeUser.email,
+                        venueName: court.venue.name,
+                        facilitiesText: court.facilities.join(' • '),
+                        courtImageUrl: court.imageUrl,
+                        fullDateText: _formatDate(selectedDate),
+                        ticketDateText: _formatDate(selectedDate),
+                      );
+
+                      MockData.mockBookings.insert(0, newBooking);
+                      MockData.mockAdminBookings.insert(0, newBooking);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: Colors.transparent,
+                          elevation: 0,
+                          content: AppInfoNotice(
+                            message: 'Booking berhasil dibuat. Silakan selesaikan pembayaran.',
+                            iconPath: AppIcons.circleCheck,
+                          ),
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+
+                      Navigator.popUntil(context, (route) => route.isFirst);
                     },
                     trailingIconPath: AppIcons.arrowRight,
                   ),
