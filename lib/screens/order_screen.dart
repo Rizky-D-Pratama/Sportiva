@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/mock_data.dart';
-import '../data/repositories/auth_repository_impl.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_badge.dart';
@@ -29,10 +29,14 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   void initState() {
     super.initState();
-    final activeUser = FakeAuthRepository().currentUser ?? FakeAuthRepository.seedUser;
-    _bookings = MockData.mockBookings
-        .where((b) => b.userId == activeUser.id)
-        .toList();
+    final activeUser = AppConfig.authRepository.currentUser;
+    if (activeUser != null) {
+      _bookings = MockData.mockBookings
+          .where((b) => b.userId == activeUser.id)
+          .toList();
+    } else {
+      _bookings = [];
+    }
     _sortBookings();
   }
 

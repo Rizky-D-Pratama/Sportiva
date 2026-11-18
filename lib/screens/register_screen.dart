@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/repositories/auth_repository.dart';
-import '../data/repositories/auth_repository_impl.dart';
 import '../theme/app_theme.dart';
 import '../utils/validators.dart';
 import '../widgets/app_button.dart';
@@ -15,7 +15,7 @@ class RegisterScreen extends StatefulWidget {
   RegisterScreen({
     super.key,
     AuthRepository? authRepository,
-  }) : authRepository = authRepository ?? FakeAuthRepository();
+  }) : authRepository = authRepository ?? AppConfig.authRepository;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -75,17 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _phoneError == null &&
         _passwordError == null &&
         _confirmError == null) {
-      final isRegistered = await widget.authRepository.isEmailRegistered(_emailController.text);
-      if (!mounted) return;
-
-      if (isRegistered) {
-        setState(() {
-          _emailError = 'Email sudah terdaftar.';
-        });
-        return;
-      }
-
-      final user = await widget.authRepository.signUp(
+      final result = await widget.authRepository.signUp(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _phoneController.text.trim(),
@@ -93,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       if (!mounted) return;
 
-      if (user != null) {
+      if (result.isSuccess) {
         final messenger = ScaffoldMessenger.of(context);
         messenger.showSnackBar(
           SnackBar(
@@ -109,6 +99,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
 
         Navigator.pop(context);
+      } else {
+        setState(() {
+          switch (result.failureType) {
+            case AuthFailureType.emailAlreadyRegistered:
+              _emailError = 'Email sudah terdaftar.';
+              break;
+            case AuthFailureType.networkError:
+              _confirmError =
+                  'Koneksi terputus. Periksa jaringan internet Anda.';
+              break;
+            case AuthFailureType.serverError:
+            default:
+              _confirmError =
+                  'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+              break;
+          }
+        });
       }
     }
   }

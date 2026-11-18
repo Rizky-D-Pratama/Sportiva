@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/mock_data.dart';
 import '../data/repositories/auth_repository.dart';
-import '../data/repositories/auth_repository_impl.dart';
+import '../models/user.dart';
 import '../widgets/profile_content.dart';
 import '../widgets/theme_select_bottom_sheet.dart';
 import 'account_screen.dart';
@@ -15,11 +16,17 @@ class ProfileScreen extends StatelessWidget {
   ProfileScreen({
     super.key,
     AuthRepository? authRepository,
-  }) : authRepository = authRepository ?? FakeAuthRepository();
+  }) : authRepository = authRepository ?? AppConfig.authRepository;
 
   @override
   Widget build(BuildContext context) {
-    final user = authRepository.currentUser ?? FakeAuthRepository.seedUser;
+    final user = authRepository.currentUser ??
+        User(
+          id: '',
+          name: 'Pengguna',
+          email: '',
+          joinedDate: DateTime.now(),
+        );
 
     return ProfileContentWidget(
       name: user.name,

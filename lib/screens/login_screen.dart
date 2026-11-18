@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/court_repository.dart';
 import '../data/repositories/auth_repository.dart';
-import '../data/repositories/auth_repository_impl.dart';
 import '../models/user.dart';
 import '../theme/app_theme.dart';
 import '../utils/validators.dart';
@@ -19,7 +19,7 @@ class LoginScreen extends StatefulWidget {
   LoginScreen({
     super.key,
     AuthRepository? authRepository,
-  }) : authRepository = authRepository ?? FakeAuthRepository();
+  }) : authRepository = authRepository ?? AppConfig.authRepository;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -57,30 +57,47 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (_emailError == null && _passwordError == null) {
-      final user = await widget.authRepository.signIn(
+      final result = await widget.authRepository.signIn(
         _emailController.text,
         _passwordController.text,
       );
       if (!mounted) return;
 
-      if (user == null) {
+      if (result.isSuccess && result.data != null) {
+        final user = result.data!;
+        final targetScreen = user.role == UserRole.admin
+            ? const AdminShell()
+            : MainShell(repository: FakeCourtRepository());
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => targetScreen,
+          ),
+          (route) => false,
+        );
+      } else {
         setState(() {
-          _passwordError = 'Email atau kata sandi salah.';
+          switch (result.failureType) {
+            case AuthFailureType.invalidCredentials:
+              _passwordError = 'Email atau kata sandi salah.';
+              break;
+            case AuthFailureType.networkError:
+              _passwordError =
+                  'Koneksi terputus. Periksa jaringan internet Anda.';
+              break;
+            case AuthFailureType.profileNotFound:
+              _passwordError =
+                  'Gagal memuat profil pengguna. Silakan hubungi admin.';
+              break;
+            case AuthFailureType.serverError:
+            default:
+              _passwordError =
+                  'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+              break;
+          }
         });
-        return;
       }
-
-      final targetScreen = user.role == UserRole.admin
-          ? const AdminShell()
-          : MainShell(repository: FakeCourtRepository());
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (_) => targetScreen,
-        ),
-        (route) => false,
-      );
     }
   }
 
@@ -96,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Padding (
+                child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.paddingXLarge,
                     vertical: AppTheme.paddingLarge,

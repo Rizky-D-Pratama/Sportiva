@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../config/app_config.dart';
 import '../../constants/app_icons.dart';
 import '../../constants/app_images.dart';
 import '../../data/court_repository.dart';
 import '../../data/mock_data.dart';
-import '../../data/repositories/auth_repository_impl.dart';
 import '../../models/booking.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/date_format_helper.dart';
@@ -128,7 +128,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Halo, ${(FakeAuthRepository().currentUser ?? FakeAuthRepository.seedAdmin).name.split(' ').first}!',
+                      'Halo, ${(AppConfig.authRepository.currentUser?.name ?? 'Admin').split(' ').first}!',
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontSize: 20.0,
                         fontWeight: FontWeight.w600,

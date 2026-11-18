@@ -52,7 +52,7 @@ class BookingDetailScreen extends StatelessWidget {
         : MockData.userName;
     final userPhoneText = (booking.userPhone != null && booking.userPhone!.isNotEmpty)
         ? booking.userPhone!
-        : (MockData.currentUser.phoneNumber ?? '-');
+        : '-';
     final paymentMethodText = (booking.paymentMethod != null && booking.paymentMethod!.isNotEmpty)
         ? booking.paymentMethod!
         : 'Belum memilih metode pembayaran';

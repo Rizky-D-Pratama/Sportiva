@@ -54,14 +54,13 @@ class FakeAuthRepository implements AuthRepository {
   String _normalizeEmail(String email) => email.trim().toLowerCase();
 
   @override
-  Future<bool> isEmailRegistered(String email) async {
-    final normalized = _normalizeEmail(email);
-    return _accounts.any((u) => _normalizeEmail(u.email) == normalized);
+  Future<User?> restoreSession() async {
+    await Future.delayed(const Duration(milliseconds: 50));
+    return _currentUser;
   }
 
   @override
-  Future<User?> signIn(String email, String password) async {
-    // TODO: Replace with Supabase authentication signIn
+  Future<AuthResult<User>> signIn(String email, String password) async {
     await Future.delayed(const Duration(milliseconds: 50));
     final normalized = _normalizeEmail(email);
 
@@ -70,7 +69,7 @@ class FakeAuthRepository implements AuthRepository {
     );
 
     if (userIndex == -1) {
-      return null;
+      return const AuthResult.failure(AuthFailureType.invalidCredentials);
     }
 
     final matchedUser = _accounts[userIndex];
@@ -78,25 +77,24 @@ class FakeAuthRepository implements AuthRepository {
 
     if (expectedPassword == password) {
       _currentUser = matchedUser;
-      return matchedUser;
+      return AuthResult.success(matchedUser);
     }
 
-    return null;
+    return const AuthResult.failure(AuthFailureType.invalidCredentials);
   }
 
   @override
-  Future<User?> signUp(
+  Future<AuthResult<void>> signUp(
     String name,
     String email,
     String phoneNumber,
     String password,
   ) async {
-    // TODO: Replace with Supabase authentication signUp
     await Future.delayed(const Duration(milliseconds: 50));
     final normalized = _normalizeEmail(email);
 
-    if (await isEmailRegistered(email)) {
-      return null;
+    if (_accounts.any((u) => _normalizeEmail(u.email) == normalized)) {
+      return const AuthResult.failure(AuthFailureType.emailAlreadyRegistered);
     }
 
     final newUser = User(
@@ -112,7 +110,8 @@ class FakeAuthRepository implements AuthRepository {
 
     _accounts.add(newUser);
     _passwords[normalized] = password;
-    return newUser;
+    _currentUser = null;
+    return const AuthResult.success(null);
   }
 
   @override
@@ -122,12 +121,14 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<User?> updateProfile({
+  Future<AuthResult<User>> updateProfile({
     required String name,
     required String phoneNumber,
   }) async {
     await Future.delayed(const Duration(milliseconds: 50));
-    if (_currentUser == null) return null;
+    if (_currentUser == null) {
+      return const AuthResult.failure(AuthFailureType.serverError);
+    }
 
     final updated = _currentUser!.copyWith(
       name: name,
@@ -141,6 +142,6 @@ class FakeAuthRepository implements AuthRepository {
       _accounts[index] = updated;
     }
 
-    return updated;
+    return AuthResult.success(updated);
   }
 }

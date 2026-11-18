@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../constants/app_constants.dart';
 import '../constants/app_icons.dart';
 import '../data/repositories/auth_repository.dart';
-import '../data/repositories/auth_repository_impl.dart';
 import '../screens/login_screen.dart';
 import '../theme/app_theme.dart';
 import 'app_avatar.dart';
@@ -54,7 +54,7 @@ class ProfileContentWidget extends StatelessWidget {
   /// Static helper for showing standard sign-out confirmation modal
   static void showLogoutModal(BuildContext context, {AuthRepository? authRepository}) {
     final colors = context.appColors;
-    final authRepo = authRepository ?? FakeAuthRepository();
+    final authRepo = authRepository ?? AppConfig.authRepository;
 
     AppModal.show(
       context: context,

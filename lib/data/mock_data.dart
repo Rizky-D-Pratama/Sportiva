@@ -7,24 +7,18 @@ import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/notification_item.dart';
 import '../models/unavailable_time_slot.dart';
-import '../models/user.dart';
 import '../models/venue.dart';
 import '../utils/date_format_helper.dart';
 
-import 'repositories/auth_repository_impl.dart';
-
 /// Mock Data source containing sample data for Sportiva app
 class MockData {
-  static String get userName => FakeAuthRepository.seedUser.name;
-  static String get adminName => FakeAuthRepository.seedAdmin.name.split(' ').first;
-  static String get adminFullName => FakeAuthRepository.seedAdmin.name;
-  static String get adminEmail => FakeAuthRepository.seedAdmin.email;
+  static String get userName => 'Pengguna';
+  static String get adminName => 'Admin';
+  static String get adminFullName => 'Admin Sportiva';
+  static String get adminEmail => 'admin@sportiva.com';
   static const String welcomeGreeting = 'Selamat Datang 👋';
   static const String profilePhotoUrl = AppImages.blankProfile;
-  static String get userPhone => FakeAuthRepository.seedUser.phoneNumber ?? '';
-
-  static User get currentUser => FakeAuthRepository.seedUser;
-  static User get adminUser => FakeAuthRepository.seedAdmin;
+  static String get userPhone => '-';
 
   /// Helper to format user joined date into Indonesian text: "Sobat Sport sejak {Bulan} {Tahun}"
   static String formatJoinedDate(DateTime date) {
@@ -201,7 +195,7 @@ class MockData {
       paymentStatusText: 'Belum bayar',
       userName: userName,
       userPhone: userPhone,
-      userEmail: FakeAuthRepository.seedUser.email,
+      userEmail: 'user@sportiva.test',
       venueName: 'Sportiva Center',
       facilitiesText: 'Futsal • Indoor • Sintetis • Toilet',
       courtImageUrl: AppImages.soccer,
@@ -227,7 +221,7 @@ class MockData {
       paymentStatusText: '13 Oktober 2026, 09.35 WIB',
       userName: userName,
       userPhone: userPhone,
-      userEmail: FakeAuthRepository.seedUser.email,
+      userEmail: 'user@sportiva.test',
       venueName: 'Sportiva Center',
       facilitiesText: 'Voli • Indoor • Net standar • Toilet',
       courtImageUrl: AppImages.volleyball,
@@ -253,7 +247,7 @@ class MockData {
       paymentStatusText: '9 Oktober 2026, 14.05 WIB',
       userName: userName,
       userPhone: userPhone,
-      userEmail: FakeAuthRepository.seedUser.email,
+      userEmail: 'user@sportiva.test',
       venueName: 'Sportiva Center',
       facilitiesText: 'Badminton • Indoor • Karpet • Toilet',
       courtImageUrl: AppImages.badminton,
@@ -279,7 +273,7 @@ class MockData {
       paymentStatusText: 'Dibatalkan',
       userName: userName,
       userPhone: userPhone,
-      userEmail: FakeAuthRepository.seedUser.email,
+      userEmail: 'user@sportiva.test',
       venueName: 'Sportiva Center',
       facilitiesText: 'Basket • Indoor • Parquet • Toilet',
       courtImageUrl: AppImages.basket,
@@ -305,7 +299,7 @@ class MockData {
       paymentStatusText: '4 Oktober 2026, 11.25 WIB',
       userName: userName,
       userPhone: userPhone,
-      userEmail: FakeAuthRepository.seedUser.email,
+      userEmail: 'user@sportiva.test',
       venueName: 'Sportiva Center',
       facilitiesText: 'Futsal • Indoor • Sintetis • Toilet',
       courtImageUrl: AppImages.soccer,
@@ -441,7 +435,7 @@ class MockData {
         createdDateText: '${today.day} ${DateFormatHelper.monthNames[today.month - 1]} ${today.year}, 09.30 WIB',
         paymentStatusText: 'Belum bayar',
         userName: 'Arya Ghiffary Habyantara',
-        userEmail: FakeAuthRepository.seedUser.email,
+        userEmail: 'user@sportiva.test',
         userPhone: '0812 3456 7890',
         venueName: 'Sportiva Center',
         facilitiesText: 'Futsal • Rumput sintetis • Parkir • Toilet',

@@ -1,6 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
+import '../data/court_repository.dart';
+import '../models/user.dart';
 import '../theme/app_theme.dart';
+import 'admin/admin_shell.dart';
+import 'main_shell.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,24 +16,45 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) return;
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    final startTime = DateTime.now();
+
+    User? restoredUser;
+    try {
+      restoredUser = await AppConfig.authRepository.restoreSession();
+    } catch (_) {
+      restoredUser = null;
+    }
+
+    final elapsed = DateTime.now().difference(startTime);
+    final remaining = const Duration(seconds: 2) - elapsed;
+    if (remaining > Duration.zero) {
+      await Future.delayed(remaining);
+    }
+
+    if (!mounted) return;
+
+    if (restoredUser != null) {
+      final targetScreen = restoredUser.role == UserRole.admin
+          ? const AdminShell()
+          : MainShell(repository: FakeCourtRepository());
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => targetScreen),
+      );
+    } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+    }
   }
 
   @override

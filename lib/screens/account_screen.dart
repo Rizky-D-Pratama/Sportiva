@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/repositories/auth_repository.dart';
-import '../data/repositories/auth_repository_impl.dart';
 import '../models/user.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
 import '../widgets/app_header.dart';
+import '../widgets/app_info_notice.dart';
 import '../widgets/app_menu_tile.dart';
 
 /// Screen for Account Info & Security ("Akun")
@@ -19,7 +20,7 @@ class AccountScreen extends StatefulWidget {
     super.key,
     this.user,
     AuthRepository? authRepository,
-  }) : authRepository = authRepository ?? FakeAuthRepository();
+  }) : authRepository = authRepository ?? AppConfig.authRepository;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -31,7 +32,14 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   void initState() {
     super.initState();
-    _currentUser = widget.user ?? widget.authRepository.currentUser ?? FakeAuthRepository.seedUser;
+    _currentUser = widget.user ??
+        widget.authRepository.currentUser ??
+        User(
+          id: '',
+          name: 'Pengguna',
+          email: '',
+          joinedDate: DateTime.now(),
+        );
   }
 
   void _showEditNameDialog() {
@@ -61,15 +69,31 @@ class _AccountScreenState extends State<AccountScreen> {
               onPressed: () async {
                 final newName = controller.text.trim();
                 if (newName.isNotEmpty) {
-                  final updated = await widget.authRepository.updateProfile(
+                  final result = await widget.authRepository.updateProfile(
                     name: newName,
                     phoneNumber: _currentUser.phoneNumber ?? '',
                   );
                   if (!mounted) return;
-                  if (updated != null) {
+                  if (result.isSuccess && result.data != null) {
                     setState(() {
-                      _currentUser = updated;
+                      _currentUser = result.data!;
                     });
+                  } else {
+                    final message = result.failureType == AuthFailureType.networkError
+                        ? 'Koneksi terputus. Periksa jaringan internet Anda.'
+                        : 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        padding: EdgeInsets.zero,
+                        margin: const EdgeInsets.all(AppTheme.paddingLarge),
+                        content: AppInfoNotice(
+                          message: message,
+                        ),
+                      ),
+                    );
                   }
                 }
                 if (ctx.mounted) Navigator.pop(ctx);
@@ -109,15 +133,31 @@ class _AccountScreenState extends State<AccountScreen> {
               onPressed: () async {
                 final newPhone = controller.text.trim();
                 if (newPhone.isNotEmpty) {
-                  final updated = await widget.authRepository.updateProfile(
+                  final result = await widget.authRepository.updateProfile(
                     name: _currentUser.name,
                     phoneNumber: newPhone,
                   );
                   if (!mounted) return;
-                  if (updated != null) {
+                  if (result.isSuccess && result.data != null) {
                     setState(() {
-                      _currentUser = updated;
+                      _currentUser = result.data!;
                     });
+                  } else {
+                    final message = result.failureType == AuthFailureType.networkError
+                        ? 'Koneksi terputus. Periksa jaringan internet Anda.'
+                        : 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        padding: EdgeInsets.zero,
+                        margin: const EdgeInsets.all(AppTheme.paddingLarge),
+                        content: AppInfoNotice(
+                          message: message,
+                        ),
+                      ),
+                    );
                   }
                 }
                 if (ctx.mounted) Navigator.pop(ctx);

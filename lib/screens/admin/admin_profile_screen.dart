@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../config/app_config.dart';
 import '../../constants/app_icons.dart';
 import '../../data/mock_data.dart';
 import '../../data/repositories/auth_repository.dart';
-import '../../data/repositories/auth_repository_impl.dart';
+import '../../models/user.dart';
 import '../../widgets/app_badge.dart';
 import '../../widgets/profile_content.dart';
 import '../../widgets/theme_select_bottom_sheet.dart';
@@ -16,11 +17,18 @@ class AdminProfileScreen extends StatelessWidget {
   AdminProfileScreen({
     super.key,
     AuthRepository? authRepository,
-  }) : authRepository = authRepository ?? FakeAuthRepository();
+  }) : authRepository = authRepository ?? AppConfig.authRepository;
 
   @override
   Widget build(BuildContext context) {
-    final adminUser = authRepository.currentUser ?? FakeAuthRepository.seedAdmin;
+    final adminUser = authRepository.currentUser ??
+        User(
+          id: '',
+          name: 'Admin',
+          email: '',
+          joinedDate: DateTime.now(),
+          role: UserRole.admin,
+        );
 
     return ProfileContentWidget(
       name: adminUser.name,

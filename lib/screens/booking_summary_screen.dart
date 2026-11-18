@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/mock_data.dart';
-import '../data/repositories/auth_repository_impl.dart';
 import '../models/booking.dart';
 import '../models/court.dart';
 import '../theme/app_theme.dart';
@@ -305,7 +305,8 @@ class BookingSummaryScreen extends StatelessWidget {
                   AppButton(
                     label: 'Lanjutkan Pembayaran',
                     onPressed: () {
-                      final activeUser = FakeAuthRepository().currentUser ?? FakeAuthRepository.seedUser;
+                      final activeUser = AppConfig.authRepository.currentUser;
+                      if (activeUser == null) return;
                       final endHour = startHour + durationHours;
                       final now = DateTime.now();
 
