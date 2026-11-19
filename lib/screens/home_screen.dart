@@ -292,11 +292,19 @@ class _HomeScreenState extends State<HomeScreen> {
               }
 
               if (snapshot.hasError) {
+                final errorMsg = snapshot.error is CourtNetworkException
+                    ? 'Gagal memuat lapangan. Periksa jaringan internet Anda.'
+                    : 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+
                 return Center(
-                  child: Text(
-                    'Gagal memuat data lapangan',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: textSecondary,
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Text(
+                      errorMsg,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 );

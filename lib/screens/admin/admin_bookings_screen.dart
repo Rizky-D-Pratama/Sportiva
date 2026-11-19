@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/app_config.dart';
 import '../../data/court_repository.dart';
 import '../../data/mock_data.dart';
 import '../../models/booking.dart';
@@ -46,7 +47,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
   @override
   void initState() {
     super.initState();
-    _courtRepository = widget.courtRepository ?? FakeCourtRepository();
+    _courtRepository = widget.courtRepository ?? AppConfig.courtRepository;
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
     _loadData();

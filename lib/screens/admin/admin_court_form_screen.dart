@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../config/app_config.dart';
 import '../../constants/app_icons.dart';
 import '../../constants/app_images.dart';
 import '../../data/court_repository.dart';
-import '../../data/mock_data.dart';
 import '../../models/court.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/price_format_helper.dart';
@@ -75,7 +75,7 @@ class _AdminCourtFormScreenState extends State<AdminCourtFormScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.courtRepository ?? FakeCourtRepository();
+    _repository = widget.courtRepository ?? AppConfig.courtRepository;
     _isEditMode = widget.court != null;
 
     if (_isEditMode) {
@@ -229,11 +229,15 @@ class _AdminCourtFormScreenState extends State<AdminCourtFormScreen> {
       );
       await _repository.updateCourt(updatedCourt);
     } else {
+      final adminVenue = AppConfig.authRepository.currentUser?.venue;
+      if (adminVenue == null) {
+        throw const CourtServerException('Venue data is missing');
+      }
       final newCourt = Court(
         id: 'court_${DateTime.now().millisecondsSinceEpoch}',
         name: nameTrimmed,
         category: _selectedCategory!,
-        venue: MockData.sportivaCenter,
+        venue: adminVenue,
         pricePerHour: priceVal,
         rating: 0.0,
         reviewCount: 0,

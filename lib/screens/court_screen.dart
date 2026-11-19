@@ -252,6 +252,25 @@ class _CourtScreenState extends State<CourtScreen> {
                 );
               }
 
+              if (snapshot.hasError) {
+                final errorMsg = snapshot.error is CourtNetworkException
+                    ? 'Gagal memuat lapangan. Periksa jaringan internet Anda.'
+                    : 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Text(
+                      errorMsg,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
               final allCourts = snapshot.data ?? [];
               final filteredCourts = _filterAndSortCourts(allCourts);
 

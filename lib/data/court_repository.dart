@@ -6,6 +6,17 @@ import '../models/unavailable_time_slot.dart';
 import '../models/venue_closure.dart';
 import 'mock_data.dart';
 
+/// Exception thrown when network connection fails during Court operations
+class CourtNetworkException implements Exception {
+  const CourtNetworkException();
+}
+
+/// Exception thrown when server error occurs during Court operations
+class CourtServerException implements Exception {
+  final String? details;
+  const CourtServerException([this.details]);
+}
+
 /// Abstract repository contract for Court (Lapangan) & Schedule Closure data operations
 abstract class CourtRepository {
   Future<List<Court>> getAllCourts();
@@ -67,6 +78,17 @@ bool _isSameDate(DateTime a, DateTime b) {
 class FakeCourtRepository implements CourtRepository {
   /// In-memory storage of admin venue courts
   static final List<Court> _adminCourts = List.from(MockData.allCourts);
+
+  Court? _findCourtByIdOrName(String courtId) {
+    for (final c in _adminCourts) {
+      if (c.id == courtId) return c;
+    }
+    final target = courtId.toLowerCase().trim();
+    for (final c in _adminCourts) {
+      if (c.name.toLowerCase() == target) return c;
+    }
+    return null;
+  }
 
   /// In-memory storage of venue and court closures
   static final List<VenueClosure> _venueClosures = _initMockClosures();
@@ -215,10 +237,10 @@ class FakeCourtRepository implements CourtRepository {
     // (3) penutupan venue dari venue_closures.
     // Layar pengguna (Detail Lapangan, Jadwal Lapangan) akan disambungkan ke fungsi ini di sesi terpisah.
 
-    final targetCourt = _adminCourts.firstWhere(
-      (c) => c.id == courtId,
-      orElse: () => MockData.allCourts.first,
-    );
+    final Court? targetCourt = _findCourtByIdOrName(courtId);
+    if (targetCourt == null) {
+      return [];
+    }
 
     final List<UnavailableTimeSlot> slots = [];
 
@@ -321,11 +343,8 @@ class FakeCourtRepository implements CourtRepository {
       if (!_isSameDate(booking.playDateTime, date)) continue;
 
       if (courtId != null && courtId.isNotEmpty) {
-        final court = _adminCourts.firstWhere(
-          (c) => c.id == courtId,
-          orElse: () => MockData.allCourts.first,
-        );
-        if (booking.courtName.toLowerCase() != court.name.toLowerCase()) continue;
+        final court = _findCourtByIdOrName(courtId);
+        if (court == null || booking.courtName.toLowerCase() != court.name.toLowerCase()) continue;
       }
 
       final bStart = booking.playDateTime.hour;

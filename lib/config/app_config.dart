@@ -1,8 +1,10 @@
+import '../data/court_repository.dart';
 import '../data/repositories/auth_repository.dart';
 
 /// Application configuration reading --dart-define parameters
 class AppConfig {
   static late final AuthRepository authRepository;
+  static late final CourtRepository courtRepository;
 
   static String get supabaseUrl =>
       const String.fromEnvironment('SUPABASE_URL');

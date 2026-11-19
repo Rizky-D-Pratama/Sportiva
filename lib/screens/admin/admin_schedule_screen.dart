@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../config/app_config.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/app_icons.dart';
 import '../../data/court_repository.dart';
-import '../../data/mock_data.dart';
 import '../../models/court.dart';
 import '../../models/unavailable_time_slot.dart';
 import '../../models/venue_closure.dart';
@@ -38,7 +38,7 @@ class AdminScheduleScreen extends StatefulWidget {
 
 class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
   late final CourtRepository _repository;
-  final String _venueName = MockData.sportivaCenter.name;
+  String get _venueName => AppConfig.authRepository.currentUser?.venue?.name ?? '';
 
   List<Court> _adminCourts = [];
   bool _isLoadingCourts = true;
@@ -70,7 +70,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.courtRepository ?? FakeCourtRepository();
+    _repository = widget.courtRepository ?? AppConfig.courtRepository;
 
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
@@ -106,7 +106,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
 
   Future<void> _fetchScheduleData() async {
     final date = _selectedDate;
-    final venueId = MockData.sportivaCenter.id;
+    final venueId = AppConfig.authRepository.currentUser?.venue?.id ?? '';
 
     if (_isWholeVenueScope) {
       final closures = await _repository.getVenueClosures(
@@ -330,7 +330,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
 
     final newClosure = VenueClosure(
       id: 'closure_${DateTime.now().millisecondsSinceEpoch}',
-      venueId: MockData.sportivaCenter.id,
+      venueId: AppConfig.authRepository.currentUser?.venue?.id ?? '',
       courtId: _selectedCourtId,
       date: _selectedDate,
       startHour: effectiveStartHour,

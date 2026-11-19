@@ -5,6 +5,19 @@ import '../../models/user.dart';
 import '../../models/venue.dart';
 import 'auth_repository.dart';
 
+/// Checks if an error is a network connection issue without using platform-specific APIs
+bool isNetworkError(Object error) {
+  final str = error.toString().toLowerCase();
+  return error is AuthRetryableFetchException ||
+      str.contains('socketexception') ||
+      str.contains('clientexception') ||
+      str.contains('network') ||
+      str.contains('failed to connect') ||
+      str.contains('connection refused') ||
+      str.contains('connection closed') ||
+      str.contains('handshakeexception');
+}
+
 /// Supabase implementation of AuthRepository for Sportiva
 class SupabaseAuthRepository implements AuthRepository {
   User? _currentUser;
@@ -25,16 +38,7 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   /// Checks if an error is a network connection issue without using platform-specific APIs
-  bool _isNetworkError(Object error) {
-    final str = error.toString().toLowerCase();
-    return str.contains('socketexception') ||
-        str.contains('clientexception') ||
-        str.contains('network') ||
-        str.contains('failed to connect') ||
-        str.contains('connection refused') ||
-        str.contains('connection closed') ||
-        str.contains('handshakeexception');
-  }
+  bool _isNetworkError(Object error) => isNetworkError(error);
 
   /// Single private helper to load profile and venue for a user
   Future<User?> _fetchUserProfileAndVenue({

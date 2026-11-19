@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
-import '../data/court_repository.dart';
 import '../models/user.dart';
 import '../theme/app_theme.dart';
 import 'admin/admin_shell.dart';
@@ -43,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (restoredUser != null) {
       final targetScreen = restoredUser.role == UserRole.admin
           ? const AdminShell()
-          : MainShell(repository: FakeCourtRepository());
+          : MainShell(repository: AppConfig.courtRepository);
 
       Navigator.pushReplacement(
         context,

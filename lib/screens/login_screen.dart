@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../config/app_config.dart';
 import '../constants/app_icons.dart';
-import '../data/court_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../models/user.dart';
 import '../theme/app_theme.dart';
@@ -67,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final user = result.data!;
         final targetScreen = user.role == UserRole.admin
             ? const AdminShell()
-            : MainShell(repository: FakeCourtRepository());
+            : MainShell(repository: AppConfig.courtRepository);
 
         Navigator.pushAndRemoveUntil(
           context,

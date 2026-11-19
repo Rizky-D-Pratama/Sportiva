@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/app_config.dart';
 import '../../constants/app_icons.dart';
 import '../../data/court_repository.dart';
 import '../../models/court.dart';
@@ -31,21 +32,36 @@ class _AdminCourtsScreenState extends State<AdminCourtsScreen> {
   CourtFilter _selectedFilter = CourtFilter.semua;
   List<Court> _allCourts = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _repository = widget.courtRepository ?? FakeCourtRepository();
+    _repository = widget.courtRepository ?? AppConfig.courtRepository;
     _loadCourts();
   }
 
   Future<void> _loadCourts() async {
-    final courts = await _repository.getAdminCourts();
-    if (!mounted) return;
     setState(() {
-      _allCourts = courts;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+    try {
+      final courts = await _repository.getAdminCourts();
+      if (!mounted) return;
+      setState(() {
+        _allCourts = courts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is CourtNetworkException
+            ? 'Gagal memuat lapangan. Periksa jaringan internet Anda.'
+            : 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+      });
+    }
   }
 
   List<Court> get _filteredCourts {
@@ -123,7 +139,20 @@ class _AdminCourtsScreenState extends State<AdminCourtsScreen> {
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : ListView(
+                  : _errorMessage != null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Text(
+                              _errorMessage!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        )
+                      : ListView(
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.only(
                         left: AppTheme.paddingXLarge,
