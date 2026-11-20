@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../config/app_config.dart';
 import '../constants/app_constants.dart';
 import '../constants/app_icons.dart';
+import '../data/booking_repository.dart';
+import '../data/repositories/supabase_auth_repository.dart';
 import '../models/court.dart';
 import '../models/unavailable_time_slot.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_calendar.dart';
 import '../widgets/app_image.dart';
+import '../widgets/app_info_notice.dart';
 import 'booking_summary_screen.dart';
 import '../widgets/time_select_bottom_sheet.dart';
 import '../widgets/app_button.dart';
@@ -36,6 +40,10 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   int? _selectedStartHour; // e.g. 18 for 18.00
   int? _selectedDurationHours; // e.g. 2 for 2 hours
 
+  List<UnavailableTimeSlot> _unavailableSlots = [];
+  bool _isLoadingSchedule = false;
+  String? _scheduleErrorMessage;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +59,35 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       _selectedDate = today;
     }
     _selectedStartHour = widget.initialStartHour;
+    _loadSchedule();
+  }
+
+  Future<void> _loadSchedule() async {
+    setState(() {
+      _isLoadingSchedule = true;
+      _scheduleErrorMessage = null;
+    });
+    try {
+      final slots = await AppConfig.bookingRepository.getVenueAvailability(
+        venueId: widget.court.venue.id,
+        date: _selectedDate,
+        courtId: widget.court.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        _unavailableSlots = slots;
+        _isLoadingSchedule = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      final isNet = isNetworkError(e) || e is BookingNetworkException;
+      setState(() {
+        _isLoadingSchedule = false;
+        _scheduleErrorMessage = isNet
+            ? 'Gagal memuat jadwal. Periksa jaringan internet Anda.'
+            : 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+      });
+    }
   }
 
   bool _isHourUnavailable(int hour) {
@@ -60,11 +97,19 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
         _selectedDate.month == today.month &&
         _selectedDate.day == today.day;
 
-    if (isToday && hour <= now.hour) {
-      return true;
+    if (isToday) {
+      final slotStart = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        hour,
+      );
+      if (slotStart.difference(now).inMinutes < AppConstants.minBookingLeadTimeMinutes) {
+        return true;
+      }
     }
 
-    for (final slot in widget.court.unavailableTimeSlots) {
+    for (final slot in _unavailableSlots) {
       if (hour >= slot.startHour && hour < slot.endHour) {
         return true;
       }
@@ -106,7 +151,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       builder: (context) {
         return TimeSelectBottomSheet(
           selectedDate: _selectedDate,
-          unavailableSlots: widget.court.unavailableTimeSlots,
+          unavailableSlots: _unavailableSlots,
           onTimeSelected: (hour) {
             setState(() {
               _selectedStartHour = hour;
@@ -349,6 +394,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                           _selectedStartHour = null; // Reset time selection on date change
                           _selectedDurationHours = null;
                         });
+                        _loadSchedule();
                       },
                     ),
                     const SizedBox(height: 16.0),
@@ -375,8 +421,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     ),
                     const SizedBox(height: 16.0),
 
-                    // 7. Time Information Card ("Waktu tidak tersedia")
-                    if (widget.court.unavailableTimeSlots.isNotEmpty)
+                    // 7. Time Information Card ("Waktu tidak tersedia" / Loading / Error)
+                    if (_isLoadingSchedule)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (_scheduleErrorMessage != null)
+                      AppInfoNotice(
+                        message: _scheduleErrorMessage!,
+                        variant: AppInfoNoticeVariant.danger,
+                      )
+                    else if (_unavailableSlots.isNotEmpty)
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -405,8 +463,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                             ),
                             const SizedBox(height: 12.0),
                             Column(
-                              children: widget.court.unavailableTimeSlots
-                                  .map((slot) {
+                              children: _unavailableSlots.map((slot) {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 8.0),
                                   child: _buildUnavailableSlotRow(
@@ -430,7 +487,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                           child: AppField(
                             label: 'Jam mulai',
                             trailingIconPath: AppIcons.clock,
-                            enabled: hasAvailableHours,
+                            enabled: !_isLoadingSchedule && _scheduleErrorMessage == null && hasAvailableHours,
                             onTap: _openTimeSelectBottomSheet,
                             child: Text(
                               !hasAvailableHours
@@ -457,7 +514,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                           child: PopupMenuButton<int>(
                             tooltip: '',
                             position: PopupMenuPosition.under,
-                            enabled: _selectedStartHour != null && maxDuration > 0,
+                            enabled: !_isLoadingSchedule && _scheduleErrorMessage == null && _selectedStartHour != null && maxDuration > 0,
                             onSelected: (d) => setState(() => _selectedDurationHours = d),
                             itemBuilder: (context) => [
                               for (int d = 1; d <= maxDuration; d++)
@@ -466,7 +523,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                             child: AppField(
                               label: 'Durasi',
                               trailingIconPath: AppIcons.chevronDown,
-                              enabled: _selectedStartHour != null && maxDuration > 0,
+                              enabled: !_isLoadingSchedule && _scheduleErrorMessage == null && _selectedStartHour != null && maxDuration > 0,
                               child: Text(
                                 _selectedDurationHours != null
                                     ? '$_selectedDurationHours jam'
@@ -527,21 +584,30 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   const SizedBox(height: 8.0),
                   AppButton(
                     label: 'Booking Sekarang',
-                    onPressed: isBookingValid
-                        ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BookingSummaryScreen(
-                            court: widget.court,
-                            selectedDate: _selectedDate,
-                            startHour: _selectedStartHour!,
-                            durationHours: _selectedDurationHours!,
-                          ),
-                        ),
-                      );
-                    }
-                    : null,
+                    onPressed: (isBookingValid && !_isLoadingSchedule && _scheduleErrorMessage == null)
+                        ? () async {
+                            final result = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BookingSummaryScreen(
+                                  court: widget.court,
+                                  selectedDate: _selectedDate,
+                                  startHour: _selectedStartHour!,
+                                  durationHours: _selectedDurationHours!,
+                                ),
+                              ),
+                            );
+
+                            if (result == true) {
+                              if (!mounted) return;
+                              setState(() {
+                                _selectedStartHour = null;
+                                _selectedDurationHours = null;
+                              });
+                              _loadSchedule();
+                            }
+                          }
+                        : null,
                   ),
                 ],
               ),

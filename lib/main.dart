@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/app_config.dart';
 import 'data/repositories/supabase_auth_repository.dart';
+import 'data/repositories/supabase_booking_repository.dart';
 import 'data/repositories/supabase_court_repository.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
@@ -20,6 +21,7 @@ void main() async {
       );
       AppConfig.authRepository = SupabaseAuthRepository();
       AppConfig.courtRepository = SupabaseCourtRepository();
+      AppConfig.bookingRepository = SupabaseBookingRepository();
       isConfigValid = true;
     } catch (e) {
       if (kDebugMode) {

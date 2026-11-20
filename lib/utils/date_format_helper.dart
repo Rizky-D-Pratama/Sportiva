@@ -125,4 +125,32 @@ class DateFormatHelper {
       return '${start.day} ${monthNames[start.month - 1]} ${start.year} – ${end.day} ${monthNames[end.month - 1]} ${end.year}';
     }
   }
+
+  /// Parses ISO timestamptz string in UTC and converts to WIB (UTC+7 fixed)
+  static DateTime parseUtcToWib(String isoUtcString) {
+    final parsed = DateTime.parse(isoUtcString).toUtc();
+    return parsed.add(const Duration(hours: 7));
+  }
+
+  /// Returns date with full month without day name e.g. "20 November 2026"
+  static String formatDateMonthYear(DateTime date) {
+    final monthName = monthNames[date.month - 1];
+    return '${date.day} $monthName ${date.year}';
+  }
+
+  /// Returns short date with time in WIB e.g. "20 Nov 2026, 09.30 WIB"
+  static String formatShortDateWithTime(DateTime wibDateTime) {
+    final shortMonth = shortMonthNames[wibDateTime.month - 1];
+    final hourStr = wibDateTime.hour.toString().padLeft(2, '0');
+    final minStr = wibDateTime.minute.toString().padLeft(2, '0');
+    return '${wibDateTime.day} $shortMonth ${wibDateTime.year}, $hourStr.$minStr WIB';
+  }
+
+  /// Returns payment deadline string in WIB e.g. "Bayar sebelum 20 Nov 2026, 18.00 WIB"
+  static String formatPaymentDeadline(DateTime wibDeadline) {
+    final shortMonth = shortMonthNames[wibDeadline.month - 1];
+    final hourStr = wibDeadline.hour.toString().padLeft(2, '0');
+    final minStr = wibDeadline.minute.toString().padLeft(2, '0');
+    return 'Bayar sebelum ${wibDeadline.day} $shortMonth ${wibDeadline.year}, $hourStr.$minStr WIB';
+  }
 }

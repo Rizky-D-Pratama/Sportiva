@@ -36,8 +36,16 @@ class TimeSelectBottomSheet extends StatelessWidget {
       return true;
     }
 
-    if (isToday && hour <= now.hour && restrictAfterHour == null) {
-      return true;
+    if (isToday && restrictAfterHour == null) {
+      final slotStart = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        hour,
+      );
+      if (slotStart.difference(now).inMinutes < AppConstants.minBookingLeadTimeMinutes) {
+        return true;
+      }
     }
 
     for (final slot in unavailableSlots) {

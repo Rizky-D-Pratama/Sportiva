@@ -13,6 +13,7 @@ enum SlotSourceMark {
 
 /// Model representing an unavailable time slot for a court
 class UnavailableTimeSlot {
+  final String? courtId;
   final int startHour;
   final int endHour;
   final String statusLabel; // e.g. "Dipesan", "Ditahan Sementara", "Ditutup"
@@ -22,6 +23,7 @@ class UnavailableTimeSlot {
   final SlotSourceMark sourceMark;
 
   const UnavailableTimeSlot({
+    this.courtId,
     required this.startHour,
     required this.endHour,
     required this.statusLabel,
