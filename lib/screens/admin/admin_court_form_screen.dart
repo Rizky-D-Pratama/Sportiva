@@ -217,59 +217,101 @@ class _AdminCourtFormScreenState extends State<AdminCourtFormScreen> {
         ? _imageUrl!
         : AppImages.soccer;
 
-    if (_isEditMode) {
-      final updatedCourt = widget.court!.copyWith(
-        name: nameTrimmed,
-        category: _selectedCategory!,
-        pricePerHour: priceVal,
-        description: descriptionTrimmed,
-        facilities: List.from(_facilities),
-        isActive: _isActive,
-        imageUrl: effectiveImageUrl,
-      );
-      await _repository.updateCourt(updatedCourt);
-    } else {
-      final adminVenue = AppConfig.authRepository.currentUser?.venue;
-      if (adminVenue == null) {
-        throw const CourtServerException('Venue data is missing');
+    try {
+      if (_isEditMode) {
+        final updatedCourt = widget.court!.copyWith(
+          name: nameTrimmed,
+          category: _selectedCategory!,
+          pricePerHour: priceVal,
+          description: descriptionTrimmed,
+          facilities: List.from(_facilities),
+          isActive: _isActive,
+          imageUrl: effectiveImageUrl,
+        );
+        await _repository.updateCourt(updatedCourt);
+      } else {
+        final adminVenue = AppConfig.authRepository.currentUser?.venue;
+        if (adminVenue == null) {
+          throw const CourtServerException('Venue data is missing');
+        }
+        final newCourt = Court(
+          id: 'court_${DateTime.now().millisecondsSinceEpoch}',
+          name: nameTrimmed,
+          category: _selectedCategory!,
+          venue: adminVenue,
+          pricePerHour: priceVal,
+          rating: 0.0,
+          reviewCount: 0,
+          imageUrl: effectiveImageUrl,
+          facilities: List.from(_facilities),
+          description: descriptionTrimmed,
+          isActive: _isActive,
+          isFullToday: false,
+        );
+        await _repository.addCourt(newCourt);
       }
-      final newCourt = Court(
-        id: 'court_${DateTime.now().millisecondsSinceEpoch}',
-        name: nameTrimmed,
-        category: _selectedCategory!,
-        venue: adminVenue,
-        pricePerHour: priceVal,
-        rating: 0.0,
-        reviewCount: 0,
-        imageUrl: effectiveImageUrl,
-        facilities: List.from(_facilities),
-        description: descriptionTrimmed,
-        isActive: _isActive,
-        isFullToday: false,
-      );
-      await _repository.addCourt(newCourt);
-    }
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final snackMessage = _isEditMode
-        ? 'Perubahan disimpan.'
-        : 'Lapangan berhasil ditambahkan.';
+      final snackMessage = _isEditMode
+          ? 'Perubahan disimpan.'
+          : 'Lapangan berhasil ditambahkan.';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        content: AppInfoNotice(
-          message: snackMessage,
-          iconPath: AppIcons.circleCheck,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: snackMessage,
+            iconPath: AppIcons.circleCheck,
+          ),
+          duration: const Duration(seconds: 3),
         ),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+      );
 
-    Navigator.of(context).pop(true);
+      Navigator.of(context).pop(true);
+    } on CourtDuplicateNameException {
+      if (!mounted) return;
+      setState(() {
+        _nameError = 'Nama lapangan sudah digunakan.';
+        _isSubmitting = false;
+      });
+    } on CourtNetworkException {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: 'Koneksi terputus. Periksa jaringan internet Anda.',
+            iconPath: AppIcons.circleAlert,
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.',
+            iconPath: AppIcons.circleAlert,
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   void _openFacilityBottomSheet() {

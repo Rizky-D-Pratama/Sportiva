@@ -17,6 +17,11 @@ class CourtServerException implements Exception {
   const CourtServerException([this.details]);
 }
 
+/// Exception thrown when a court with the same name already exists in the venue
+class CourtDuplicateNameException implements Exception {
+  const CourtDuplicateNameException();
+}
+
 /// Abstract repository contract for Court (Lapangan) & Schedule Closure data operations
 abstract class CourtRepository {
   Future<List<Court>> getAllCourts();

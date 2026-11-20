@@ -95,6 +95,18 @@ class SupabaseCourtRepository implements CourtRepository {
     );
   }
 
+  /// Helper to handle PostgrestException for write operations
+  void _handlePostgrestException(PostgrestException e, String contextMessage) {
+    _log('SUPABASE PostgrestException in $contextMessage: message=${e.message}, code=${e.code}, details=${e.details}');
+    final msgLower = e.message.toLowerCase();
+    final detailsLower = e.details?.toString().toLowerCase() ?? '';
+    if (e.code == '23505' &&
+        (msgLower.contains('courts_venue_nama_uq') || detailsLower.contains('courts_venue_nama_uq'))) {
+      throw const CourtDuplicateNameException();
+    }
+    throw CourtServerException(e.message);
+  }
+
   @override
   Future<List<Court>> getAllCourts() async {
     try {
@@ -102,7 +114,8 @@ class SupabaseCourtRepository implements CourtRepository {
           .from('courts')
           .select('*, venues(*)')
           .eq('is_active', true)
-          .order('nama', ascending: true);
+          .isFilter('dihapus_pada', null)
+          .order('created_at', ascending: true);
 
       final list = response as List<dynamic>;
       return list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
@@ -129,8 +142,10 @@ class SupabaseCourtRepository implements CourtRepository {
           .from('courts')
           .select('*, venues(*)')
           .eq('is_active', true)
+          .isFilter('dihapus_pada', null)
           .order('rating', ascending: false)
           .order('jumlah_ulasan', ascending: false)
+          .order('nama', ascending: true)
           .limit(2);
 
       final list = response as List<dynamic>;
@@ -157,8 +172,9 @@ class SupabaseCourtRepository implements CourtRepository {
           .from('courts')
           .select('*, venues(*)')
           .eq('is_active', true)
-          .ilike('kategori', category)
-          .order('nama', ascending: true);
+          .isFilter('dihapus_pada', null)
+          .eq('kategori', category)
+          .order('created_at', ascending: true);
 
       final list = response as List<dynamic>;
       return list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
@@ -205,7 +221,8 @@ class SupabaseCourtRepository implements CourtRepository {
           .from('courts')
           .select('*, venues(*)')
           .eq('venue_id', adminVenue.id)
-          .order('nama', ascending: true);
+          .isFilter('dihapus_pada', null)
+          .order('created_at', ascending: true);
 
       final list = response as List<dynamic>;
       return list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
@@ -224,20 +241,105 @@ class SupabaseCourtRepository implements CourtRepository {
     }
   }
 
-  // SEMENTARA irisan 2b: write operations delegate to FakeCourtRepository
   @override
   Future<void> addCourt(Court court) async {
-    await _fakeRepo.addCourt(court);
+    final venueId = AppConfig.authRepository.currentUser?.venue?.id;
+    if (venueId == null) {
+      throw const CourtServerException('Venue data is missing');
+    }
+
+    try {
+      final response = await Supabase.instance.client.from('courts').insert({
+        'venue_id': venueId,
+        'nama': court.name.trim(),
+        'kategori': court.category,
+        'harga_per_jam': court.pricePerHour,
+        'fasilitas': court.facilities,
+        'deskripsi': court.description,
+        'is_active': court.isActive,
+        'foto': null,
+      }).select();
+
+      final list = response as List<dynamic>;
+      if (list.length != 1) {
+        throw const CourtServerException('Gagal menambahkan lapangan');
+      }
+    } on PostgrestException catch (e) {
+      _handlePostgrestException(e, 'addCourt');
+    } catch (e) {
+      _log('SUPABASE Exception in addCourt: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException || e is CourtDuplicateNameException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 
   @override
   Future<void> updateCourt(Court court) async {
-    await _fakeRepo.updateCourt(court);
+    try {
+      final response = await Supabase.instance.client
+          .from('courts')
+          .update({
+            'nama': court.name.trim(),
+            'kategori': court.category,
+            'harga_per_jam': court.pricePerHour,
+            'fasilitas': court.facilities,
+            'deskripsi': court.description,
+            'is_active': court.isActive,
+          })
+          .eq('id', court.id)
+          .select();
+
+      final list = response as List<dynamic>;
+      if (list.length != 1) {
+        throw const CourtServerException('Gagal memperbarui lapangan');
+      }
+    } on PostgrestException catch (e) {
+      _handlePostgrestException(e, 'updateCourt');
+    } catch (e) {
+      _log('SUPABASE Exception in updateCourt: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException || e is CourtDuplicateNameException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 
   @override
   Future<void> deleteCourt(String courtId) async {
-    await _fakeRepo.deleteCourt(courtId);
+    try {
+      final response = await Supabase.instance.client
+          .from('courts')
+          .update({
+            'dihapus_pada': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', courtId)
+          .select();
+
+      final list = response as List<dynamic>;
+      if (list.length != 1) {
+        throw const CourtServerException('Gagal menghapus lapangan');
+      }
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in deleteCourt: message=${e.message}, code=${e.code}');
+      throw CourtServerException(e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in deleteCourt: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 
   @override

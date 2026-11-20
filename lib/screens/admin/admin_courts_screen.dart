@@ -8,6 +8,7 @@ import '../../widgets/admin_court_card.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_header.dart';
+import '../../widgets/app_info_notice.dart';
 import '../../widgets/app_modal.dart';
 import '../../widgets/app_sticky_bottom_bar.dart';
 import 'admin_court_form_screen.dart';
@@ -32,6 +33,7 @@ class _AdminCourtsScreenState extends State<AdminCourtsScreen> {
   CourtFilter _selectedFilter = CourtFilter.semua;
   List<Court> _allCourts = [];
   bool _isLoading = true;
+  bool _isDeleting = false;
   String? _errorMessage;
 
   @override
@@ -84,10 +86,45 @@ class _AdminCourtsScreenState extends State<AdminCourtsScreen> {
       message: 'Lapangan akan dihapus. Anda dapat menambahkan kembali kapan saja.',
       primaryButtonLabel: 'Ya, Hapus',
       onPrimaryPressed: () async {
+        if (_isDeleting) return;
+        _isDeleting = true;
         Navigator.pop(context); // Close modal
-        await _repository.deleteCourt(court.id);
-        if (!mounted) return;
-        await _loadCourts(); // Refresh court list
+        try {
+          await _repository.deleteCourt(court.id);
+          _isDeleting = false;
+          if (!mounted) return;
+          await _loadCourts(); // Refresh court list
+        } on CourtNetworkException {
+          _isDeleting = false;
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              content: AppInfoNotice(
+                message: 'Koneksi terputus. Periksa jaringan internet Anda.',
+                iconPath: AppIcons.circleAlert,
+              ),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } catch (_) {
+          _isDeleting = false;
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              content: AppInfoNotice(
+                message: 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.',
+                iconPath: AppIcons.circleAlert,
+              ),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       },
       secondaryButtonLabel: 'Kembali',
       onSecondaryPressed: () => Navigator.pop(context),
