@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../config/app_config.dart';
 import '../constants/app_icons.dart';
-import '../data/mock_data.dart';
+import '../data/booking_repository.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_badge.dart';
@@ -10,7 +10,6 @@ import '../widgets/app_button.dart';
 import '../widgets/app_chip.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_star_rating.dart';
-import '../widgets/give_rating_bottom_sheet.dart';
 import 'booking_detail_screen.dart';
 
 /// Screen for Riwayat Booking (Booking History)
@@ -23,20 +22,37 @@ class BookingHistoryScreen extends StatefulWidget {
 
 class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   String _selectedFilter = 'Semua';
-  late List<Booking> _bookings;
+  List<Booking> _bookings = [];
+  bool _isLoading = true;
+  Object? _error;
 
   @override
   void initState() {
     super.initState();
-    final activeUser = AppConfig.authRepository.currentUser;
-    if (activeUser != null) {
-      _bookings = MockData.mockBookings
-          .where((b) => b.userId == activeUser.id)
-          .toList();
-    } else {
-      _bookings = [];
+    _fetchBookings();
+  }
+
+  Future<void> _fetchBookings() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final bookings = await AppConfig.bookingRepository.getMyBookings();
+      if (!mounted) return;
+      setState(() {
+        _bookings = bookings;
+        _sortBookings();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _isLoading = false;
+      });
     }
-    _sortBookings();
   }
 
   void _sortBookings() {
@@ -66,19 +82,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     return history;
   }
 
-  void _updateBookingRating(String bookingId, int rating) {
-    setState(() {
-      final index = _bookings.indexWhere((b) => b.id == bookingId);
-      if (index != -1) {
-        _bookings[index] = _bookings[index].copyWith(rating: rating);
-        // Also update MockData in memory so it persists across screen re-opens
-        final mockIndex = MockData.mockBookings.indexWhere((b) => b.id == bookingId);
-        if (mockIndex != -1) {
-          MockData.mockBookings[mockIndex] =
-              MockData.mockBookings[mockIndex].copyWith(rating: rating);
-        }
-      }
-    });
+  String get _errorMessage {
+    if (_error is BookingNetworkException) {
+      return 'Gagal memuat pesanan. Periksa jaringan internet Anda.';
+    }
+    return 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
   }
 
   @override
@@ -91,95 +99,118 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.paddingXLarge,
-            12.0,
-            AppTheme.paddingXLarge,
-            AppTheme.paddingXLarge,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. App Header with back button and headlineMedium title (fontSize 20.0)
-              AppHeader(
-                title: 'Riwayat Booking',
-                showBackButton: true,
-                onBackTap: () => Navigator.maybePop(context),
-              ),
-              const SizedBox(height: 16.0),
+        child: RefreshIndicator(
+          onRefresh: _fetchBookings,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.paddingXLarge,
+              12.0,
+              AppTheme.paddingXLarge,
+              AppTheme.paddingXLarge,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. App Header with back button
+                AppHeader(
+                  title: 'Riwayat Booking',
+                  showBackButton: true,
+                  onBackTap: () => Navigator.maybePop(context),
+                ),
+                const SizedBox(height: 16.0),
 
-              // 2. Status Filter Chips ("Semua", "Selesai", "Batal")
-              Row(
-                children: [
-                  Expanded(
-                    child: AppChip(
-                      label: 'Semua',
-                      isSelected: _selectedFilter == 'Semua',
-                      onTap: () {
-                        setState(() {
-                          _selectedFilter = 'Semua';
-                        });
-                      },
-                      size: AppChipSize.compact,
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: AppChip(
-                      label: 'Selesai',
-                      isSelected: _selectedFilter == 'Selesai',
-                      onTap: () {
-                        setState(() {
-                          _selectedFilter = 'Selesai';
-                        });
-                      },
-                      size: AppChipSize.compact,
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: AppChip(
-                      label: 'Batal',
-                      isSelected: _selectedFilter == 'Batal',
-                      onTap: () {
-                        setState(() {
-                          _selectedFilter = 'Batal';
-                        });
-                      },
-                      size: AppChipSize.compact,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16.0),
-
-              // 3. History List Cards
-              if (displayed.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 48.0),
-                  child: Center(
-                    child: Text(
-                      'Belum ada riwayat booking.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colors.textSecondary,
+                // 2. Status Filter Chips ("Semua", "Selesai", "Batal")
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppChip(
+                        label: 'Semua',
+                        isSelected: _selectedFilter == 'Semua',
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = 'Semua';
+                          });
+                        },
+                        size: AppChipSize.compact,
                       ),
                     ),
-                  ),
-                )
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayed.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 16.0),
-                  itemBuilder: (context, index) {
-                    final booking = displayed[index];
-                    return _buildHistoryCardItem(context, booking);
-                  },
+                    const SizedBox(width: 8.0),
+                    Expanded(
+                      child: AppChip(
+                        label: 'Selesai',
+                        isSelected: _selectedFilter == 'Selesai',
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = 'Selesai';
+                          });
+                        },
+                        size: AppChipSize.compact,
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    Expanded(
+                      child: AppChip(
+                        label: 'Batal',
+                        isSelected: _selectedFilter == 'Batal',
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = 'Batal';
+                          });
+                        },
+                        size: AppChipSize.compact,
+                      ),
+                    ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 16.0),
+
+                // 3. History List / Loading / Error / Empty Content
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 48.0),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 48.0),
+                    child: Center(
+                      child: Text(
+                        _errorMessage,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                else if (displayed.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 48.0),
+                    child: Center(
+                      child: Text(
+                        'Belum ada riwayat booking.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: displayed.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 16.0),
+                    itemBuilder: (context, index) {
+                      final booking = displayed[index];
+                      return _buildHistoryCardItem(context, booking);
+                    },
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -316,13 +347,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                 label: 'Beri penilaian',
                 variant: AppButtonVariant.secondary,
                 onPressed: () {
-                  showGiveRatingBottomSheet(
-                    context: context,
-                    booking: booking,
-                    onRatingSubmitted: (rating) {
-                      _updateBookingRating(booking.id, rating);
-                    },
-                  );
+                  // TODO: irisan penilaian
                 },
               ),
             ] else ...[

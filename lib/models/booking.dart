@@ -24,6 +24,9 @@ class Booking {
 
   // Extended fields for Detail & Ticket views
   final String? userId;
+  final String? courtId;
+  final String? venueId;
+  final DateTime? createdAt;
   final int pricePerHour;
   final int serviceFee;
   final int durationHours;
@@ -51,15 +54,18 @@ class Booking {
     required this.playDateTime,
     this.rating,
     this.userId,
-    this.pricePerHour = 100000,
-    this.serviceFee = 5000,
-    this.durationHours = 1,
+    this.courtId,
+    this.venueId,
+    this.createdAt,
+    required this.pricePerHour,
+    required this.serviceFee,
+    required this.durationHours,
     this.createdDateText,
     this.paymentStatusText,
     this.userName,
     this.userPhone,
     this.userEmail,
-    this.venueName = 'Sportiva Center',
+    required this.venueName,
     this.facilitiesText,
     this.courtImageUrl,
     this.fullDateText,
@@ -97,6 +103,9 @@ class Booking {
     DateTime? playDateTime,
     int? rating,
     String? userId,
+    String? courtId,
+    String? venueId,
+    DateTime? createdAt,
     int? pricePerHour,
     int? serviceFee,
     int? durationHours,
@@ -124,6 +133,9 @@ class Booking {
       playDateTime: playDateTime ?? this.playDateTime,
       rating: rating ?? this.rating,
       userId: userId ?? this.userId,
+      courtId: courtId ?? this.courtId,
+      venueId: venueId ?? this.venueId,
+      createdAt: createdAt ?? this.createdAt,
       pricePerHour: pricePerHour ?? this.pricePerHour,
       serviceFee: serviceFee ?? this.serviceFee,
       durationHours: durationHours ?? this.durationHours,

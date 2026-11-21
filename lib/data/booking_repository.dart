@@ -24,6 +24,9 @@ class BookingServerException extends BookingException {
 
 /// Interface for Booking repository operations
 abstract class BookingRepository {
+  /// Fetches bookings for the current logged-in user using RPC `get_my_bookings`
+  Future<List<Booking>> getMyBookings();
+
   /// Creates a booking on the server using RPC `create_booking`
   Future<Booking> createBooking({
     required Court court,

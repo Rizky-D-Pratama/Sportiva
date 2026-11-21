@@ -16,6 +16,133 @@ class SupabaseBookingRepository implements BookingRepository {
     }
   }
 
+  /// Maps a JSON row (from get_my_bookings or create_booking RPC) to a Booking model
+  Booking _mapJsonToBooking(Map<String, dynamic> json) {
+    final id = json['id'] as String;
+    final bookingCode = json['kode_booking'] as String;
+    final statusStr = json['status'] as String?;
+    final courtId = json['court_id'] as String?;
+    final venueId = json['venue_id'] as String?;
+    final courtName = json['nama_lapangan'] as String? ?? '';
+    final kategori = json['kategori'] as String? ?? '';
+    final fasilitasRaw = json['fasilitas'];
+    List<String> fasilitas = [];
+    if (fasilitasRaw is List) {
+      fasilitas = fasilitasRaw.map((e) => e.toString()).toList();
+    }
+    final foto = json['foto'] as String?;
+    final venueName = json['nama_venue'] as String? ?? '';
+    final tanggalStr = json['tanggal'] as String; // YYYY-MM-DD
+    final jamMulai = (json['jam_mulai'] as num).toInt();
+    final durasiJam = (json['durasi_jam'] as num).toInt();
+    final hargaPerJam = (json['harga_per_jam'] as num).toInt();
+    final biayaLayanan = (json['biaya_layanan'] as num).toInt();
+    final total = (json['total'] as num).toInt();
+    final batasBayarStr = json['batas_bayar'] as String?;
+    final dibuatPadaStr = json['dibuat_pada'] as String?;
+    final namaPemesan = json['nama_pemesan'] as String?;
+    final teleponPemesan = json['telepon_pemesan'] as String?;
+    final emailPemesan = json['email_pemesan'] as String?;
+    final userId = json['user_id'] as String?;
+
+    // Date & Time formatting
+    final dateParts = tanggalStr.split('-');
+    final playDateTime = DateTime(
+      int.parse(dateParts[0]),
+      int.parse(dateParts[1]),
+      int.parse(dateParts[2]),
+      jamMulai,
+    );
+
+    final endHour = jamMulai + durasiJam;
+    final timeRange =
+        '${jamMulai.toString().padLeft(2, '0')}.00 – ${endHour.toString().padLeft(2, '0')}.00 WIB';
+
+    final dateText = DateFormatHelper.formatShortDate(playDateTime);
+    final fullDateText = DateFormatHelper.formatDateMonthYear(playDateTime);
+    final ticketDateText = DateFormatHelper.formatFullDate(playDateTime);
+
+    String? paymentDeadline;
+    if (batasBayarStr != null && batasBayarStr.isNotEmpty) {
+      final wibDeadline = DateFormatHelper.parseUtcToWib(batasBayarStr);
+      paymentDeadline = DateFormatHelper.formatPaymentDeadline(wibDeadline);
+    }
+
+    DateTime? createdAt;
+    String? createdDateText;
+    if (dibuatPadaStr != null && dibuatPadaStr.isNotEmpty) {
+      createdAt = DateFormatHelper.parseUtcToWib(dibuatPadaStr);
+      createdDateText = DateFormatHelper.formatShortDateWithTime(createdAt);
+    }
+
+    // Status Mapping: kedaluwarsa -> dibatalkan
+    final status = switch (statusStr) {
+      'belum_bayar' => BookingStatus.belumBayar,
+      'sudah_bayar' => BookingStatus.sudahBayar,
+      'selesai' => BookingStatus.selesai,
+      'dibatalkan' || 'kedaluwarsa' => BookingStatus.dibatalkan,
+      _ => BookingStatus.belumBayar,
+    };
+
+    // Image URL resolution
+    final courtImageUrl = (foto != null && foto.isNotEmpty)
+        ? foto
+        : DateFormatHelper.getCategoryImageUrl(kategori);
+
+    return Booking(
+      id: id,
+      bookingCode: bookingCode,
+      courtName: courtName,
+      date: dateText,
+      timeRange: timeRange,
+      totalPayment: total,
+      status: status,
+      paymentMethod: null,
+      paymentDeadline: paymentDeadline,
+      playDateTime: playDateTime,
+      userId: userId,
+      courtId: courtId,
+      venueId: venueId,
+      createdAt: createdAt,
+      pricePerHour: hargaPerJam,
+      serviceFee: biayaLayanan,
+      durationHours: durasiJam,
+      createdDateText: createdDateText,
+      paymentStatusText: null,
+      userName: namaPemesan,
+      userPhone: teleponPemesan,
+      userEmail: emailPemesan,
+      venueName: venueName,
+      facilitiesText: fasilitas.isNotEmpty ? fasilitas.join(' • ') : null,
+      courtImageUrl: courtImageUrl,
+      fullDateText: fullDateText,
+      ticketDateText: ticketDateText,
+    );
+  }
+
+  @override
+  Future<List<Booking>> getMyBookings() async {
+    try {
+      final response = await Supabase.instance.client.rpc('get_my_bookings');
+      final list = response as List<dynamic>;
+      return list
+          .map((item) => _mapJsonToBooking(item as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in getMyBookings: code=${e.code}, message=${e.message}');
+      throw BookingServerException(e.code, e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in getMyBookings: $e');
+      if (isNetworkError(e)) {
+        throw const BookingNetworkException();
+      }
+      if (e is BookingException) {
+        rethrow;
+      }
+      throw BookingServerException(null, e.toString());
+    }
+  }
+
   @override
   Future<Booking> createBooking({
     required Court court,
@@ -37,79 +164,17 @@ class SupabaseBookingRepository implements BookingRepository {
         },
       );
 
-      final json = response as Map<String, dynamic>;
+      final json = Map<String, dynamic>.from(response as Map<String, dynamic>);
+      json['court_id'] = court.id;
+      json['venue_id'] = court.venue.id;
+      json['nama_lapangan'] = court.name;
+      json['kategori'] = court.category;
+      json['fasilitas'] = court.facilities;
+      json['foto'] = court.imageUrl;
+      json['nama_venue'] = court.venue.name;
+      json['status'] = 'belum_bayar';
 
-      final id = json['id'] as String;
-      final bookingCode = json['kode_booking'] as String;
-      final userId = json['user_id'] as String?;
-      final tanggalStr = json['tanggal'] as String; // YYYY-MM-DD
-      final jamMulai = (json['jam_mulai'] as num).toInt();
-      final durasiJam = (json['durasi_jam'] as num).toInt();
-      final hargaPerJam = (json['harga_per_jam'] as num).toInt();
-      final biayaLayanan = (json['biaya_layanan'] as num).toInt();
-      final total = (json['total'] as num).toInt();
-      final batasBayarStr = json['batas_bayar'] as String?;
-      final namaPemesan = json['nama_pemesan'] as String?;
-      final teleponPemesan = json['telepon_pemesan'] as String?;
-      final emailPemesan = json['email_pemesan'] as String?;
-      final dibuatPadaStr = json['dibuat_pada'] as String?;
-
-      // Correction #1: playDateTime built from tanggal + jam_mulai
-      final dateParts = tanggalStr.split('-');
-      final playDateTime = DateTime(
-        int.parse(dateParts[0]),
-        int.parse(dateParts[1]),
-        int.parse(dateParts[2]),
-        jamMulai,
-      );
-
-      final endHour = jamMulai + durasiJam;
-      final timeRange =
-          '${jamMulai.toString().padLeft(2, '0')}.00 – ${endHour.toString().padLeft(2, '0')}.00 WIB';
-
-      // Correction #2: Text formatting for Booking object
-      final dateText = DateFormatHelper.formatShortDate(playDateTime);
-      final fullDateText = DateFormatHelper.formatDateMonthYear(playDateTime);
-      final ticketDateText = DateFormatHelper.formatFullDate(playDateTime);
-
-      String? paymentDeadline;
-      if (batasBayarStr != null && batasBayarStr.isNotEmpty) {
-        final wibDeadline = DateFormatHelper.parseUtcToWib(batasBayarStr);
-        paymentDeadline = DateFormatHelper.formatPaymentDeadline(wibDeadline);
-      }
-
-      String? createdDateText;
-      if (dibuatPadaStr != null && dibuatPadaStr.isNotEmpty) {
-        final wibCreated = DateFormatHelper.parseUtcToWib(dibuatPadaStr);
-        createdDateText = DateFormatHelper.formatShortDateWithTime(wibCreated);
-      }
-
-      return Booking(
-        id: id,
-        bookingCode: bookingCode,
-        courtName: court.name,
-        date: dateText,
-        timeRange: timeRange,
-        totalPayment: total,
-        status: BookingStatus.belumBayar,
-        paymentMethod: null, // "Belum memilih metode pembayaran"
-        paymentDeadline: paymentDeadline,
-        playDateTime: playDateTime,
-        userId: userId,
-        pricePerHour: hargaPerJam,
-        serviceFee: biayaLayanan,
-        durationHours: durasiJam,
-        createdDateText: createdDateText,
-        paymentStatusText: 'Belum bayar',
-        userName: namaPemesan,
-        userPhone: teleponPemesan,
-        userEmail: emailPemesan,
-        venueName: court.venue.name,
-        facilitiesText: court.facilities.join(' • '),
-        courtImageUrl: court.imageUrl,
-        fullDateText: fullDateText,
-        ticketDateText: ticketDateText,
-      );
+      return _mapJsonToBooking(json);
     } on PostgrestException catch (e) {
       _log('SUPABASE PostgrestException in createBooking: code=${e.code}, message=${e.message}');
       final code = e.code;

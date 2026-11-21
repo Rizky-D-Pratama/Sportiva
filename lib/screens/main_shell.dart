@@ -12,23 +12,28 @@ import 'profile_screen.dart';
 class MainShell extends StatefulWidget {
   final CourtRepository repository;
 
+  /// Notifier to request tab switching from anywhere in the app
+  static final ValueNotifier<int?> tabRequest = ValueNotifier<int?>(null);
+
   const MainShell({
     super.key,
     required this.repository,
   });
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<MainShell> createState() => MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  final GlobalKey<OrderScreenState> _orderScreenKey = GlobalKey<OrderScreenState>();
 
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    MainShell.tabRequest.addListener(_handleTabRequest);
     _pages = [
       HomeScreen(
         repository: widget.repository,
@@ -37,15 +42,36 @@ class _MainShellState extends State<MainShell> {
       CourtScreen(
         repository: widget.repository,
       ),
-      const OrderScreen(),
+      OrderScreen(key: _orderScreenKey),
       ProfileScreen(),
     ];
   }
 
-  void _onTabTapped(int index) {
+  @override
+  void dispose() {
+    MainShell.tabRequest.removeListener(_handleTabRequest);
+    super.dispose();
+  }
+
+  void _handleTabRequest() {
+    final targetIndex = MainShell.tabRequest.value;
+    if (targetIndex != null) {
+      selectTab(targetIndex);
+      MainShell.tabRequest.value = null;
+    }
+  }
+
+  void selectTab(int index) {
     setState(() {
       _currentIndex = index;
     });
+    if (index == 2) {
+      _orderScreenKey.currentState?.reloadBookings();
+    }
+  }
+
+  void _onTabTapped(int index) {
+    selectTab(index);
   }
 
   @override
@@ -53,8 +79,7 @@ class _MainShellState extends State<MainShell> {
     final colors = context.appColors;
 
     final navBg = colors.surfaceNavigation;
-    final borderColor =
-        colors.borderDefault;
+    final borderColor = colors.borderDefault;
 
     return Scaffold(
       body: SafeArea(

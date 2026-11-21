@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../config/app_config.dart';
 import '../constants/app_icons.dart';
-import '../data/mock_data.dart';
+import '../data/booking_repository.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_badge.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_chip.dart';
 import '../widgets/app_header.dart';
-import '../widgets/app_modal.dart';
 import 'booking_detail_screen.dart';
 import 'booking_history_screen.dart';
 import 'booking_ticket_screen.dart';
@@ -19,29 +18,51 @@ class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key});
 
   @override
-  State<OrderScreen> createState() => _OrderScreenState();
+  State<OrderScreen> createState() => OrderScreenState();
 }
 
-class _OrderScreenState extends State<OrderScreen> {
+class OrderScreenState extends State<OrderScreen> {
   String _selectedFilter = 'Semua';
-  late List<Booking> _bookings;
+  List<Booking> _bookings = [];
+  bool _isLoading = true;
+  Object? _error;
 
   @override
   void initState() {
     super.initState();
-    final activeUser = AppConfig.authRepository.currentUser;
-    if (activeUser != null) {
-      _bookings = MockData.mockBookings
-          .where((b) => b.userId == activeUser.id)
-          .toList();
-    } else {
-      _bookings = [];
+    _fetchBookings();
+  }
+
+  /// Public method to trigger reloading from MainShell
+  Future<void> reloadBookings() async {
+    return _fetchBookings();
+  }
+
+  Future<void> _fetchBookings() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final bookings = await AppConfig.bookingRepository.getMyBookings();
+      if (!mounted) return;
+      setState(() {
+        _bookings = bookings;
+        _sortBookings();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _isLoading = false;
+      });
     }
-    _sortBookings();
   }
 
   void _sortBookings() {
-    // Sort active bookings by closest play date/time
+    // Sort active bookings by closest play date/time (ascending)
     _bookings.sort((a, b) => a.playDateTime.compareTo(b.playDateTime));
   }
 
@@ -64,25 +85,14 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   void _cancelBooking(Booking booking) {
-    AppModal.show(
-      context: context,
-      iconPath: AppIcons.circleAlert,
-      title: 'Batalkan Booking?',
-      message:
-          'Booking anda akan dibatalkan. Anda dapat pesan kembali kapan saja.',
-      primaryButtonLabel: 'Ya, Batalkan',
-      secondaryButtonLabel: 'Kembali',
-      onPrimaryPressed: () {
-        setState(() {
-          _bookings.removeWhere((b) => b.id == booking.id);
-        });
-        Navigator.pop(context);
-        // TODO: nanti memanggil server untuk membatalkan booking
-      },
-      onSecondaryPressed: () {
-        Navigator.pop(context);
-      },
-    );
+    // TODO: irisan 6
+  }
+
+  String get _errorMessage {
+    if (_error is BookingNetworkException) {
+      return 'Gagal memuat pesanan. Periksa jaringan internet Anda.';
+    }
+    return 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
   }
 
   @override
@@ -92,119 +102,143 @@ class _OrderScreenState extends State<OrderScreen> {
 
     final displayed = _displayedBookings;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.paddingXLarge,
-        vertical: AppTheme.paddingSmall,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // App Header
-          const AppHeader(
-            title: 'Pesanan',
-            showNotificationBell: true,
-          ),
-          const SizedBox(height: 16.0),
+    return RefreshIndicator(
+      onRefresh: _fetchBookings,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.paddingXLarge,
+          vertical: AppTheme.paddingSmall,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // App Header
+            const AppHeader(
+              title: 'Pesanan',
+              showNotificationBell: true,
+            ),
+            const SizedBox(height: 16.0),
 
-          // Filter pembayaran chips
-          Row(
-            children: [
-              Expanded(
-                child: AppChip(
-                  label: 'Semua',
-                  isSelected: _selectedFilter == 'Semua',
-                  onTap: () {
-                    setState(() {
-                      _selectedFilter = 'Semua';
-                    });
-                  },
-                  size: AppChipSize.compact,
-                ),
-              ),
-              const SizedBox(width: 6.0),
-              Expanded(
-                child: AppChip(
-                  label: 'Belum bayar',
-                  isSelected: _selectedFilter == 'Belum bayar',
-                  onTap: () {
-                    setState(() {
-                      _selectedFilter = 'Belum bayar';
-                    });
-                  },
-                  size: AppChipSize.compact,
-                ),
-              ),
-              const SizedBox(width: 6.0),
-              Expanded(
-                child: AppChip(
-                  label: 'Sudah bayar',
-                  isSelected: _selectedFilter == 'Sudah bayar',
-                  onTap: () {
-                    setState(() {
-                      _selectedFilter = 'Sudah bayar';
-                    });
-                  },
-                  size: AppChipSize.compact,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-
-          // List Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Pesanan aktif',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: colors.textPrimary,
-                  fontSize: 17.0,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                '${displayed.length} pesanan',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colors.textSecondary,
-                  fontSize: 11.0,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-
-          // Booking List Cards
-          if (displayed.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32.0),
-              child: Center(
-                child: Text(
-                  'Belum ada pesanan aktif.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.textSecondary,
+            // Filter pembayaran chips
+            Row(
+              children: [
+                Expanded(
+                  child: AppChip(
+                    label: 'Semua',
+                    isSelected: _selectedFilter == 'Semua',
+                    onTap: () {
+                      setState(() {
+                        _selectedFilter = 'Semua';
+                      });
+                    },
+                    size: AppChipSize.compact,
                   ),
                 ),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: displayed.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 16.0),
-              itemBuilder: (context, index) {
-                final booking = displayed[index];
-                return _buildBookingCard(context, booking);
-              },
+                const SizedBox(width: 6.0),
+                Expanded(
+                  child: AppChip(
+                    label: 'Belum bayar',
+                    isSelected: _selectedFilter == 'Belum bayar',
+                    onTap: () {
+                      setState(() {
+                        _selectedFilter = 'Belum bayar';
+                      });
+                    },
+                    size: AppChipSize.compact,
+                  ),
+                ),
+                const SizedBox(width: 6.0),
+                Expanded(
+                  child: AppChip(
+                    label: 'Sudah bayar',
+                    isSelected: _selectedFilter == 'Sudah bayar',
+                    onTap: () {
+                      setState(() {
+                        _selectedFilter = 'Sudah bayar';
+                      });
+                    },
+                    size: AppChipSize.compact,
+                  ),
+                ),
+              ],
             ),
-          const SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
 
-          // Booking History Card ("Riwayat Booking")
-          _buildHistoryCard(context),
-          const SizedBox(height: 16.0),
-        ],
+            // List Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Pesanan aktif',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: colors.textPrimary,
+                    fontSize: 17.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '${displayed.length} pesanan',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.textSecondary,
+                    fontSize: 11.0,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16.0),
+
+            // Booking List / Loading / Error / Empty Content
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 48.0),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 48.0),
+                child: Center(
+                  child: Text(
+                    _errorMessage,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            else if (displayed.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32.0),
+                child: Center(
+                  child: Text(
+                    'Belum ada pesanan aktif.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: displayed.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 16.0),
+                itemBuilder: (context, index) {
+                  final booking = displayed[index];
+                  return _buildBookingCard(context, booking);
+                },
+              ),
+            const SizedBox(height: 16.0),
+
+            // Booking History Card ("Riwayat Booking")
+            _buildHistoryCard(context),
+            const SizedBox(height: 16.0),
+          ],
+        ),
       ),
     );
   }
@@ -388,7 +422,7 @@ class _OrderScreenState extends State<OrderScreen> {
                             children: [
                               Text(
                                 booking.paymentMethod ??
-                                    'Metode pembayaran belum dipilih',
+                                    'Belum memilih metode pembayaran',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: colors.textPrimary,
                                   fontSize: 11.0,

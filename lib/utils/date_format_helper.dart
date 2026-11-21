@@ -1,3 +1,5 @@
+import '../constants/app_images.dart';
+
 /// Helper class for Indonesian date, time, and currency formatting without external packages.
 class DateFormatHelper {
   static const List<String> dayNames = [
@@ -152,5 +154,22 @@ class DateFormatHelper {
     final hourStr = wibDeadline.hour.toString().padLeft(2, '0');
     final minStr = wibDeadline.minute.toString().padLeft(2, '0');
     return 'Bayar sebelum ${wibDeadline.day} $shortMonth ${wibDeadline.year}, $hourStr.$minStr WIB';
+  }
+
+  /// Maps court category to default asset image path
+  static String getCategoryImageUrl(String category) {
+    final catLower = category.toLowerCase().trim();
+    switch (catLower) {
+      case 'futsal':
+        return AppImages.soccer;
+      case 'voli':
+        return AppImages.volleyball;
+      case 'basket':
+        return AppImages.basket;
+      case 'badminton':
+        return AppImages.badminton;
+      default:
+        return AppImages.soccer;
+    }
   }
 }

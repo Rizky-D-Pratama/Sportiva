@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../constants/app_icons.dart';
-import '../data/mock_data.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
+import '../utils/date_format_helper.dart';
 import '../widgets/app_badge.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_header.dart';
@@ -28,7 +28,6 @@ class BookingDetailScreen extends StatelessWidget {
     final colors = context.appColors;
 
     final isSudahBayar = booking.status == BookingStatus.sudahBayar;
-    final isDibatalkan = booking.status == BookingStatus.dibatalkan;
 
     final badgeLabel = switch (booking.status) {
       BookingStatus.sudahBayar => 'Sudah bayar',
@@ -43,22 +42,36 @@ class BookingDetailScreen extends StatelessWidget {
       BookingStatus.belumBayar => AppBadgeVariant.warning,
     };
 
-    final courtImage = booking.courtImageUrl ?? MockData.allCourts[1].imageUrl;
-    final facilitiesText = booking.facilitiesText ?? 'Voli • Indoor • Net standar • Toilet';
-    final fullDateText = booking.fullDateText ?? '14 Oktober 2026';
-    final createdDateText = booking.createdDateText ?? '13 Oktober 2026, 09.30 WIB';
+    final courtImage = (booking.courtImageUrl != null && booking.courtImageUrl!.isNotEmpty)
+        ? booking.courtImageUrl!
+        : DateFormatHelper.getCategoryImageUrl('');
+    final facilitiesText = (booking.facilitiesText != null && booking.facilitiesText!.isNotEmpty)
+        ? booking.facilitiesText!
+        : '-';
+    final fullDateText = (booking.fullDateText != null && booking.fullDateText!.isNotEmpty)
+        ? booking.fullDateText!
+        : (booking.date.isNotEmpty ? booking.date : '-');
+    final createdDateText = (booking.createdDateText != null && booking.createdDateText!.isNotEmpty)
+        ? booking.createdDateText!
+        : '-';
     final userNameText = (booking.userName != null && booking.userName!.isNotEmpty)
         ? booking.userName!
-        : MockData.userName;
+        : '-';
     final userPhoneText = (booking.userPhone != null && booking.userPhone!.isNotEmpty)
         ? booking.userPhone!
+        : '-';
+    final userEmailText = (booking.userEmail != null && booking.userEmail!.isNotEmpty)
+        ? booking.userEmail!
         : '-';
     final paymentMethodText = (booking.paymentMethod != null && booking.paymentMethod!.isNotEmpty)
         ? booking.paymentMethod!
         : 'Belum memilih metode pembayaran';
-    final paymentStatusText = isDibatalkan
-        ? 'Dibatalkan'
-        : (booking.paymentStatusText ?? '13 Oktober, 09.35 WIB');
+
+    final paymentStatusText = switch (booking.status) {
+      BookingStatus.belumBayar => 'Belum bayar',
+      BookingStatus.dibatalkan => 'Dibatalkan',
+      BookingStatus.sudahBayar || BookingStatus.selesai => '-',
+    };
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -255,7 +268,7 @@ class BookingDetailScreen extends StatelessWidget {
                             const SizedBox(height: 12.0),
                             AppInfoRow(
                               label: 'Email',
-                              value: booking.userEmail ?? 'shendy@gmail.com',
+                              value: userEmailText,
                             ),
                           ],
                           const SizedBox(height: 12.0),

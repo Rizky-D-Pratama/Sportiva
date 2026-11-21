@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/booking_repository.dart';
-import '../data/mock_data.dart';
 import '../models/court.dart';
+import 'main_shell.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
@@ -81,7 +81,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     });
 
     try {
-      final booking = await AppConfig.bookingRepository.createBooking(
+      await AppConfig.bookingRepository.createBooking(
         court: widget.court,
         date: widget.selectedDate,
         startHour: widget.startHour,
@@ -89,11 +89,6 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       );
 
       if (!mounted) return;
-
-      // Correction #5: Insert into MockData.mockBookings only if ID is not already present
-      if (!MockData.mockBookings.any((b) => b.id == booking.id)) {
-        MockData.mockBookings.insert(0, booking);
-      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -109,6 +104,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       );
 
       Navigator.popUntil(context, (route) => route.isFirst);
+      MainShell.tabRequest.value = 2;
     } on BookingUnavailableException {
       if (!mounted) return;
       setState(() {
