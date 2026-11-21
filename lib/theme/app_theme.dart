@@ -132,7 +132,7 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
 
 /// AppTheme defines the ThemeData using values extracted from the Figma tokens.
 class AppTheme {
-  // Base Palette Colors
+  /* ==== Base Palette Colors ==== */
   static const Color baseBackground = Color(0xFFFFFDF1);
   static const Color brandPrimary = Color(0xFF59C749);
   //text
@@ -159,6 +159,36 @@ class AppTheme {
   static const Color borderDefaultColor = Color(0xFFE8EBDD);
   //star
   static const Color starYellow = Color(0xFFF7C049);
+
+  /* ==== Dark Palette Colors ==== */
+  static const Color darkBaseBackground = Color(0xFF141414);
+  static const Color darkBrandPrimary = Color(0xFF2BEE34);
+
+  // Dark text
+  static const Color darkTextPrimaryColor = Color(0xFFF1F4EE);
+  static const Color darkTextSecondaryColor = Color(0xFFB0B8AA);
+  static const Color darkTextOnPrimaryColor = Color(0xFF102010);
+
+  // Dark surface
+  static const Color darkSurfaceCard = Color(0xFF242424);
+  static const Color darkSurfaceControlColor = Color(0xFF252A23);
+  static const Color darkSurfaceNavigationColor = Color(0xFF1B1F1B);
+
+  // Dark status
+  static const Color darkStatusSuccessForeground = Color(0xFF94E384);
+  static const Color darkStatusSuccessBackground = Color(0xFF1C351F);
+
+  static const Color darkStatusWarningForeground = Color(0xFFF1C477);
+  static const Color darkStatusWarningBackground = Color(0xFF392D17);
+
+  static const Color darkStatusDangerForeground = Color(0xFFFF9297);
+  static const Color darkStatusDangerBackground = Color(0xFF3B2024);
+
+  static const Color darkStatusNeutralForeground = Color(0xFFB7BEB2);
+  static const Color darkStatusNeutralBackground = Color(0xFF292E29);
+
+  // Dark border
+  static const Color darkBorderDefaultColor = Color(0xFF4E514C);
 
   // Spacing & Border Radius Tokens
   static const double borderRadiusExtraSmall = 10.4;
@@ -302,6 +332,102 @@ class AppTheme {
           warningBackground: statusWarningBackground,
           neutralForeground: statusNeutralForeground,
           neutralBackground: statusNeutralBackground,
+        ),
+      ],
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      fontFamily: 'Inter',
+      scaffoldBackgroundColor: darkBaseBackground,
+
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.iOS: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.windows: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.macOS: SlideRightPageTransitionsBuilder(),
+          TargetPlatform.linux: SlideRightPageTransitionsBuilder(),
+        },
+      ),
+
+      colorScheme: const ColorScheme.dark(
+        primary: darkBrandPrimary,
+        onPrimary: darkTextOnPrimaryColor,
+        surface: darkSurfaceCard,
+        onSurface: darkTextPrimaryColor,
+        onSurfaceVariant: darkTextSecondaryColor,
+        outline: darkBorderDefaultColor,
+        primaryContainer: darkStatusSuccessBackground,
+        onPrimaryContainer: darkStatusSuccessForeground,
+      ),
+
+      textTheme: lightTheme.textTheme.copyWith(
+        headlineLarge: lightTheme.textTheme.headlineLarge?.copyWith(
+          color: darkTextPrimaryColor,
+        ),
+        headlineMedium: lightTheme.textTheme.headlineMedium?.copyWith(
+          color: darkTextPrimaryColor,
+        ),
+        titleLarge: lightTheme.textTheme.titleLarge?.copyWith(
+          color: darkTextPrimaryColor,
+        ),
+        titleMedium: lightTheme.textTheme.titleMedium?.copyWith(
+          color: darkTextPrimaryColor,
+        ),
+        titleSmall: lightTheme.textTheme.titleSmall?.copyWith(
+          color: darkTextPrimaryColor,
+        ),
+        bodyMedium: lightTheme.textTheme.bodyMedium?.copyWith(
+          color: darkTextPrimaryColor,
+        ),
+        bodySmall: lightTheme.textTheme.bodySmall?.copyWith(
+          color: darkTextSecondaryColor,
+        ),
+        labelLarge: lightTheme.textTheme.labelLarge?.copyWith(
+          color: darkStatusSuccessForeground,
+        ),
+        labelMedium: lightTheme.textTheme.labelMedium?.copyWith(
+          color: darkTextSecondaryColor,
+        ),
+        labelSmall: lightTheme.textTheme.labelSmall?.copyWith(
+          color: darkTextPrimaryColor,
+        ),
+      ),
+
+      cardTheme: CardThemeData(
+        color: darkSurfaceCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadiusLarge),
+          side: const BorderSide(
+            color: darkBorderDefaultColor,
+            width: 1.0,
+          ),
+        ),
+      ),
+
+      extensions: const <ThemeExtension<dynamic>>[
+        AppCustomColors(
+          successBackground: darkStatusSuccessBackground,
+          successForeground: darkStatusSuccessForeground,
+          borderDefault: darkBorderDefaultColor,
+          brandPrimary: darkBrandPrimary,
+          surfaceCard: darkSurfaceCard,
+          textPrimary: darkTextPrimaryColor,
+          textSecondary: darkTextSecondaryColor,
+          dangerBackground: darkStatusDangerBackground,
+          dangerForeground: darkStatusDangerForeground,
+          surfaceControl: darkSurfaceControlColor,
+          surfaceNavigation: darkSurfaceNavigationColor,
+          textOnPrimary: darkTextOnPrimaryColor,
+          warningForeground: darkStatusWarningForeground,
+          warningBackground: darkStatusWarningBackground,
+          neutralForeground: darkStatusNeutralForeground,
+          neutralBackground: darkStatusNeutralBackground,
         ),
       ],
     );

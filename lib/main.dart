@@ -6,6 +6,7 @@ import 'data/repositories/supabase_auth_repository.dart';
 import 'data/repositories/supabase_court_repository.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,24 +35,46 @@ void main() async {
     isConfigValid = false;
   }
 
-  runApp(SportivaApp(isConfigValid: isConfigValid));
+  final themeController = ThemeController();
+  await themeController.load();
+
+  runApp(
+    SportivaApp(
+      isConfigValid: isConfigValid,
+      themeController: themeController,
+    ),
+  );
 }
 
 class SportivaApp extends StatelessWidget {
   final bool isConfigValid;
+  final ThemeController themeController;
 
   const SportivaApp({
     super.key,
     this.isConfigValid = true,
+    required this.themeController,
   });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Sportiva',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: isConfigValid ? const SplashScreen() : const AppConfigErrorScreen(),
+    return ThemeControllerScope(
+      controller: themeController,
+      child: AnimatedBuilder(
+        animation: themeController,
+        builder: (context, child) {
+          return MaterialApp(
+            title: 'Sportiva',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeController.themeMode,
+            home: isConfigValid
+                ? const SplashScreen()
+                : const AppConfigErrorScreen(),
+          );
+        },
+      ),
     );
   }
 }
