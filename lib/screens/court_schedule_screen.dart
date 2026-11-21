@@ -247,6 +247,8 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
               // 2. Date Picker (AppCalendar)
               AppCalendar(
                 selectedDate: _selectedDate,
+                minDate: DateTime(2000, 1, 1),
+                maxDate: DateTime(2100, 12, 31),
                 onDateSelected: (date) {
                   setState(() {
                     _selectedDate = date;
