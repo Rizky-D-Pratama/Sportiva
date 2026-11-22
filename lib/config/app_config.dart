@@ -1,3 +1,4 @@
+import '../data/booking_repository.dart';
 import '../data/court_repository.dart';
 import '../data/repositories/auth_repository.dart';
 
@@ -5,6 +6,7 @@ import '../data/repositories/auth_repository.dart';
 class AppConfig {
   static late final AuthRepository authRepository;
   static late final CourtRepository courtRepository;
+  static late final BookingRepository bookingRepository;
 
   static String get supabaseUrl =>
       const String.fromEnvironment('SUPABASE_URL');

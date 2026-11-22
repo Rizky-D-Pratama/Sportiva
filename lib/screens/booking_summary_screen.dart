@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../config/app_config.dart';
 import '../constants/app_icons.dart';
-import '../data/mock_data.dart';
-import '../models/booking.dart';
+import '../data/booking_repository.dart';
 import '../models/court.dart';
+import 'main_shell.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
 import '../widgets/app_image.dart';
 import '../widgets/app_info_notice.dart';
 import '../widgets/app_info_row.dart';
+import '../widgets/app_modal.dart';
 import '../widgets/app_sticky_bottom_bar.dart';
 
-class BookingSummaryScreen extends StatelessWidget {
+class BookingSummaryScreen extends StatefulWidget {
   final Court court;
   final DateTime selectedDate;
   final int startHour;
@@ -28,6 +29,14 @@ class BookingSummaryScreen extends StatelessWidget {
     required this.startHour,
     required this.durationHours,
   });
+
+  @override
+  State<BookingSummaryScreen> createState() => _BookingSummaryScreenState();
+}
+
+class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
+  bool _isSubmitting = false;
+  String? _errorMessage;
 
   String _formatNumber(int number) {
     final buffer = StringBuffer();
@@ -63,6 +72,77 @@ class BookingSummaryScreen extends StatelessWidget {
     return '$dayName, ${date.day} $monthName ${date.year}';
   }
 
+  Future<void> _handleCreateBooking() async {
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await AppConfig.bookingRepository.createBooking(
+        court: widget.court,
+        date: widget.selectedDate,
+        startHour: widget.startHour,
+        durationHours: widget.durationHours,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: 'Booking berhasil dibuat. Silakan selesaikan pembayaran.',
+            iconPath: AppIcons.circleCheck,
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      Navigator.popUntil(context, (route) => route.isFirst);
+      MainShell.tabRequest.value = 2;
+    } on BookingUnavailableException {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      // Show single button confirmation modal as specified in Note 9
+      await AppModal.show(
+        context: context,
+        title: 'Waktu Tidak Tersedia',
+        message: 'Waktu ini sudah tidak tersedia. Silakan pilih waktu lain.',
+        primaryButtonLabel: 'Pilih Waktu Lain',
+        onPrimaryPressed: () {
+          Navigator.pop(context); // Close modal
+          Navigator.pop(context, true); // Pop summary screen with result true
+        },
+      );
+    } on BookingNetworkException {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = 'Koneksi terputus. Periksa jaringan internet Anda.';
+      });
+    } on BookingServerException {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -74,10 +154,10 @@ class BookingSummaryScreen extends StatelessWidget {
     final textPrimary = colors.textPrimary;
     final textSecondary = colors.textSecondary;
 
-    final subtotal = court.pricePerHour * durationHours;
-    final totalPayment = subtotal + serviceFee;
-    final formattedStartTime = '${startHour.toString().padLeft(2, '0')}.00';
-    final facilitiesText = court.facilities.join(' • ');
+    final subtotal = widget.court.pricePerHour * widget.durationHours;
+    final totalPayment = subtotal + BookingSummaryScreen.serviceFee;
+    final formattedStartTime = '${widget.startHour.toString().padLeft(2, '0')}.00';
+    final facilitiesText = widget.court.facilities.join(' • ');
 
     return Scaffold(
       backgroundColor: baseBg,
@@ -92,7 +172,7 @@ class BookingSummaryScreen extends StatelessWidget {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: _isSubmitting ? null : () => Navigator.pop(context),
                     child: SvgPicture.asset(
                       AppIcons.arrowLeft,
                       width: 20.0,
@@ -142,7 +222,7 @@ class BookingSummaryScreen extends StatelessWidget {
                               width: 76.0,
                               height: 80.0,
                               child: AppImage(
-                                imagePath: court.imageUrl,
+                                imagePath: widget.court.imageUrl,
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -153,7 +233,7 @@ class BookingSummaryScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  court.name,
+                                  widget.court.name,
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     color: textPrimary,
                                     fontWeight: FontWeight.w600,
@@ -173,7 +253,7 @@ class BookingSummaryScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4.0),
                                 Text(
-                                  'Rp${_formatNumber(court.pricePerHour)}/jam',
+                                  'Rp${_formatNumber(widget.court.pricePerHour)}/jam',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: textPrimary,
                                     fontWeight: FontWeight.w600,
@@ -189,14 +269,14 @@ class BookingSummaryScreen extends StatelessWidget {
                     const SizedBox(height: 15.0),
 
                     // Date & Time Input (Read-only)
-                    AppField(label: 'Tanggal booking', child: Text(_formatDate(selectedDate))),
+                    AppField(label: 'Tanggal booking', child: Text(_formatDate(widget.selectedDate))),
                     const SizedBox(height: 15.0),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(child: AppField(label: 'Jam mulai', child: Text(formattedStartTime))),
                         const SizedBox(width: 12.0),
-                        Expanded(child: AppField(label: 'Durasi', child: Text('$durationHours jam'))),
+                        Expanded(child: AppField(label: 'Durasi', child: Text('${widget.durationHours} jam'))),
                       ],
                     ),
                     const SizedBox(height: 15.0),
@@ -231,12 +311,12 @@ class BookingSummaryScreen extends StatelessWidget {
                           const SizedBox(height: 12.0),
                           AppInfoRow(
                             label: 'Harga per jam',
-                            value: 'Rp${_formatNumber(court.pricePerHour)}',
+                            value: 'Rp${_formatNumber(widget.court.pricePerHour)}',
                           ),
                           const SizedBox(height: 8.0),
                           AppInfoRow(
                             label: 'Durasi',
-                            value: '$durationHours jam × Rp${_formatNumber(court.pricePerHour)}',
+                            value: '${widget.durationHours} jam × Rp${_formatNumber(widget.court.pricePerHour)}',
                           ),
                           const SizedBox(height: 8.0),
                           AppInfoRow(
@@ -246,7 +326,7 @@ class BookingSummaryScreen extends StatelessWidget {
                           const SizedBox(height: 8.0),
                           AppInfoRow(
                             label: 'Biaya layanan',
-                            value: 'Rp${_formatNumber(serviceFee)}',
+                            value: 'Rp${_formatNumber(BookingSummaryScreen.serviceFee)}',
                           ),
                           const SizedBox(height: 12.0),
                           Divider(color: borderColor, height: 1.0),
@@ -260,7 +340,7 @@ class BookingSummaryScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8.0),
-                    // Helper text below payment summary card as specified in behavior notes
+                    // Helper text below payment summary card
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       child: Text(
@@ -283,6 +363,14 @@ class BookingSummaryScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (_errorMessage != null) ...[
+                    AppInfoNotice(
+                      message: _errorMessage!,
+                      variant: AppInfoNoticeVariant.danger,
+                      iconPath: AppIcons.circleAlert,
+                    ),
+                    const SizedBox(height: 8.0),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -304,57 +392,7 @@ class BookingSummaryScreen extends StatelessWidget {
                   const SizedBox(height: 8.0),
                   AppButton(
                     label: 'Lanjutkan Pembayaran',
-                    onPressed: () {
-                      final activeUser = AppConfig.authRepository.currentUser;
-                      if (activeUser == null) return;
-                      final endHour = startHour + durationHours;
-                      final now = DateTime.now();
-
-                      final newBooking = Booking(
-                        id: 'booking_${now.millisecondsSinceEpoch}',
-                        userId: activeUser.id,
-                        bookingCode: 'ABK-${(now.millisecondsSinceEpoch % 90000) + 10000}',
-                        courtName: court.name,
-                        date: '${selectedDate.day} ${_formatDate(selectedDate).split(' ')[2]} ${selectedDate.year}',
-                        timeRange: '${startHour.toString().padLeft(2, '0')}.00 – ${endHour.toString().padLeft(2, '0')}.00 WIB',
-                        totalPayment: totalPayment,
-                        status: BookingStatus.belumBayar,
-                        paymentMethod: 'Transfer BCA',
-                        paymentDeadline: 'Bayar sebelum ${_formatDate(selectedDate)}, ${startHour.toString().padLeft(2, '0')}.00 WIB',
-                        playDateTime: DateTime(selectedDate.year, selectedDate.month, selectedDate.day, startHour),
-                        pricePerHour: court.pricePerHour,
-                        serviceFee: serviceFee,
-                        durationHours: durationHours,
-                        createdDateText: '${now.day} ${_formatDate(now).split(' ')[2]} ${now.year}, ${now.hour.toString().padLeft(2, '0')}.${now.minute.toString().padLeft(2, '0')} WIB',
-                        paymentStatusText: 'Belum bayar',
-                        userName: activeUser.name,
-                        userPhone: activeUser.phoneNumber ?? '0812 3456 7890',
-                        userEmail: activeUser.email,
-                        venueName: court.venue.name,
-                        facilitiesText: court.facilities.join(' • '),
-                        courtImageUrl: court.imageUrl,
-                        fullDateText: _formatDate(selectedDate),
-                        ticketDateText: _formatDate(selectedDate),
-                      );
-
-                      MockData.mockBookings.insert(0, newBooking);
-                      MockData.mockAdminBookings.insert(0, newBooking);
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          content: AppInfoNotice(
-                            message: 'Booking berhasil dibuat. Silakan selesaikan pembayaran.',
-                            iconPath: AppIcons.circleCheck,
-                          ),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                    },
+                    onPressed: _isSubmitting ? null : _handleCreateBooking,
                     trailingIconPath: AppIcons.arrowRight,
                   ),
                 ],

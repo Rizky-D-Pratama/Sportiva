@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../constants/app_icons.dart';
-import '../data/mock_data.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
+import '../utils/date_format_helper.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_image.dart';
@@ -25,11 +25,16 @@ class BookingTicketScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = context.appColors;
 
-    final courtImage = booking.courtImageUrl ?? MockData.allCourts[1].imageUrl;
-    final ticketDateText = booking.ticketDateText ?? 'Jumat, 16 Okt 2026';
+    final courtImage = (booking.courtImageUrl != null && booking.courtImageUrl!.isNotEmpty)
+        ? booking.courtImageUrl!
+        : DateFormatHelper.getCategoryImageUrl('');
+    final ticketDateText = (booking.ticketDateText != null && booking.ticketDateText!.isNotEmpty)
+        ? booking.ticketDateText!
+        : (booking.date.isNotEmpty ? booking.date : '-');
     final userNameText = (booking.userName != null && booking.userName!.isNotEmpty)
         ? booking.userName!
-        : MockData.userName;
+        : '-';
+    final venueNameText = booking.venueName.isNotEmpty ? booking.venueName : '-';
     final timeFormatted = '${booking.timeRange} • ${booking.durationHours} jam';
 
     return Scaffold(
@@ -104,7 +109,7 @@ class BookingTicketScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 2.0),
                           Text(
-                            booking.venueName,
+                            venueNameText,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colors.textSecondary,
                               fontSize: 11.0,

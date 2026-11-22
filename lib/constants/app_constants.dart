@@ -3,6 +3,9 @@ class AppConstants {
   /// Maximum duration in hours allowed for a single court booking
   static const int maxBookingDurationHours = 5;
 
+  /// Minimum lead time in minutes required before court booking start time
+  static const int minBookingLeadTimeMinutes = 30;
+
   /// Operational start hour (08.00 WIB)
   static const int operationalStartHour = 8;
 
