@@ -27,8 +27,17 @@ class MainShell extends StatefulWidget {
 class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   final GlobalKey<OrderScreenState> _orderScreenKey = GlobalKey<OrderScreenState>();
+  final GlobalKey<CourtScreenState> _courtScreenKey = GlobalKey<CourtScreenState>();
 
   late final List<Widget> _pages;
+
+  void _openCourtSearch() {
+    selectTab(1);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _courtScreenKey.currentState?.focusSearch();
+    });
+  }
 
   @override
   void initState() {
@@ -38,8 +47,10 @@ class MainShellState extends State<MainShell> {
       HomeScreen(
         repository: widget.repository,
         onNavigateTab: _onTabTapped,
+        onSearchTap: _openCourtSearch,
       ),
       CourtScreen(
+        key: _courtScreenKey,
         repository: widget.repository,
       ),
       OrderScreen(

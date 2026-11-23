@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 class AppSearchBar extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
+  final FocusNode? focusNode;
   final bool readOnly;
   final String? hintText;
 
@@ -17,6 +18,7 @@ class AppSearchBar extends StatelessWidget {
     this.onTap,
     this.readOnly = false,
     this.hintText,
+    this.focusNode,
   });
 
   @override
@@ -56,6 +58,7 @@ class AppSearchBar extends StatelessWidget {
           Expanded(
             child: TextField(
               readOnly: readOnly,
+              focusNode: focusNode,
               onTap: onTap,
               onChanged: onChanged,
               style: theme.textTheme.labelMedium?.copyWith(

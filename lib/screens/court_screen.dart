@@ -25,11 +25,12 @@ class CourtScreen extends StatefulWidget {
   });
 
   @override
-  State<CourtScreen> createState() => _CourtScreenState();
+  State<CourtScreen> createState() => CourtScreenState();
 }
 
-class _CourtScreenState extends State<CourtScreen> {
+class CourtScreenState extends State<CourtScreen> {
   late Future<List<Court>> _courtsFuture;
+  final FocusNode _searchFocusNode = FocusNode();
 
   // Filter & Sort state
   String _searchQuery = '';
@@ -86,6 +87,16 @@ class _CourtScreenState extends State<CourtScreen> {
         onApply: (sortType) => setState(() => _ratingSort = sortType),
       ),
     );
+  }
+
+  void focusSearch() {
+    _searchFocusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   List<Court> _filterAndSortCourts(List<Court> allCourts) {
@@ -169,6 +180,7 @@ class _CourtScreenState extends State<CourtScreen> {
 
           // 2. Search Bar
           AppSearchBar(
+            focusNode: _searchFocusNode,
             onChanged: (query) {
               setState(() {
                 _searchQuery = query;

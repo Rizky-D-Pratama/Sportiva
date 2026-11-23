@@ -17,11 +17,13 @@ import 'court_schedule_screen.dart';
 class HomeScreen extends StatefulWidget {
   final CourtRepository repository;
   final ValueChanged<int>? onNavigateTab;
+  final VoidCallback? onSearchTap;
 
   const HomeScreen({
     super.key,
     required this.repository,
     this.onNavigateTab,
+    this.onSearchTap,
   });
 
   @override
@@ -126,9 +128,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // 2. Search Bar
           AppSearchBar(
-            onTap: () {
-              widget.onNavigateTab?.call(1); // Navigate to Lapangan tab
-            },
+            readOnly: true,
+            onTap: widget.onSearchTap,
           ),
           const SizedBox(height: 16.0),
 
