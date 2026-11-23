@@ -9,7 +9,7 @@ import '../theme/app_theme.dart';
 /// - Input Teks: isi [controller], [hintText], [keyboardType], dll. (tanpa [child]).
 /// [enabled] false = tampil nonaktif dan tidak bisa diketuk.
 class AppField extends StatelessWidget {
-  final String label;
+  final String? label;
   final Widget? child;
   final String? trailingIconPath;
   final VoidCallback? onTap;
@@ -35,7 +35,7 @@ class AppField extends StatelessWidget {
 
   const AppField({
     super.key,
-    required this.label,
+    this.label,
     this.child,
     this.trailingIconPath,
     this.onTap,
@@ -100,14 +100,16 @@ class AppField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w600,
+        if (label != null && label!.isNotEmpty) ...[
+          Text(
+            label!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        const SizedBox(height: AppTheme.paddingSmall),
+          const SizedBox(height: AppTheme.paddingSmall),
+        ],
         Material(
           color: colors.surfaceCard,
           shape: RoundedRectangleBorder(
