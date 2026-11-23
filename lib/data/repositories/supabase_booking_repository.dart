@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -377,6 +378,9 @@ class SupabaseBookingRepository implements BookingRepository {
         params: {'p_booking_id': bookingId},
       );
       _log('SUPABASE cancelBooking response: $response');
+      if (response == 'dibatalkan') {
+        unawaited(_cancelPaymentTransaction(bookingId));
+      }
     } on PostgrestException catch (e) {
       _log('SUPABASE PostgrestException in cancelBooking: code=${e.code}, message=${e.message}');
       final code = e.code;
@@ -399,6 +403,20 @@ class SupabaseBookingRepository implements BookingRepository {
         rethrow;
       }
       throw BookingServerException(null, e.toString());
+    }
+  }
+
+  /// Helper to invoke Edge Function `cancel-payment-transaction` in a best-effort manner.
+  /// All errors are swallowed internally and never rethrown or propagated.
+  Future<void> _cancelPaymentTransaction(String bookingId) async {
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'cancel-payment-transaction',
+        body: {'booking_id': bookingId},
+      );
+      _log('SUPABASE cancelPaymentTransaction status: ${response.status}');
+    } catch (e) {
+      _log('SUPABASE Exception in cancelPaymentTransaction: ${e.runtimeType}');
     }
   }
 }
