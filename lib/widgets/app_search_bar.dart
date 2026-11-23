@@ -9,6 +9,7 @@ class AppSearchBar extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final FocusNode? focusNode;
+  final TextEditingController? controller;
   final bool readOnly;
   final String? hintText;
 
@@ -16,9 +17,10 @@ class AppSearchBar extends StatelessWidget {
     super.key,
     this.onChanged,
     this.onTap,
+    this.focusNode,
+    this.controller,
     this.readOnly = false,
     this.hintText,
-    this.focusNode,
   });
 
   @override
@@ -57,6 +59,8 @@ class AppSearchBar extends StatelessWidget {
           const SizedBox(width: 8.0),
           Expanded(
             child: TextField(
+              textAlignVertical: TextAlignVertical.center,
+              controller: controller,
               readOnly: readOnly,
               focusNode: focusNode,
               onTap: onTap,
@@ -72,6 +76,38 @@ class AppSearchBar extends StatelessWidget {
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
+                suffixIcon: controller != null && !readOnly
+                    ? ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller!,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return IconButton(
+                      onPressed: () {
+                        controller!.clear();
+                        onChanged?.call('');
+                        focusNode?.requestFocus();
+                      },
+                      icon: SvgPicture.asset(
+                        AppIcons.cross,
+                        width: 18.0,
+                        height: 18.0,
+                        colorFilter: ColorFilter.mode(
+                          textSecondary,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32.0,
+                        minHeight: 32.0,
+                      ),
+                    );
+                  },
+                )
+                    : null,
               ),
             ),
           ),

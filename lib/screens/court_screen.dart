@@ -31,6 +31,7 @@ class CourtScreen extends StatefulWidget {
 class CourtScreenState extends State<CourtScreen> {
   late Future<List<Court>> _courtsFuture;
   final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
 
   // Filter & Sort state
   String _searchQuery = '';
@@ -95,6 +96,7 @@ class CourtScreenState extends State<CourtScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -180,6 +182,7 @@ class CourtScreenState extends State<CourtScreen> {
 
           // 2. Search Bar
           AppSearchBar(
+            controller: _searchController,
             focusNode: _searchFocusNode,
             onChanged: (query) {
               setState(() {

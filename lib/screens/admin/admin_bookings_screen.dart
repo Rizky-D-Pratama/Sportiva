@@ -398,6 +398,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                       children: [
                         // Search Bar
                         AppSearchBar(
+                          controller: _searchController,
                           hintText: 'Cari ID booking atau nama...',
                           onChanged: (val) {
                             setState(() {
