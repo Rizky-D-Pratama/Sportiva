@@ -5,13 +5,13 @@ import '../data/mock_data.dart';
 import '../theme/app_theme.dart';
 
 /// Reusable SearchBarWidget based on Sportiva Search Bar component
-class SearchBarWidget extends StatelessWidget {
+class AppSearchBar extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final bool readOnly;
   final String? hintText;
 
-  const SearchBarWidget({
+  const AppSearchBar({
     super.key,
     this.onChanged,
     this.onTap,

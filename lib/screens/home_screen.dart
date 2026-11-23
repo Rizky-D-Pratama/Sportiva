@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_image.dart';
 import '../widgets/app_notification_bell.dart';
 import '../widgets/court_card.dart';
-import '../widgets/search_bar_widget.dart';
+import '../widgets/app_search_bar.dart';
 import '../widgets/sport_chip.dart';
 import 'booking_history_screen.dart';
 import 'court_detail_screen.dart';
@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16.0),
 
           // 2. Search Bar
-          SearchBarWidget(
+          AppSearchBar(
             onTap: () {
               widget.onNavigateTab?.call(1); // Navigate to Lapangan tab
             },

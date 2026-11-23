@@ -12,7 +12,7 @@ import '../../widgets/app_calendar.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/dropdown_chip.dart';
-import '../../widgets/search_bar_widget.dart';
+import '../../widgets/app_search_bar.dart';
 import '../../widgets/sheet_action_buttons.dart';
 import '../booking_detail_screen.dart';
 
@@ -397,7 +397,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                       ),
                       children: [
                         // Search Bar
-                        SearchBarWidget(
+                        AppSearchBar(
                           hintText: 'Cari ID booking atau nama...',
                           onChanged: (val) {
                             setState(() {

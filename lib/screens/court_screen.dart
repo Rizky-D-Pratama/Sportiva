@@ -9,7 +9,7 @@ import '../widgets/court_card.dart';
 import '../widgets/dropdown_chip.dart';
 import '../widgets/price_range_bottom_sheet.dart';
 import '../widgets/rating_bottom_sheet.dart';
-import '../widgets/search_bar_widget.dart';
+import '../widgets/app_search_bar.dart';
 import 'court_detail_screen.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../widgets/app_header.dart';
@@ -168,7 +168,7 @@ class _CourtScreenState extends State<CourtScreen> {
           const SizedBox(height: 16.0),
 
           // 2. Search Bar
-          SearchBarWidget(
+          AppSearchBar(
             onChanged: (query) {
               setState(() {
                 _searchQuery = query;
