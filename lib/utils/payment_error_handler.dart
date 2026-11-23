@@ -4,6 +4,13 @@ import '../widgets/app_modal.dart';
 
 /// Helper to display payment error modal dialogs matching Sportiva design system
 class PaymentErrorHandler {
+  static const networkErrorTitle = 'Terjadi Kesalahan';
+  static const networkErrorMessage = 'Koneksi terputus. Periksa jaringan internet Anda.';
+  static const serverErrorTitle = 'Terjadi Kesalahan';
+  static const serverErrorMessage = 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+  static const sessionExpiredTitle = 'Sesi Berakhir';
+  static const sessionExpiredMessage = 'Sesi Anda telah berakhir. Silakan masuk kembali.';
+
   static Future<void> showErrorDialog(BuildContext context, PaymentException exception) {
     final (title, message) = switch (exception) {
       PaymentExpiredException() => (
@@ -15,16 +22,16 @@ class PaymentErrorHandler {
           'Pesanan ini sudah dibayar atau dibatalkan.',
         ),
       PaymentUnauthorizedException() => (
-          'Sesi Berakhir',
-          'Sesi Anda telah berakhir. Silakan masuk kembali.',
+          sessionExpiredTitle,
+          sessionExpiredMessage,
         ),
       PaymentNetworkException() => (
-          'Terjadi Kesalahan',
-          'Koneksi terputus. Periksa jaringan internet Anda.',
+          networkErrorTitle,
+          networkErrorMessage,
         ),
       PaymentServerException() => (
-          'Terjadi Kesalahan',
-          'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.',
+          serverErrorTitle,
+          serverErrorMessage,
         ),
     };
 
