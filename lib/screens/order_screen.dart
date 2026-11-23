@@ -6,16 +6,19 @@ import '../constants/app_icons.dart';
 import '../data/booking_repository.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
+import '../utils/booking_error_handler.dart';
 import '../utils/payment_error_handler.dart';
 import '../widgets/app_badge.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_chip.dart';
+import '../widgets/app_empty_state.dart';
 import '../widgets/app_header.dart';
+import '../widgets/app_info_notice.dart';
+import '../widgets/app_modal.dart';
 import 'booking_detail_screen.dart';
 import 'booking_history_screen.dart';
 import 'booking_ticket_screen.dart';
 import 'payment_webview_screen.dart';
-import '../widgets/app_empty_state.dart';
 
 /// Request model for triggering order list refresh or polling from external flow (e.g. BookingSummary)
 class PaymentRefreshRequest {
@@ -52,7 +55,7 @@ class OrderScreenState extends State<OrderScreen> {
   Object? _error;
 
   Timer? _pollingTimer;
-  final Set<String> _loadingPaymentBookingIds = {};
+  final Set<String> _busyBookingIds = {};
 
   @override
   void initState() {
@@ -115,10 +118,10 @@ class OrderScreenState extends State<OrderScreen> {
   }
 
   Future<void> _handlePaymentDetail(Booking booking) async {
-    if (_loadingPaymentBookingIds.contains(booking.id)) return;
+    if (_busyBookingIds.contains(booking.id)) return;
 
     setState(() {
-      _loadingPaymentBookingIds.add(booking.id);
+      _busyBookingIds.add(booking.id);
     });
 
     try {
@@ -140,6 +143,7 @@ class OrderScreenState extends State<OrderScreen> {
     } on PaymentException catch (e) {
       if (!mounted) return;
       await PaymentErrorHandler.showErrorDialog(context, e);
+      if (!mounted) return;
       _fetchBookings();
     } catch (_) {
       if (!mounted) return;
@@ -147,11 +151,69 @@ class OrderScreenState extends State<OrderScreen> {
         context,
         const PaymentServerException(),
       );
+      if (!mounted) return;
       _fetchBookings();
     } finally {
       if (mounted) {
         setState(() {
-          _loadingPaymentBookingIds.remove(booking.id);
+          _busyBookingIds.remove(booking.id);
+        });
+      }
+    }
+  }
+
+  Future<void> _cancelBooking(Booking booking) async {
+    if (_busyBookingIds.contains(booking.id)) return;
+    final colors = context.appColors;
+
+    final confirmed = await AppModal.show<bool>(
+      context: context,
+      iconPath: AppIcons.circleAlert,
+      iconColor: colors.dangerForeground,
+      title: 'Batalkan Pemesanan?',
+      message:
+          'Pemesanan kamu akan dibatalkan. Kamu bisa pesan kembali kapan saja',
+      primaryButtonLabel: 'Ya, batalkan',
+      onPrimaryPressed: () => Navigator.pop(context, true),
+      secondaryButtonLabel: 'Kembali',
+      onSecondaryPressed: () => Navigator.pop(context, false),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _busyBookingIds.add(booking.id);
+    });
+
+    try {
+      await AppConfig.bookingRepository.cancelBooking(booking.id);
+      if (!mounted) return;
+
+      await _fetchBookings(silent: true);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          content: AppInfoNotice(
+            message: 'Pemesanan dibatalkan.',
+            variant: AppInfoNoticeVariant.success,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      await BookingErrorHandler.showErrorDialog(context, e);
+      if (!mounted) return;
+      if (e is BookingNotCancellableException || e is BookingNotFoundException) {
+        _fetchBookings(silent: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busyBookingIds.remove(booking.id);
         });
       }
     }
@@ -212,10 +274,6 @@ class OrderScreenState extends State<OrderScreen> {
             b.status == BookingStatus.belumBayar ||
             b.status == BookingStatus.sudahBayar)
         .toList();
-  }
-
-  void _cancelBooking(Booking booking) {
-    // TODO: irisan 6
   }
 
   String get _errorMessage {
@@ -394,6 +452,7 @@ class OrderScreenState extends State<OrderScreen> {
     final theme = Theme.of(context);
     final colors = context.appColors;
     final isUnpaid = booking.status == BookingStatus.belumBayar;
+    final isBusy = _busyBookingIds.contains(booking.id);
 
     return GestureDetector(
       onTap: !isUnpaid
@@ -598,7 +657,7 @@ class OrderScreenState extends State<OrderScreen> {
                       children: [
                         AppButton(
                           label: 'Lihat detail pembayaran',
-                          onPressed: _loadingPaymentBookingIds.contains(booking.id)
+                          onPressed: isBusy
                               ? null
                               : () => _handlePaymentDetail(booking),
                           trailingIconPath: AppIcons.arrowRight,
@@ -608,12 +667,16 @@ class OrderScreenState extends State<OrderScreen> {
                           width: double.infinity,
                           height: 44.0,
                           child: OutlinedButton(
-                            onPressed: () => _cancelBooking(booking),
+                            onPressed: isBusy
+                                ? null
+                                : () => _cancelBooking(booking),
                             style: OutlinedButton.styleFrom(
                               backgroundColor: colors.surfaceCard,
                               foregroundColor: colors.dangerForeground,
                               side: BorderSide(
-                                color: colors.dangerForeground,
+                                color: isBusy
+                                    ? colors.borderDefault
+                                    : colors.dangerForeground,
                                 width: 1.0,
                               ),
                               shape: RoundedRectangleBorder(
