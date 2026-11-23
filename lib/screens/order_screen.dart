@@ -682,7 +682,9 @@ class OrderScreenState extends State<OrderScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const BookingHistoryScreen(),
+              builder: (context) => BookingHistoryScreen(
+                onNavigateToCourts: () => widget.onNavigateTab?.call(1),
+              ),
             ),
           );
         },
@@ -706,7 +708,7 @@ class OrderScreenState extends State<OrderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Riwayat Booking',
+                      'Riwayat Pemesanan',
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: colors.successForeground,
                         fontSize: 12.0,
@@ -715,7 +717,7 @@ class OrderScreenState extends State<OrderScreen> {
                     ),
                     const SizedBox(height: 3.0),
                     Text(
-                      'Lihat booking selesai atau dibatalkan',
+                      'Lihat semua riwayat pemesanan kamu',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.textSecondary,
                         fontSize: 10.0,

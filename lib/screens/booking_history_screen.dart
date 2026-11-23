@@ -11,10 +11,16 @@ import '../widgets/app_chip.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_star_rating.dart';
 import 'booking_detail_screen.dart';
+import '../widgets/app_empty_state.dart';
 
 /// Screen for Riwayat Booking (Booking History)
 class BookingHistoryScreen extends StatefulWidget {
-  const BookingHistoryScreen({super.key});
+  final VoidCallback? onNavigateToCourts;
+
+  const BookingHistoryScreen({
+    super.key,
+    this.onNavigateToCourts,
+  });
 
   @override
   State<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
@@ -84,9 +90,50 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
 
   String get _errorMessage {
     if (_error is BookingNetworkException) {
-      return 'Gagal memuat pesanan. Periksa jaringan internet Anda.';
+      return 'Gagal memuat pemesanan. Periksa jaringan internet Anda.';
     }
     return 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+  }
+
+  Widget _buildEmptyState() {
+    final hasNoBookings = _bookings.isEmpty;
+    final hasNoHistory = _historyBookings.isEmpty;
+
+    String title;
+    String description;
+
+    if (hasNoBookings || hasNoHistory) {
+      title = 'Belum Ada Riwayat';
+      description = hasNoBookings
+          ? 'Temukan lapangan favoritmu dan buat booking pertamamu sekarang!'
+          : 'Semua riwayat pemesanan akan muncul di sini.';
+    } else if (_selectedFilter == 'Selesai') {
+      title = 'Belum Ada Pemesanan Selesai';
+      description = 'Pemesanan yang selesai akan muncul di sini.';
+    } else {
+      title = 'Belum Ada Pemesanan Batal';
+      description = 'Pemesanan yang batal akan muncul di sini.';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32.0),
+      child: AppEmptyState(
+        illustration: SvgPicture.asset(
+          AppIcons.calendarSearch,
+          width: 72,
+          height: 72,
+        ),
+        title: title,
+        description: description,
+        buttonText: hasNoBookings ? 'Cari Lapangan' : null,
+        onButtonPressed: hasNoBookings
+            ? () {
+          Navigator.maybePop(context);
+          widget.onNavigateToCourts?.call();
+        }
+            : null,
+      ),
+    );
   }
 
   @override
@@ -114,7 +161,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
               children: [
                 // 1. App Header with back button
                 AppHeader(
-                  title: 'Riwayat Booking',
+                  title: 'Riwayat Pemesanan',
                   showBackButton: true,
                   onBackTap: () => Navigator.maybePop(context),
                 ),
@@ -187,17 +234,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                     ),
                   )
                 else if (displayed.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 48.0),
-                    child: Center(
-                      child: Text(
-                        'Belum ada riwayat booking.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  )
+                    _buildEmptyState()
                 else
                   ListView.separated(
                     shrinkWrap: true,
