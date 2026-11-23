@@ -21,6 +21,9 @@ class AppIcons {
   static const String clock = 'assets/icons/clock.svg';
   static const String cross = 'assets/icons/cross.svg';
   static const String calendar = 'assets/icons/calendar.svg';
+  static const String calendarX = 'assets/icons/calendar_x.svg';
+  static const String calendarCheck = 'assets/icons/calendar_check.svg';
+  static const String calendarSearch = 'assets/icons/calendar_search.svg';
   static const String wallet = 'assets/icons/wallet.svg';
   static const String circleCheck = 'assets/icons/circle_check.svg';
   static const String circleAlert = 'assets/icons/circle_alert.svg';
@@ -40,9 +43,7 @@ class AppIcons {
   static const String phone = 'assets/icons/phone.svg';
   static const String mail = 'assets/icons/mail.svg';
   static const String lockKeyhole = 'assets/icons/lock_keyhole.svg';
-  static const String calendarX = 'assets/icons/calendar_x.svg';
   static const String shieldCheck = 'assets/icons/shield_check.svg';
-  static const String calendarCheck = 'assets/icons/calendar_check.svg';
   static const String imagePlus = 'assets/icons/image_plus.svg';
   static const String eyeOff = 'assets/icons/eye_off.svg';
   static const String eye = 'assets/icons/eye.svg';
