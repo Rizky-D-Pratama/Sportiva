@@ -61,6 +61,18 @@ class BookingServerException extends BookingException {
   const BookingServerException([this.errorCode, super.message]);
 }
 
+class BookingNotCancellableException extends BookingException {
+  const BookingNotCancellableException([super.message]);
+}
+
+class BookingNotFoundException extends BookingException {
+  const BookingNotFoundException([super.message]);
+}
+
+class BookingUnauthorizedException extends BookingException {
+  const BookingUnauthorizedException([super.message]);
+}
+
 /// Interface for Booking repository operations
 abstract class BookingRepository {
   /// Fetches bookings for the current logged-in user using RPC `get_my_bookings`
@@ -84,4 +96,7 @@ abstract class BookingRepository {
 
   /// Creates a Midtrans payment session for a booking using Edge Function `create-booking-payment`
   Future<PaymentSession> createPaymentSession(String bookingId);
+
+  /// Cancels a booking using RPC `cancel_booking`
+  Future<void> cancelBooking(String bookingId);
 }

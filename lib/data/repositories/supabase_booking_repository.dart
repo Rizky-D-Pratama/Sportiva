@@ -368,4 +368,37 @@ class SupabaseBookingRepository implements BookingRepository {
     }
     throw const PaymentServerException();
   }
+
+  @override
+  Future<void> cancelBooking(String bookingId) async {
+    try {
+      final response = await Supabase.instance.client.rpc(
+        'cancel_booking',
+        params: {'p_booking_id': bookingId},
+      );
+      _log('SUPABASE cancelBooking response: $response');
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in cancelBooking: code=${e.code}, message=${e.message}');
+      final code = e.code;
+      if (code == 'BK009') {
+        throw BookingNotCancellableException(e.message);
+      }
+      if (code == 'BK008') {
+        throw BookingNotFoundException(e.message);
+      }
+      if (code == 'BK007') {
+        throw BookingUnauthorizedException(e.message);
+      }
+      throw BookingServerException(code, e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in cancelBooking: $e');
+      if (isNetworkError(e)) {
+        throw const BookingNetworkException();
+      }
+      if (e is BookingException) {
+        rethrow;
+      }
+      throw BookingServerException(null, e.toString());
+    }
+  }
 }
