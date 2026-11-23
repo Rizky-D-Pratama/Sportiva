@@ -313,6 +313,13 @@ class CourtScreenState extends State<CourtScreen> {
               if (filteredCourts.isEmpty) {
                 final isSearching = _searchQuery.trim().isNotEmpty;
 
+                final isFiltering =
+                    _selectedCategory != null ||
+                        _minPrice != null ||
+                        _maxPrice != null;
+
+                final hasSearchAndFilter = isSearching && isFiltering;
+
                 return AppEmptyState(
                   illustration: _EmptyStateIllustration(
                     assetPath: isSearching
@@ -322,7 +329,9 @@ class CourtScreenState extends State<CourtScreen> {
                   title: isSearching
                       ? 'Tidak ditemukan'
                       : 'Lapangan tidak ditemukan',
-                  description: isSearching
+                  description: hasSearchAndFilter
+                      ? 'Kombinasi kata kunci "${_searchQuery.trim()}" dan filter yang dipilih tidak menemukan lapangan yang cocok. Coba ubah kata kunci atau filter.'
+                      : isSearching
                       ? 'Tidak ada lapangan, lokasi, atau venue dengan kata kunci "${_searchQuery.trim()}". Coba kata kunci lain.'
                       : 'Tidak ada lapangan yang sesuai dengan filter pilihanmu. Coba ubah filter.',
                 );
