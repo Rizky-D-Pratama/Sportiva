@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/booking.dart';
 import '../../models/court.dart';
 import '../../models/unavailable_time_slot.dart';
 import '../../utils/date_format_helper.dart';
+import '../../utils/payment_method_helper.dart';
 import '../booking_repository.dart';
 import 'supabase_auth_repository.dart';
 
@@ -44,6 +46,18 @@ class SupabaseBookingRepository implements BookingRepository {
     final teleponPemesan = json['telepon_pemesan'] as String?;
     final emailPemesan = json['email_pemesan'] as String?;
     final userId = json['user_id'] as String?;
+
+    // Optional new fields (can be absent e.g. from create_booking)
+    final metodePembayaran = json['metode_pembayaran'] as String?;
+    final detailMetode = json['detail_metode'] as String?;
+    final dibayarPadaStr = json['dibayar_pada'] as String?;
+
+    final paymentMethod = PaymentMethodHelper.getLabel(metodePembayaran, detailMetode);
+
+    DateTime? paidAt;
+    if (dibayarPadaStr != null && dibayarPadaStr.isNotEmpty) {
+      paidAt = DateFormatHelper.parseUtcToWib(dibayarPadaStr);
+    }
 
     // Date & Time formatting
     final dateParts = tanggalStr.split('-');
@@ -97,13 +111,14 @@ class SupabaseBookingRepository implements BookingRepository {
       timeRange: timeRange,
       totalPayment: total,
       status: status,
-      paymentMethod: null,
+      paymentMethod: paymentMethod,
       paymentDeadline: paymentDeadline,
       playDateTime: playDateTime,
       userId: userId,
       courtId: courtId,
       venueId: venueId,
       createdAt: createdAt,
+      paidAt: paidAt,
       pricePerHour: hargaPerJam,
       serviceFee: biayaLayanan,
       durationHours: durasiJam,
@@ -262,5 +277,95 @@ class SupabaseBookingRepository implements BookingRepository {
       }
       throw BookingServerException(null, e.toString());
     }
+  }
+
+  @override
+  Future<PaymentSession> createPaymentSession(String bookingId) async {
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'create-booking-payment',
+        body: {'booking_id': bookingId},
+      );
+
+      final status = response.status;
+      final data = response.data;
+
+      if (status == 200 && data is Map<String, dynamic>) {
+        final orderId = data['order_id'] as String?;
+        final token = data['token'] as String?;
+        final redirectUrl = data['redirect_url'] as String?;
+        if (orderId != null && token != null && redirectUrl != null) {
+          return PaymentSession(
+            orderId: orderId,
+            token: token,
+            redirectUrl: redirectUrl,
+          );
+        }
+      }
+
+      String? errorCode;
+      if (data is Map<String, dynamic> && data.containsKey('error')) {
+        errorCode = data['error'] as String?;
+      } else if (data is String && data.isNotEmpty) {
+        try {
+          final parsed = jsonDecode(data);
+          if (parsed is Map<String, dynamic>) {
+            errorCode = parsed['error'] as String?;
+          }
+        } catch (_) {}
+      }
+
+      _mapErrorCodeToPaymentException(errorCode, status);
+    } on FunctionException catch (e) {
+      _log('SUPABASE FunctionException in createPaymentSession: status=${e.status}, details=${e.details}');
+      String? errorCode;
+      final details = e.details;
+      if (details is Map<String, dynamic>) {
+        errorCode = details['error'] as String?;
+      } else if (details is String && details.isNotEmpty) {
+        try {
+          final parsed = jsonDecode(details);
+          if (parsed is Map<String, dynamic>) {
+            errorCode = parsed['error'] as String?;
+          }
+        } catch (_) {}
+      }
+      _mapErrorCodeToPaymentException(errorCode, e.status);
+    } catch (e) {
+      _log('SUPABASE Exception in createPaymentSession: $e');
+      if (isNetworkError(e)) {
+        throw const PaymentNetworkException();
+      }
+      if (e is PaymentException) {
+        rethrow;
+      }
+      throw PaymentServerException(e.toString());
+    }
+  }
+
+  Never _mapErrorCodeToPaymentException(String? errorCode, int? httpStatus) {
+    if (errorCode != null && errorCode.isNotEmpty) {
+      switch (errorCode) {
+        case 'expired':
+        case 'time_too_short':
+          throw const PaymentExpiredException();
+        case 'not_payable':
+          throw const PaymentNotPayableException();
+        case 'unauthorized':
+          throw const PaymentUnauthorizedException();
+        case 'midtrans_error':
+        case 'server_error':
+        case 'invalid_request':
+        case 'not_found':
+          throw const PaymentServerException();
+        default:
+          throw const PaymentServerException();
+      }
+    }
+
+    if (httpStatus == 401) {
+      throw const PaymentUnauthorizedException();
+    }
+    throw const PaymentServerException();
   }
 }

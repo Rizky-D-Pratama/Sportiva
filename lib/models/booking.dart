@@ -27,6 +27,7 @@ class Booking {
   final String? courtId;
   final String? venueId;
   final DateTime? createdAt;
+  final DateTime? paidAt;
   final int pricePerHour;
   final int serviceFee;
   final int durationHours;
@@ -57,6 +58,7 @@ class Booking {
     this.courtId,
     this.venueId,
     this.createdAt,
+    this.paidAt,
     required this.pricePerHour,
     required this.serviceFee,
     required this.durationHours,
@@ -106,6 +108,7 @@ class Booking {
     String? courtId,
     String? venueId,
     DateTime? createdAt,
+    DateTime? paidAt,
     int? pricePerHour,
     int? serviceFee,
     int? durationHours,
@@ -136,6 +139,7 @@ class Booking {
       courtId: courtId ?? this.courtId,
       venueId: venueId ?? this.venueId,
       createdAt: createdAt ?? this.createdAt,
+      paidAt: paidAt ?? this.paidAt,
       pricePerHour: pricePerHour ?? this.pricePerHour,
       serviceFee: serviceFee ?? this.serviceFee,
       durationHours: durationHours ?? this.durationHours,

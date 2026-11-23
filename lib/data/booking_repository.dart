@@ -2,6 +2,45 @@ import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/unavailable_time_slot.dart';
 
+/// Payment session response model returned from Edge Function create-booking-payment
+class PaymentSession {
+  final String orderId;
+  final String token;
+  final String redirectUrl;
+
+  const PaymentSession({
+    required this.orderId,
+    required this.token,
+    required this.redirectUrl,
+  });
+}
+
+/// Base sealed class for Payment Exceptions
+sealed class PaymentException implements Exception {
+  final String? message;
+  const PaymentException([this.message]);
+}
+
+class PaymentExpiredException extends PaymentException {
+  const PaymentExpiredException([super.message]);
+}
+
+class PaymentNotPayableException extends PaymentException {
+  const PaymentNotPayableException([super.message]);
+}
+
+class PaymentUnauthorizedException extends PaymentException {
+  const PaymentUnauthorizedException([super.message]);
+}
+
+class PaymentNetworkException extends PaymentException {
+  const PaymentNetworkException([super.message]);
+}
+
+class PaymentServerException extends PaymentException {
+  const PaymentServerException([super.message]);
+}
+
 /// Exceptions thrown by BookingRepository
 sealed class BookingException implements Exception {
   final String? message;
@@ -42,4 +81,7 @@ abstract class BookingRepository {
     required DateTime date,
     String? courtId,
   });
+
+  /// Creates a Midtrans payment session for a booking using Edge Function `create-booking-payment`
+  Future<PaymentSession> createPaymentSession(String bookingId);
 }
