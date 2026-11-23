@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../config/app_config.dart';
@@ -5,6 +6,7 @@ import '../constants/app_icons.dart';
 import '../data/booking_repository.dart';
 import '../models/booking.dart';
 import '../theme/app_theme.dart';
+import '../utils/payment_error_handler.dart';
 import '../widgets/app_badge.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_chip.dart';
@@ -12,9 +14,25 @@ import '../widgets/app_header.dart';
 import 'booking_detail_screen.dart';
 import 'booking_history_screen.dart';
 import 'booking_ticket_screen.dart';
+import 'payment_webview_screen.dart';
+
+/// Request model for triggering order list refresh or polling from external flow (e.g. BookingSummary)
+class PaymentRefreshRequest {
+  final String bookingId;
+  final bool poll;
+
+  const PaymentRefreshRequest({
+    required this.bookingId,
+    required this.poll,
+  });
+}
 
 /// Screen for Pesanan (Order) & Riwayat (History) tab
 class OrderScreen extends StatefulWidget {
+  /// Notifier to receive payment refresh/polling requests across tabs
+  static final ValueNotifier<PaymentRefreshRequest?> refreshRequest =
+      ValueNotifier<PaymentRefreshRequest?>(null);
+
   const OrderScreen({super.key});
 
   @override
@@ -27,10 +45,110 @@ class OrderScreenState extends State<OrderScreen> {
   bool _isLoading = true;
   Object? _error;
 
+  Timer? _pollingTimer;
+  final Set<String> _loadingPaymentBookingIds = {};
+
   @override
   void initState() {
     super.initState();
+    OrderScreen.refreshRequest.addListener(_handlePaymentRefreshRequest);
     _fetchBookings();
+  }
+
+  @override
+  void dispose() {
+    OrderScreen.refreshRequest.removeListener(_handlePaymentRefreshRequest);
+    _cancelPolling();
+    super.dispose();
+  }
+
+  void _cancelPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
+  }
+
+  void _handlePaymentRefreshRequest() {
+    final req = OrderScreen.refreshRequest.value;
+    if (req != null) {
+      startRefreshOrPolling(bookingId: req.bookingId, poll: req.poll);
+      OrderScreen.refreshRequest.value = null;
+    }
+  }
+
+  void startRefreshOrPolling({required String bookingId, required bool poll}) {
+    _cancelPolling();
+    _fetchBookings(silent: true);
+
+    if (!poll) return;
+
+    int attempts = 0;
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      attempts++;
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      await _fetchBookings(silent: true);
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      final targetBooking = _bookings.where((b) => b.id == bookingId).firstOrNull;
+      final isStillUnpaid =
+          targetBooking != null && targetBooking.status == BookingStatus.belumBayar;
+
+      if (!isStillUnpaid || attempts >= 10) {
+        timer.cancel();
+        if (identical(_pollingTimer, timer)) {
+          _pollingTimer = null;
+        }
+      }
+    });
+  }
+
+  Future<void> _handlePaymentDetail(Booking booking) async {
+    if (_loadingPaymentBookingIds.contains(booking.id)) return;
+
+    setState(() {
+      _loadingPaymentBookingIds.add(booking.id);
+    });
+
+    try {
+      final session =
+          await AppConfig.bookingRepository.createPaymentSession(booking.id);
+      if (!mounted) return;
+
+      final result = await Navigator.push<PaymentWebViewResult>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentWebViewScreen(redirectUrl: session.redirectUrl),
+        ),
+      );
+
+      if (!mounted) return;
+
+      final poll = result == PaymentWebViewResult.finished;
+      startRefreshOrPolling(bookingId: booking.id, poll: poll);
+    } on PaymentException catch (e) {
+      if (!mounted) return;
+      await PaymentErrorHandler.showErrorDialog(context, e);
+      _fetchBookings();
+    } catch (_) {
+      if (!mounted) return;
+      await PaymentErrorHandler.showErrorDialog(
+        context,
+        const PaymentServerException(),
+      );
+      _fetchBookings();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingPaymentBookingIds.remove(booking.id);
+        });
+      }
+    }
   }
 
   /// Public method to trigger reloading from MainShell
@@ -38,11 +156,15 @@ class OrderScreenState extends State<OrderScreen> {
     return _fetchBookings();
   }
 
-  Future<void> _fetchBookings() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  Future<void> _fetchBookings({bool silent = false}) async {
+    final isSilent = silent && _bookings.isNotEmpty;
+
+    if (!isSilent) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
     try {
       final bookings = await AppConfig.bookingRepository.getMyBookings();
@@ -54,10 +176,12 @@ class OrderScreenState extends State<OrderScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _error = e;
-        _isLoading = false;
-      });
+      if (!isSilent) {
+        setState(() {
+          _error = e;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -451,9 +575,9 @@ class OrderScreenState extends State<OrderScreen> {
                       children: [
                         AppButton(
                           label: 'Lihat detail pembayaran',
-                          onPressed: () {
-                            // TODO: Lihat detail pembayaran / Snap (belum ada layar)
-                          },
+                          onPressed: _loadingPaymentBookingIds.contains(booking.id)
+                              ? null
+                              : () => _handlePaymentDetail(booking),
                           trailingIconPath: AppIcons.arrowRight,
                         ),
                         const SizedBox(height: 8.0),

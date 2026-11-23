@@ -67,11 +67,9 @@ class BookingDetailScreen extends StatelessWidget {
         ? booking.paymentMethod!
         : 'Belum memilih metode pembayaran';
 
-    final paymentStatusText = switch (booking.status) {
-      BookingStatus.belumBayar => 'Belum bayar',
-      BookingStatus.dibatalkan => 'Dibatalkan',
-      BookingStatus.sudahBayar || BookingStatus.selesai => '-',
-    };
+    final paidDateText = booking.paidAt != null
+        ? DateFormatHelper.formatShortDateWithTime(booking.paidAt!)
+        : '-';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -139,7 +137,7 @@ class BookingDetailScreen extends StatelessWidget {
                           const SizedBox(height: 4.0),
                           AppInfoRow(
                             label: 'Dibayar',
-                            value: paymentStatusText,
+                            value: paidDateText,
                           ),
                         ],
                       ),

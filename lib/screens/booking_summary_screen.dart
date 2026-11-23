@@ -3,9 +3,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../config/app_config.dart';
 import '../constants/app_icons.dart';
 import '../data/booking_repository.dart';
+import '../models/booking.dart';
 import '../models/court.dart';
-import 'main_shell.dart';
 import '../theme/app_theme.dart';
+import '../utils/payment_error_handler.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_field.dart';
 import '../widgets/app_image.dart';
@@ -13,6 +14,9 @@ import '../widgets/app_info_notice.dart';
 import '../widgets/app_info_row.dart';
 import '../widgets/app_modal.dart';
 import '../widgets/app_sticky_bottom_bar.dart';
+import 'main_shell.dart';
+import 'order_screen.dart';
+import 'payment_webview_screen.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
   final Court court;
@@ -80,31 +84,14 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
       _errorMessage = null;
     });
 
+    Booking? createdBooking;
     try {
-      await AppConfig.bookingRepository.createBooking(
+      createdBooking = await AppConfig.bookingRepository.createBooking(
         court: widget.court,
         date: widget.selectedDate,
         startHour: widget.startHour,
         durationHours: widget.durationHours,
       );
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          content: AppInfoNotice(
-            message: 'Booking berhasil dibuat. Silakan selesaikan pembayaran.',
-            iconPath: AppIcons.circleCheck,
-          ),
-          duration: Duration(seconds: 3),
-        ),
-      );
-
-      Navigator.popUntil(context, (route) => route.isFirst);
-      MainShell.tabRequest.value = 2;
     } on BookingUnavailableException {
       if (!mounted) return;
       setState(() {
@@ -122,24 +109,64 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
           Navigator.pop(context, true); // Pop summary screen with result true
         },
       );
+      return;
     } on BookingNetworkException {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
         _errorMessage = 'Koneksi terputus. Periksa jaringan internet Anda.';
       });
-    } on BookingServerException {
-      if (!mounted) return;
-      setState(() {
-        _isSubmitting = false;
-        _errorMessage = 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
-      });
+      return;
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
         _errorMessage = 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
       });
+      return;
+    }
+
+    // Booking created successfully, attempt to create payment session
+    PaymentSession? session;
+    PaymentException? paymentError;
+    try {
+      session = await AppConfig.bookingRepository.createPaymentSession(createdBooking.id);
+    } on PaymentException catch (e) {
+      paymentError = e;
+    } catch (_) {
+      paymentError = const PaymentServerException();
+    }
+
+    if (!mounted) return;
+
+    if (session != null) {
+      final result = await Navigator.push<PaymentWebViewResult>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentWebViewScreen(redirectUrl: session!.redirectUrl),
+        ),
+      );
+
+      if (!mounted) return;
+
+      final poll = result == PaymentWebViewResult.finished;
+      Navigator.popUntil(context, (route) => route.isFirst);
+      MainShell.tabRequest.value = 2;
+      OrderScreen.refreshRequest.value = PaymentRefreshRequest(
+        bookingId: createdBooking.id,
+        poll: poll,
+      );
+    } else {
+      // Payment session creation failed: show error modal dialog, then navigate to Pesanan tab
+      await PaymentErrorHandler.showErrorDialog(context, paymentError!);
+
+      if (!mounted) return;
+      Navigator.popUntil(context, (route) => route.isFirst);
+      MainShell.tabRequest.value = 2;
+      OrderScreen.refreshRequest.value = PaymentRefreshRequest(
+        bookingId: createdBooking.id,
+        poll: false,
+      );
     }
   }
 
