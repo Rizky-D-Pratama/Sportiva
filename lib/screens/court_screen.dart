@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_icons.dart';
 import '../data/court_repository.dart';
 import '../models/court.dart';
@@ -12,6 +13,7 @@ import '../widgets/search_bar_widget.dart';
 import 'court_detail_screen.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../widgets/app_header.dart';
+import '../widgets/app_empty_state.dart';
 
 /// Screen for Lapangan (Court) catalog/search tab
 class CourtScreen extends StatefulWidget {
@@ -90,7 +92,7 @@ class _CourtScreenState extends State<CourtScreen> {
     var result = allCourts.where((court) {
       // 1. Search Query Filter
       if (_searchQuery.isNotEmpty) {
-        final q = _searchQuery.toLowerCase();
+        final q = _searchQuery.trim().toLowerCase();
         final matchName = court.name.toLowerCase().contains(q);
         final matchVenue = court.venue.name.toLowerCase().contains(q);
         final matchLocation = court.venue.location.toLowerCase().contains(q);
@@ -274,17 +276,32 @@ class _CourtScreenState extends State<CourtScreen> {
               final allCourts = snapshot.data ?? [];
               final filteredCourts = _filterAndSortCourts(allCourts);
 
-              if (filteredCourts.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Text(
-                      'Tidak ada lapangan ditemukan.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: textSecondary,
-                      ),
-                    ),
+              if (allCourts.isEmpty) {
+                return const AppEmptyState(
+                  illustration: _EmptyStateIllustration(
+                    assetPath: AppIcons.soccerFieldX,
                   ),
+                  title: 'Lapangan belum tersedia',
+                  description:
+                  'Saat ini belum ada lapangan yang tersedia. Silakan coba kembali nanti.',
+                );
+              }
+
+              if (filteredCourts.isEmpty) {
+                final isSearching = _searchQuery.trim().isNotEmpty;
+
+                return AppEmptyState(
+                  illustration: _EmptyStateIllustration(
+                    assetPath: isSearching
+                        ? AppIcons.notFoundGlass
+                        : AppIcons.filterX,
+                  ),
+                  title: isSearching
+                      ? 'Tidak ditemukan'
+                      : 'Lapangan tidak ditemukan',
+                  description: isSearching
+                      ? 'Tidak ada lapangan, lokasi, atau venue dengan kata kunci "${_searchQuery.trim()}". Coba kata kunci lain.'
+                      : 'Tidak ada lapangan yang sesuai dengan filter pilihanmu. Coba ubah filter.',
                 );
               }
 
@@ -309,6 +326,30 @@ class _CourtScreenState extends State<CourtScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyStateIllustration extends StatelessWidget {
+  final String assetPath;
+
+  const _EmptyStateIllustration({
+    required this.assetPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return SvgPicture.asset(
+      assetPath,
+      width: 160,
+      height: 160,
+      fit: BoxFit.contain,
+      colorFilter: ColorFilter.mode(
+        colors.successForeground,
+        BlendMode.srcIn,
       ),
     );
   }
