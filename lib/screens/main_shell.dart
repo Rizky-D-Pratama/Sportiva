@@ -39,6 +39,11 @@ class MainShellState extends State<MainShell> {
     });
   }
 
+  void _openCourtCategory(String category) {
+    selectTab(1);
+    _courtScreenKey.currentState?.selectCategory(category);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +53,7 @@ class MainShellState extends State<MainShell> {
         repository: widget.repository,
         onNavigateTab: _onTabTapped,
         onSearchTap: _openCourtSearch,
+        onNavigateCategory: _openCourtCategory,
       ),
       CourtScreen(
         key: _courtScreenKey,

@@ -90,6 +90,14 @@ class CourtScreenState extends State<CourtScreen> {
     );
   }
 
+  void selectCategory(String category) {
+    if (_selectedCategory == category) return;
+
+    setState(() {
+      _selectedCategory = category;
+    });
+  }
+
   void focusSearch() {
     _searchFocusNode.requestFocus();
   }

@@ -17,12 +17,14 @@ import 'court_schedule_screen.dart';
 class HomeScreen extends StatefulWidget {
   final CourtRepository repository;
   final ValueChanged<int>? onNavigateTab;
+  final ValueChanged<String>? onNavigateCategory;
   final VoidCallback? onSearchTap;
 
   const HomeScreen({
     super.key,
     required this.repository,
     this.onNavigateTab,
+    this.onNavigateCategory,
     this.onSearchTap,
   });
 
@@ -188,21 +190,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: SportChip(
                       icon: MockData.sportCategories[0]['icon'],
                       label: MockData.sportCategories[0]['label'],
-                      onTap: () => widget.onNavigateTab?.call(1),
+                      onTap: () => widget.onNavigateCategory?.call('Futsal'),
                     ),
                   ),
                   Expanded(
                     child: SportChip(
                       icon: MockData.sportCategories[1]['icon'],
                       label: MockData.sportCategories[1]['label'],
-                      onTap: () => widget.onNavigateTab?.call(1),
+                      onTap: () => widget.onNavigateCategory?.call('Voli'),
                     ),
                   ),
                   Expanded(
                     child: SportChip(
                       icon: MockData.sportCategories[2]['icon'],
                       label: MockData.sportCategories[2]['label'],
-                      onTap: () => widget.onNavigateTab?.call(1),
+                      onTap: () => widget.onNavigateCategory?.call('Basket'),
                     ),
                   ),
                 ],
@@ -217,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: SportChip(
                       icon: MockData.sportCategories[3]['icon'],
                       label: MockData.sportCategories[3]['label'],
-                      onTap: () => widget.onNavigateTab?.call(1),
+                      onTap: () => widget.onNavigateCategory?.call('Badminton'),
                     ),
                   ),
                   Expanded(
