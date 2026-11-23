@@ -9,6 +9,8 @@ class AppIcons {
   static const String basketBall = 'assets/icons/basket_ball.svg';
   static const String shuttlecock = 'assets/icons/shuttlecock.svg';
   static const String sportField = 'assets/icons/sport_field.svg';
+  static const String soccerField = 'assets/icons/soccer_field.svg';
+  static const String soccerFieldX = 'assets/icons/soccer_field_x.svg';
   static const String timePast = 'assets/icons/time_past.svg';
   static const String mapPin = 'assets/icons/map_pin.svg';
   static const String building = 'assets/icons/building.svg';
@@ -49,6 +51,7 @@ class AppIcons {
   static const String eye = 'assets/icons/eye.svg';
   static const String plus = 'assets/icons/plus.svg';
   static const String layoutDashboard = 'assets/icons/layout_dashboard.svg';
-  static const String soccerField = 'assets/icons/soccer_field.svg';
   static const String chart = 'assets/icons/chart.svg';
+  static const String notFoundGlass = 'assets/icons/not_found_glass.svg';
+  static const String filterX = 'assets/icons/filter_x.svg';
 }
