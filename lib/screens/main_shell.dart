@@ -107,7 +107,7 @@ class MainShellState extends State<MainShell> {
             children: [
               NavItem(
                 iconPath: AppIcons.house,
-                label: 'Home',
+                label: 'Beranda',
                 isActive: _currentIndex == 0,
                 onTap: () => _onTabTapped(0),
               ),
@@ -119,7 +119,7 @@ class MainShellState extends State<MainShell> {
               ),
               NavItem(
                 iconPath: AppIcons.cart,
-                label: 'Pesanan',
+                label: 'Pemesanan',
                 isActive: _currentIndex == 2,
                 onTap: () => _onTabTapped(2),
               ),
