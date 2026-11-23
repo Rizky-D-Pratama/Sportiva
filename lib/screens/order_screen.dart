@@ -15,6 +15,7 @@ import 'booking_detail_screen.dart';
 import 'booking_history_screen.dart';
 import 'booking_ticket_screen.dart';
 import 'payment_webview_screen.dart';
+import '../widgets/app_empty_state.dart';
 
 /// Request model for triggering order list refresh or polling from external flow (e.g. BookingSummary)
 class PaymentRefreshRequest {
@@ -27,13 +28,18 @@ class PaymentRefreshRequest {
   });
 }
 
-/// Screen for Pesanan (Order) & Riwayat (History) tab
+/// Screen for Pemesanan (Order) & Riwayat (History) tab
 class OrderScreen extends StatefulWidget {
   /// Notifier to receive payment refresh/polling requests across tabs
   static final ValueNotifier<PaymentRefreshRequest?> refreshRequest =
       ValueNotifier<PaymentRefreshRequest?>(null);
 
-  const OrderScreen({super.key});
+  final ValueChanged<int>? onNavigateTab;
+
+  const OrderScreen({
+    super.key,
+    this.onNavigateTab,
+  });
 
   @override
   State<OrderScreen> createState() => OrderScreenState();
@@ -214,9 +220,36 @@ class OrderScreenState extends State<OrderScreen> {
 
   String get _errorMessage {
     if (_error is BookingNetworkException) {
-      return 'Gagal memuat pesanan. Periksa jaringan internet Anda.';
+      return 'Gagal memuat pemesanan. Periksa jaringan internet Anda.';
     }
     return 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+  }
+
+  Widget _buildEmptyState() {
+    final hasNoBookings = _bookings.isEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32.0),
+      child: AppEmptyState(
+        illustration: SvgPicture.asset(
+          AppIcons.calendarSearch,
+          width: 72,
+          height: 72,
+        ),
+        title: hasNoBookings
+            ? 'Belum Ada Pemesanan'
+            : 'Tidak Ada Pemesanan',
+        description: hasNoBookings
+            ? 'Temukan lapangan favoritmu dan buat booking pertamamu sekarang!'
+            : _selectedFilter == 'Belum bayar'
+            ? 'Belum ada pemesanan yang belum dibayar.'
+            : 'Belum ada pemesanan yang sudah dibayar.',
+        buttonText: hasNoBookings ? 'Cari Lapangan' : null,
+        onButtonPressed: hasNoBookings
+            ? () => widget.onNavigateTab?.call(1)
+            : null,
+      ),
+    );
   }
 
   @override
@@ -239,7 +272,7 @@ class OrderScreenState extends State<OrderScreen> {
           children: [
             // App Header
             const AppHeader(
-              title: 'Pesanan',
+              title: 'Pemesanan',
               showNotificationBell: true,
             ),
             const SizedBox(height: 16.0),
@@ -294,7 +327,7 @@ class OrderScreenState extends State<OrderScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Pesanan aktif',
+                  'Pemesanan aktif',
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: colors.textPrimary,
                     fontSize: 17.0,
@@ -302,7 +335,7 @@ class OrderScreenState extends State<OrderScreen> {
                   ),
                 ),
                 Text(
-                  '${displayed.length} pesanan',
+                  '${displayed.length} pemesanan',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.textSecondary,
                     fontSize: 11.0,
@@ -334,17 +367,7 @@ class OrderScreenState extends State<OrderScreen> {
                 ),
               )
             else if (displayed.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32.0),
-                child: Center(
-                  child: Text(
-                    'Belum ada pesanan aktif.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ),
-              )
+                _buildEmptyState()
             else
               ListView.separated(
                 shrinkWrap: true,

@@ -42,7 +42,10 @@ class MainShellState extends State<MainShell> {
       CourtScreen(
         repository: widget.repository,
       ),
-      OrderScreen(key: _orderScreenKey),
+      OrderScreen(
+        key: _orderScreenKey,
+        onNavigateTab: _onTabTapped,
+      ),
       ProfileScreen(),
     ];
   }
