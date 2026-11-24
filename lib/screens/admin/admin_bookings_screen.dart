@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../config/app_config.dart';
+import '../../data/booking_repository.dart';
 import '../../data/court_repository.dart';
-import '../../data/mock_data.dart';
 import '../../models/booking.dart';
 import '../../models/court.dart';
 import '../../theme/app_theme.dart';
@@ -34,15 +35,17 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
 
   // Search & Filter state
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   String _searchQuery = '';
 
   late DateTime _selectedDate;
   Court? _selectedCourt; // null = Semua lapangan
-  BookingStatus? _selectedStatus; // null = Semua status (Batal includes dibatalkan)
+  BookingStatus? _selectedStatus; // null = Semua status
 
   List<Booking> _adminBookings = [];
   List<Court> _adminCourts = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -50,93 +53,89 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
     _courtRepository = widget.courtRepository ?? AppConfig.courtRepository;
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
-    _loadData();
+    _loadInitialData();
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    final courts = await _courtRepository.getAdminCourts();
-    final bookings = MockData.mockAdminBookings;
-    if (!mounted) return;
-    setState(() {
-      _adminCourts = courts;
-      _adminBookings = List.from(bookings);
-      _isLoading = false;
-    });
+  String? _getStatusToken(BookingStatus? status) {
+    if (status == null) return null;
+    return switch (status) {
+      BookingStatus.selesai => 'selesai',
+      BookingStatus.sudahBayar => 'sudah_bayar',
+      BookingStatus.belumBayar => 'belum_bayar',
+      BookingStatus.dibatalkan => 'batal',
+    };
   }
 
-  /// Calculates filtered and sorted list of admin bookings
-  List<Booking> get _filteredAndSortedBookings {
-    final hasSearch = _searchQuery.trim().isNotEmpty;
-    final query = _searchQuery.trim().toLowerCase();
-
-    final filtered = _adminBookings.where((booking) {
-      // 1. Search Query Filter (spans all dates if search query present)
-      if (hasSearch) {
-        final matchesCode = booking.bookingCode.toLowerCase().contains(query);
-        final matchesName = (booking.userName ?? '').toLowerCase().contains(query);
-        if (!matchesCode && !matchesName) return false;
-      } else {
-        // Match selected date
-        final bDate = booking.playDateTime;
-        final isSameDate = bDate.year == _selectedDate.year &&
-            bDate.month == _selectedDate.month &&
-            bDate.day == _selectedDate.day;
-        if (!isSameDate) return false;
-      }
-
-      // 2. Court Filter
-      if (_selectedCourt != null) {
-        if (booking.courtName.toLowerCase() != _selectedCourt!.name.toLowerCase()) {
-          return false;
-        }
-      }
-
-      // 3. Status Filter
-      if (_selectedStatus != null) {
-        if (booking.status != _selectedStatus) return false;
-      }
-
-      return true;
-    }).toList();
-
-    // Sorting logic:
-    // Status weight: Belum bayar (1), Sudah bayar (2), Selesai (3), Dibatalkan (4)
-    int statusWeight(BookingStatus status) {
-      switch (status) {
-        case BookingStatus.belumBayar:
-          return 1;
-        case BookingStatus.sudahBayar:
-          return 2;
-        case BookingStatus.selesai:
-          return 3;
-        case BookingStatus.dibatalkan:
-          return 4;
-      }
+  Future<void> _loadInitialData() async {
+    try {
+      final courts = await _courtRepository.getAdminCourts();
+      if (!mounted) return;
+      setState(() {
+        _adminCourts = courts;
+      });
+    } catch (_) {
+      // Swallowed as courts list is non-critical for main list display
     }
+    await _fetchBookings();
+  }
 
-    filtered.sort((a, b) {
-      if (hasSearch) {
-        // Cross-date search: newest play date first
-        final dateCmp = b.playDateTime.compareTo(a.playDateTime);
-        if (dateCmp != 0) return dateCmp;
-      }
-
-      // Within same date: Belum bayar -> Sudah bayar -> Selesai -> Dibatalkan
-      final wA = statusWeight(a.status);
-      final wB = statusWeight(b.status);
-      if (wA != wB) return wA.compareTo(wB);
-
-      // Same status: start time ascending
-      return a.playDateTime.compareTo(b.playDateTime);
+  Future<void> _fetchBookings() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
     });
 
-    return filtered;
+    try {
+      final statusToken = _getStatusToken(_selectedStatus);
+      final query = _searchQuery.trim();
+
+      final bookings = await AppConfig.bookingRepository.getAdminBookings(
+        tanggal: query.isNotEmpty ? null : _selectedDate,
+        courtId: _selectedCourt?.id,
+        status: statusToken,
+        search: query.isNotEmpty ? query : null,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _adminBookings = bookings;
+        _isLoading = false;
+      });
+    } on BookingNetworkException {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Gagal memuat booking. Periksa jaringan internet Anda.';
+        _isLoading = false;
+      });
+    } on BookingNotAdminException {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Akun ini tidak memiliki akses admin.';
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _onSearchChanged(String val) {
+    _searchDebounce?.cancel();
+    _searchQuery = val;
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      _fetchBookings();
+    });
   }
 
   // --- FILTER BOTTOM SHEETS ---
@@ -161,7 +160,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                   AppCalendar(
                     isRangeMode: false,
                     selectedDate: tempDate,
-                    minDate: DateTime(2020, 1, 1), // Allow past dates
+                    minDate: DateTime(2020, 1, 1), // Allow past dates without lower bound
                     maxDate: today.add(const Duration(days: 14)),
                     onDateSelected: (date) {
                       setSheetState(() {
@@ -183,6 +182,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                         _selectedDate = tempDate;
                       });
                       Navigator.pop(context);
+                      _fetchBookings();
                     },
                   ),
                 ],
@@ -194,7 +194,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
     );
   }
 
-  /// Opens Bottom Sheet for Court Selection (Figma 935:1526)
+  /// Opens Bottom Sheet for Court Selection
   void _openCourtBottomSheet() {
     Court? tempCourt = _selectedCourt;
 
@@ -249,6 +249,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                         _selectedCourt = tempCourt;
                       });
                       Navigator.pop(context);
+                      _fetchBookings();
                     },
                   ),
                 ],
@@ -260,7 +261,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
     );
   }
 
-  /// Opens Bottom Sheet for Booking Status Selection (Figma 937:1940)
+  /// Opens Bottom Sheet for Booking Status Selection
   void _openStatusBottomSheet() {
     BookingStatus? tempStatus = _selectedStatus;
 
@@ -324,6 +325,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                         _selectedStatus = tempStatus;
                       });
                       Navigator.pop(context);
+                      _fetchBookings();
                     },
                   ),
                 ],
@@ -361,12 +363,11 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
       }
     }
 
-    final displayedBookings = _filteredAndSortedBookings;
     final hasSearch = _searchQuery.trim().isNotEmpty;
 
     final infoRowText = hasSearch
-        ? 'Hasil pencarian • ${displayedBookings.length} booking'
-        : '${_selectedDate.day} ${DateFormatHelper.monthNames[_selectedDate.month - 1]} ${_selectedDate.year} • ${displayedBookings.length} booking';
+        ? 'Hasil pencarian • ${_adminBookings.length} booking'
+        : '${_selectedDate.day} ${DateFormatHelper.monthNames[_selectedDate.month - 1]} ${_selectedDate.year} • ${_adminBookings.length} booking';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -387,101 +388,119 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
 
             // Scrollable Content
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.paddingXLarge,
-                        vertical: 8.0,
-                      ),
+              child: RefreshIndicator(
+                onRefresh: _fetchBookings,
+                color: colors.successForeground,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.paddingXLarge,
+                    vertical: 8.0,
+                  ),
+                  children: [
+                    // Search Bar
+                    AppSearchBar(
+                      controller: _searchController,
+                      hintText: 'Cari ID booking atau nama...',
+                      onChanged: _onSearchChanged,
+                    ),
+                    const SizedBox(height: 12.0),
+
+                    // Dropdown Chips Filter Row
+                    Row(
                       children: [
-                        // Search Bar
-                        AppSearchBar(
-                          controller: _searchController,
-                          hintText: 'Cari ID booking atau nama...',
-                          onChanged: (val) {
-                            setState(() {
-                              _searchQuery = val;
-                            });
-                          },
+                        DropdownChip(
+                          label: dateChipLabel,
+                          isActive: false,
+                          onTap: _openDateBottomSheet,
                         ),
-                        const SizedBox(height: 12.0),
-
-                        // Dropdown Chips Filter Row
-                        Row(
-                          children: [
-                            DropdownChip(
-                              label: dateChipLabel,
-                              isActive: false, // Always shows current date
-                              onTap: _openDateBottomSheet,
-                            ),
-                            const SizedBox(width: 6.0),
-                            DropdownChip(
-                              label: courtChipLabel,
-                              isActive: _selectedCourt != null,
-                              onTap: _openCourtBottomSheet,
-                            ),
-                            const SizedBox(width: 6.0),
-                            DropdownChip(
-                              label: statusChipLabel,
-                              isActive: _selectedStatus != null,
-                              onTap: _openStatusBottomSheet,
-                            ),
-                          ],
+                        const SizedBox(width: 6.0),
+                        DropdownChip(
+                          label: courtChipLabel,
+                          isActive: _selectedCourt != null,
+                          onTap: _openCourtBottomSheet,
                         ),
-                        const SizedBox(height: 12.0),
-
-                        // Date & Booking Count Info Header
-                        Text(
-                          infoRowText,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontSize: 12.0,
-                            color: colors.textSecondary,
-                          ),
+                        const SizedBox(width: 6.0),
+                        DropdownChip(
+                          label: statusChipLabel,
+                          isActive: _selectedStatus != null,
+                          onTap: _openStatusBottomSheet,
                         ),
-                        const SizedBox(height: 12.0),
-
-                        // Bookings List or Empty State
-                        if (displayedBookings.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 48.0),
-                            child: Center(
-                              child: Text(
-                                'Tidak ada booking',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          ...displayedBookings.map((booking) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: AdminBookingCard(
-                                booking: booking,
-                                onViewDetail: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => BookingDetailScreen(
-                                        booking: booking,
-                                        isAdminView: true,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                onCancel: booking.status == BookingStatus.belumBayar
-                                    ? () {
-                                        // Batalkan on Belum bayar does nothing (modal batalkan not built yet)
-                                      }
-                                    : null,
-                              ),
-                            );
-                          }),
                       ],
                     ),
+                    const SizedBox(height: 12.0),
+
+                    // Date & Booking Count Info Header
+                    Text(
+                      infoRowText,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 12.0,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12.0),
+
+                    // Content State Handling
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 48.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 48.0),
+                        child: Center(
+                          child: Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      )
+                    else if (_adminBookings.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 48.0),
+                        child: Center(
+                          child: Text(
+                            'Tidak ada booking',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ..._adminBookings.map((booking) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: AdminBookingCard(
+                            booking: booking,
+                            onViewDetail: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BookingDetailScreen(
+                                    booking: booking,
+                                    isAdminView: true,
+                                  ),
+                                ),
+                              );
+                            },
+                            onCancel: booking.status == BookingStatus.belumBayar
+                                ? () {
+                                    // Batalkan on Belum bayar does nothing
+                                  }
+                                : null,
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

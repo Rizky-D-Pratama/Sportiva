@@ -1,3 +1,4 @@
+import '../models/admin_dashboard_data.dart';
 import '../models/booking.dart';
 import '../models/court.dart';
 import '../models/unavailable_time_slot.dart';
@@ -73,6 +74,10 @@ class BookingUnauthorizedException extends BookingException {
   const BookingUnauthorizedException([super.message]);
 }
 
+class BookingNotAdminException extends BookingException {
+  const BookingNotAdminException([super.message]);
+}
+
 /// Interface for Booking repository operations
 abstract class BookingRepository {
   /// Fetches bookings for the current logged-in user using RPC `get_my_bookings`
@@ -99,4 +104,15 @@ abstract class BookingRepository {
 
   /// Cancels a booking using RPC `cancel_booking`
   Future<void> cancelBooking(String bookingId);
+
+  /// Fetches bookings for admin management using RPC `get_admin_bookings`
+  Future<List<Booking>> getAdminBookings({
+    DateTime? tanggal,
+    String? courtId,
+    String? status,
+    String? search,
+  });
+
+  /// Fetches dashboard summary statistics and recent bookings using RPC `get_admin_dashboard`
+  Future<AdminDashboardData> getAdminDashboard();
 }

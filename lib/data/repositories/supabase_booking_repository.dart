@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../models/admin_dashboard_data.dart';
 import '../../models/booking.dart';
 import '../../models/court.dart';
 import '../../models/unavailable_time_slot.dart';
@@ -417,6 +418,102 @@ class SupabaseBookingRepository implements BookingRepository {
       _log('SUPABASE cancelPaymentTransaction status: ${response.status}');
     } catch (e) {
       _log('SUPABASE Exception in cancelPaymentTransaction: ${e.runtimeType}');
+    }
+  }
+
+  @override
+  Future<List<Booking>> getAdminBookings({
+    DateTime? tanggal,
+    String? courtId,
+    String? status,
+    String? search,
+  }) async {
+    final isSearchActive = search != null && search.trim().isNotEmpty;
+    final dateStr = isSearchActive || tanggal == null
+        ? null
+        : '${tanggal.year}-${tanggal.month.toString().padLeft(2, '0')}-${tanggal.day.toString().padLeft(2, '0')}';
+
+    try {
+      final response = await Supabase.instance.client.rpc(
+        'get_admin_bookings',
+        params: {
+          'p_tanggal': dateStr,
+          'p_court_id': (courtId != null && courtId.isNotEmpty) ? courtId : null,
+          'p_status': (status != null && status.isNotEmpty) ? status : null,
+          'p_search': isSearchActive ? search.trim() : null,
+        },
+      );
+
+      final list = response as List<dynamic>;
+      return list
+          .map((item) => _mapJsonToBooking(item as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in getAdminBookings: code=${e.code}, message=${e.message}');
+      if (e.code == 'BK007') {
+        throw const BookingUnauthorizedException();
+      }
+      if (e.code == 'BK010') {
+        throw const BookingNotAdminException();
+      }
+      throw BookingServerException(e.code, e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in getAdminBookings: $e');
+      if (isNetworkError(e)) {
+        throw const BookingNetworkException();
+      }
+      if (e is BookingException) {
+        rethrow;
+      }
+      throw BookingServerException(null, e.toString());
+    }
+  }
+
+  @override
+  Future<AdminDashboardData> getAdminDashboard() async {
+    try {
+      final response = await Supabase.instance.client.rpc('get_admin_dashboard');
+      final json = Map<String, dynamic>.from(response as Map<String, dynamic>);
+
+      final totalBookingMonth = (json['total_booking_bulan'] as num).toInt();
+      final todayBookingCount = (json['booking_hari_ini'] as num).toInt();
+      final totalCourtsCount = (json['total_lapangan'] as num).toInt();
+      final monthlyRevenue = (json['pendapatan_bulan'] as num).toInt();
+
+      final bookingMingguRaw = json['booking_minggu'] as List<dynamic>? ?? [];
+      final weeklyBookingCounts = bookingMingguRaw.map((e) => (e as num).toInt()).toList();
+
+      final bookingTerbaruRaw = json['booking_terbaru'] as List<dynamic>? ?? [];
+      final recentBookings = bookingTerbaruRaw
+          .map((item) => _mapJsonToBooking(item as Map<String, dynamic>))
+          .toList();
+
+      return AdminDashboardData(
+        totalBookingMonth: totalBookingMonth,
+        todayBookingCount: todayBookingCount,
+        totalCourtsCount: totalCourtsCount,
+        monthlyRevenueRupiah: monthlyRevenue,
+        weeklyBookingCounts: weeklyBookingCounts,
+        recentBookings: recentBookings,
+      );
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in getAdminDashboard: code=${e.code}, message=${e.message}');
+      if (e.code == 'BK007') {
+        throw const BookingUnauthorizedException();
+      }
+      if (e.code == 'BK010') {
+        throw const BookingNotAdminException();
+      }
+      throw BookingServerException(e.code, e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in getAdminDashboard: $e');
+      if (isNetworkError(e)) {
+        throw const BookingNetworkException();
+      }
+      if (e is BookingException) {
+        rethrow;
+      }
+      throw BookingServerException(null, e.toString());
     }
   }
 }
