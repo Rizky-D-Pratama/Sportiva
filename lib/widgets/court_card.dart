@@ -94,7 +94,13 @@ class CourtCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (court.isFullToday) ...[
+                        if (court.isClosedToday) ...[
+                          const SizedBox(width: AppTheme.paddingSmall),
+                          const AppBadge(
+                            label: 'Tutup hari ini',
+                            variant: AppBadgeVariant.neutral,
+                          ),
+                        ] else if (court.isFullToday) ...[
                           const SizedBox(width: AppTheme.paddingSmall),
                           const AppBadge(
                             label: 'Penuh hari ini',

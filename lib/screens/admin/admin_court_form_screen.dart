@@ -246,7 +246,7 @@ class _AdminCourtFormScreenState extends State<AdminCourtFormScreen> {
           facilities: List.from(_facilities),
           description: descriptionTrimmed,
           isActive: _isActive,
-          isFullToday: false,
+          dayStatus: CourtDayStatus.none,
         );
         await _repository.addCourt(newCourt);
       }

@@ -101,7 +101,7 @@ class MockData {
       rating: 4.8,
       reviewCount: 128,
       imageUrl: AppImages.volleyball,
-      isFullToday: true,
+      dayStatus: CourtDayStatus.full,
       facilities: const ['Indoor', 'Parkir', 'Toilet', 'Ruang ganti'],
       description:
           'Lapangan voli vinyl berstandar nasional dengan sirkulasi udara yang baik dan tribun penonton.',

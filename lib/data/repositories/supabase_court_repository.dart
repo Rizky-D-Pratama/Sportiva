@@ -85,12 +85,53 @@ class SupabaseCourtRepository implements CourtRepository {
       rating: rating,
       reviewCount: reviewCount,
       imageUrl: imageUrl,
-      isFullToday: false, // SEMENTARA irisan 3
+      dayStatus: CourtDayStatus.none,
       isActive: isActive,
       facilities: facilities,
       description: description,
-      unavailableTimeSlots: const [], // SEMENTARA irisan 3
+      unavailableTimeSlots: const [],
     );
+  }
+
+  /// Fetches court day status for today using RPC get_status_lapangan_hari_ini
+  /// Returns a map of court_id -> CourtDayStatus
+  Future<Map<String, CourtDayStatus>> _fetchCourtDayStatuses() async {
+    final map = <String, CourtDayStatus>{};
+    try {
+      final response = await Supabase.instance.client
+          .rpc('get_status_lapangan_hari_ini');
+
+      final list = response as List<dynamic>;
+      for (final item in list) {
+        final row = item as Map<String, dynamic>;
+        final courtId = row['court_id'] as String?;
+        final statusStr = row['status'] as String?;
+
+        if (courtId != null && statusStr != null) {
+          final status = switch (statusStr) {
+            'tutup' => CourtDayStatus.closed,
+            'penuh' => CourtDayStatus.full,
+            _ => CourtDayStatus.none,
+          };
+          map[courtId] = status;
+        }
+      }
+    } catch (e) {
+      // Intentional fault-tolerance: badge status is non-critical decoration,
+      // so if RPC fails, log error and proceed with CourtDayStatus.none for all courts.
+      _log('SUPABASE Exception in get_status_lapangan_hari_ini: $e');
+    }
+    return map;
+  }
+
+  /// Attaches today's CourtDayStatus to a list of courts
+  Future<List<Court>> _attachDayStatuses(List<Court> courts) async {
+    if (courts.isEmpty) return courts;
+    final statusMap = await _fetchCourtDayStatuses();
+    return courts.map((court) {
+      final status = statusMap[court.id] ?? CourtDayStatus.none;
+      return court.copyWith(dayStatus: status);
+    }).toList();
   }
 
   /// Helper to handle PostgrestException for write operations
@@ -116,7 +157,8 @@ class SupabaseCourtRepository implements CourtRepository {
           .order('created_at', ascending: true);
 
       final list = response as List<dynamic>;
-      return list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
+      final courts = list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
+      return await _attachDayStatuses(courts);
     } on PostgrestException catch (e) {
       _log('SUPABASE PostgrestException in getAllCourts: message=${e.message}, code=${e.code}');
       throw CourtServerException(e.message);
@@ -134,7 +176,6 @@ class SupabaseCourtRepository implements CourtRepository {
 
   @override
   Future<List<Court>> getPopularCourts() async {
-    // SEMENTARA irisan 3: aturan popularitas berdasar booking dibayar
     try {
       final response = await Supabase.instance.client
           .from('courts')
@@ -147,7 +188,8 @@ class SupabaseCourtRepository implements CourtRepository {
           .limit(2);
 
       final list = response as List<dynamic>;
-      return list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
+      final courts = list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
+      return await _attachDayStatuses(courts);
     } on PostgrestException catch (e) {
       _log('SUPABASE PostgrestException in getPopularCourts: message=${e.message}, code=${e.code}');
       throw CourtServerException(e.message);
@@ -175,7 +217,8 @@ class SupabaseCourtRepository implements CourtRepository {
           .order('created_at', ascending: true);
 
       final list = response as List<dynamic>;
-      return list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
+      final courts = list.map((item) => _mapJsonToCourt(item as Map<String, dynamic>)).toList();
+      return await _attachDayStatuses(courts);
     } on PostgrestException catch (e) {
       _log('SUPABASE PostgrestException in getCourtsByCategory: message=${e.message}, code=${e.code}');
       throw CourtServerException(e.message);
