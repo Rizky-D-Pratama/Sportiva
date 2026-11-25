@@ -110,6 +110,24 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
         },
       );
       return;
+    } on BookingSlotClosedException {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      // USUL: Teks pesan singkat untuk slot yang ditutup admin
+      await AppModal.show(
+        context: context,
+        title: 'Jam Tertutup',
+        message: 'Jam ini sudah ditutup. Pilih jam lain.',
+        primaryButtonLabel: 'Pilih Jam Lain',
+        onPrimaryPressed: () {
+          Navigator.pop(context); // Close modal
+          Navigator.pop(context, true); // Pop summary screen with result true
+        },
+      );
+      return;
     } on BookingNetworkException {
       if (!mounted) return;
       setState(() {

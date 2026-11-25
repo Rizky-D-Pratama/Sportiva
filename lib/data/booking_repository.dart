@@ -53,6 +53,10 @@ class BookingUnavailableException extends BookingException {
   const BookingUnavailableException(this.errorCode, [super.message]);
 }
 
+class BookingSlotClosedException extends BookingException {
+  const BookingSlotClosedException([super.message]);
+}
+
 class BookingNetworkException extends BookingException {
   const BookingNetworkException([super.message]);
 }

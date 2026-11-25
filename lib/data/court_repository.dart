@@ -6,6 +6,19 @@ import '../models/unavailable_time_slot.dart';
 import '../models/venue_closure.dart';
 import 'mock_data.dart';
 
+/// Result returned from adding a venue/court closure
+class ClosureSaveResult {
+  final bool saved;
+  final int conflictCount;
+  final String? closureId;
+
+  const ClosureSaveResult({
+    required this.saved,
+    required this.conflictCount,
+    this.closureId,
+  });
+}
+
 /// Exception thrown when network connection fails during Court operations
 class CourtNetworkException implements Exception {
   const CourtNetworkException();
@@ -20,6 +33,16 @@ class CourtServerException implements Exception {
 /// Exception thrown when a court with the same name already exists in the venue
 class CourtDuplicateNameException implements Exception {
   const CourtDuplicateNameException();
+}
+
+/// Exception thrown when closure overlaps with another closure in the same scope (BK012)
+class ClosureOverlapException implements Exception {
+  const ClosureOverlapException();
+}
+
+/// Exception thrown when user is not admin of the venue/court (BK010)
+class ClosureNotAdminException implements Exception {
+  const ClosureNotAdminException();
 }
 
 /// Abstract repository contract for Court (Lapangan) & Schedule Closure data operations
@@ -46,22 +69,12 @@ abstract class CourtRepository {
     required DateTime date,
   });
 
-  Future<void> addVenueClosure(VenueClosure closure);
+  Future<ClosureSaveResult> addVenueClosure(
+    VenueClosure closure, {
+    bool confirmed = false,
+  });
+
   Future<void> deleteVenueClosure(String closureId);
-
-  Future<int> countConflictingBookings({
-    String? courtId,
-    required DateTime date,
-    required int startHour,
-    required int endHour,
-  });
-
-  Future<bool> hasOverlappingClosure({
-    String? courtId,
-    required DateTime date,
-    required int startHour,
-    required int endHour,
-  });
 
   Future<bool> isFullDayVenueClosed({
     required String venueId,
@@ -320,72 +333,55 @@ class FakeCourtRepository implements CourtRepository {
   }
 
   @override
-  Future<void> addVenueClosure(VenueClosure closure) async {
+  Future<ClosureSaveResult> addVenueClosure(
+    VenueClosure closure, {
+    bool confirmed = false,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 50));
-    // TODO: Di server simpan ke tabel venue_closures / court_closures.
+    // Check overlap
+    for (final vc in _venueClosures) {
+      if (!_isSameDate(vc.date, closure.date)) continue;
+      final isSameScope = (closure.courtId == null || closure.courtId!.isEmpty)
+          ? vc.isWholeVenue
+          : vc.courtId == closure.courtId;
+      if (!isSameScope) continue;
+      if (vc.startHour < closure.endHour && vc.endHour > closure.startHour) {
+        throw const ClosureOverlapException();
+      }
+    }
+
+    // Check conflict
+    int conflictCount = 0;
+    for (final booking in MockData.mockAdminBookings) {
+      if (booking.status == BookingStatus.dibatalkan) continue;
+      if (!_isSameDate(booking.playDateTime, closure.date)) continue;
+      if (closure.courtId != null && closure.courtId!.isNotEmpty) {
+        final court = _findCourtByIdOrName(closure.courtId!);
+        if (court == null || booking.courtName.toLowerCase() != court.name.toLowerCase()) continue;
+      }
+      final bStart = booking.playDateTime.hour;
+      final bEnd = bStart + booking.durationHours;
+      if (bStart < closure.endHour && bEnd > closure.startHour) {
+        conflictCount++;
+      }
+    }
+
+    if (conflictCount > 0 && !confirmed) {
+      return ClosureSaveResult(saved: false, conflictCount: conflictCount);
+    }
+
     _venueClosures.add(closure);
+    return ClosureSaveResult(
+      saved: true,
+      conflictCount: conflictCount,
+      closureId: closure.id,
+    );
   }
 
   @override
   Future<void> deleteVenueClosure(String closureId) async {
     await Future.delayed(const Duration(milliseconds: 50));
-    // TODO: Di server hapus record dari tabel venue_closures.
     _venueClosures.removeWhere((vc) => vc.id == closureId);
-  }
-
-  @override
-  Future<int> countConflictingBookings({
-    String? courtId,
-    required DateTime date,
-    required int startHour,
-    required int endHour,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    // TODO: Di server ini menghitung jumlah booking aktif yang tumpang tindih dengan rentang jam pada cakupan.
-    int count = 0;
-    for (final booking in MockData.mockAdminBookings) {
-      if (booking.status == BookingStatus.dibatalkan) continue;
-      if (!_isSameDate(booking.playDateTime, date)) continue;
-
-      if (courtId != null && courtId.isNotEmpty) {
-        final court = _findCourtByIdOrName(courtId);
-        if (court == null || booking.courtName.toLowerCase() != court.name.toLowerCase()) continue;
-      }
-
-      final bStart = booking.playDateTime.hour;
-      final bEnd = bStart + booking.durationHours;
-
-      // Overlap condition: bStart < endHour && bEnd > startHour
-      if (bStart < endHour && bEnd > startHour) {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  @override
-  Future<bool> hasOverlappingClosure({
-    String? courtId,
-    required DateTime date,
-    required int startHour,
-    required int endHour,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    // TODO: Di server periksa tumpang tindih penutupan pada cakupan yang SAMA.
-    for (final vc in _venueClosures) {
-      if (!_isSameDate(vc.date, date)) continue;
-
-      final isSameScope = (courtId == null || courtId.isEmpty)
-          ? vc.isWholeVenue
-          : vc.courtId == courtId;
-
-      if (!isSameScope) continue;
-
-      if (vc.startHour < endHour && vc.endHour > startHour) {
-        return true;
-      }
-    }
-    return false;
   }
 
   @override

@@ -38,7 +38,10 @@ class AdminScheduleScreen extends StatefulWidget {
 
 class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
   late final CourtRepository _repository;
-  String get _venueName => AppConfig.authRepository.currentUser?.venue?.name ?? '';
+  String get _venueName {
+    final name = AppConfig.authRepository.currentUser?.venue?.name.trim();
+    return (name != null && name.isNotEmpty) ? name : 'venue';
+  }
 
   List<Court> _adminCourts = [];
   bool _isLoadingCourts = true;
@@ -61,10 +64,11 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
   int? _endHour;
   final TextEditingController _reasonController = TextEditingController();
 
-  // Validation Errors
+  // Validation & Error States
   String? _startHourError;
   String? _endHourError;
   String? _reasonError;
+  String? _overlapError;
   bool _isSubmitting = false;
 
   @override
@@ -72,8 +76,8 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
     super.initState();
     _repository = widget.courtRepository ?? AppConfig.courtRepository;
 
-    final now = DateTime.now();
-    _selectedDate = DateTime(now.year, now.month, now.day);
+    final nowWib = DateTime.now().toUtc().add(const Duration(hours: 7));
+    _selectedDate = DateTime(nowWib.year, nowWib.month, nowWib.day);
 
     _loadInitialData();
   }
@@ -86,6 +90,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
 
   Court? get _selectedCourt {
     if (_selectedCourtId == null || _selectedCourtId!.isEmpty) return null;
+    if (_adminCourts.isEmpty) return null;
     return _adminCourts.firstWhere(
       (c) => c.id == _selectedCourtId,
       orElse: () => _adminCourts.first,
@@ -158,6 +163,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
       _startHourError = null;
       _endHourError = null;
       _reasonError = null;
+      _overlapError = null;
     });
   }
 
@@ -199,10 +205,12 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
         unavailableSlots: const [],
         minHour: AppConstants.operationalStartHour,
         maxHour: AppConstants.operationalEndHour - 1,
+        allowCurrentHour: true,
         onTimeSelected: (hour) {
           setState(() {
             _startHour = hour;
             _startHourError = null;
+            _overlapError = null;
             if (_endHour != null && _endHour! <= hour) {
               _endHour = null;
             }
@@ -231,10 +239,12 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
         minHour: AppConstants.operationalStartHour + 1,
         maxHour: AppConstants.operationalEndHour,
         restrictAfterHour: _startHour,
+        allowCurrentHour: true,
         onTimeSelected: (hour) {
           setState(() {
             _endHour = hour;
             _endHourError = null;
+            _overlapError = null;
           });
         },
       ),
@@ -244,122 +254,188 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
   Future<void> _submitClosureForm() async {
     if (_isSubmitting) return;
 
-    String? startErr;
-    String? endErr;
-    String? reasonErr;
-
-    final isFullDaySubmit = _isWholeVenueScope && _durationOption == DurationOption.fullDay;
-
-    final effectiveStartHour = isFullDaySubmit
-        ? AppConstants.operationalStartHour
-        : _startHour;
-    final effectiveEndHour = isFullDaySubmit
-        ? AppConstants.operationalEndHour
-        : _endHour;
-    final reasonTrimmed = _reasonController.text.trim();
-
-    if (!isFullDaySubmit) {
-      if (effectiveStartHour == null) {
-        startErr = 'Pilih jam mulai.';
-      }
-      if (effectiveEndHour == null) {
-        endErr = 'Pilih jam selesai.';
-      } else if (effectiveStartHour != null && effectiveEndHour <= effectiveStartHour) {
-        endErr = 'Jam selesai harus setelah jam mulai.';
-      }
-    }
-
-    if (reasonTrimmed.isEmpty) {
-      reasonErr = 'Alasan wajib diisi.';
-    }
-
-    if (startErr != null || endErr != null || reasonErr != null) {
-      setState(() {
-        _startHourError = startErr;
-        _endHourError = endErr;
-        _reasonError = reasonErr;
-      });
-      return;
-    }
-
-    // Periksa overlapping penutupan pada cakupan yang SAMA
-    final hasOverlap = await _repository.hasOverlappingClosure(
-      courtId: _selectedCourtId,
-      date: _selectedDate,
-      startHour: effectiveStartHour!,
-      endHour: effectiveEndHour!,
-    );
-
-    if (hasOverlap && mounted) {
-      setState(() {
-        _endHourError = 'Waktu tersebut sudah ditutup.';
-      });
-      return;
-    }
-
-    // Periksa benturan dengan booking aktif
-    final conflictCount = await _repository.countConflictingBookings(
-      courtId: _selectedCourtId,
-      date: _selectedDate,
-      startHour: effectiveStartHour,
-      endHour: effectiveEndHour,
-    );
-
-    if (!mounted) return;
-
-    if (conflictCount > 0) {
-      final confirm = await AppModal.show<bool>(
-        context: context,
-        iconPath: AppIcons.circleAlert,
-        iconColor: context.appColors.dangerForeground,
-        title: 'Ada Booking di Waktu Ini',
-        message:
-            'Ada $conflictCount booking pada waktu ini. Booking tidak dibatalkan otomatis; hubungi pelanggan untuk menjadwal ulang atau membatalkan.',
-        primaryButtonLabel: 'Ya, Tutup',
-        onPrimaryPressed: () => Navigator.pop(context, true),
-        secondaryButtonLabel: 'Kembali',
-        onSecondaryPressed: () => Navigator.pop(context, false),
-      );
-
-      if (confirm != true) return;
-    }
-
     setState(() {
       _isSubmitting = true;
+      _startHourError = null;
+      _endHourError = null;
+      _reasonError = null;
+      _overlapError = null;
     });
 
-    final newClosure = VenueClosure(
-      id: 'closure_${DateTime.now().millisecondsSinceEpoch}',
-      venueId: AppConfig.authRepository.currentUser?.venue?.id ?? '',
-      courtId: _selectedCourtId,
-      date: _selectedDate,
-      startHour: effectiveStartHour,
-      endHour: effectiveEndHour,
-      reason: reasonTrimmed,
-    );
+    try {
+      String? startErr;
+      String? endErr;
+      String? reasonErr;
 
-    await _repository.addVenueClosure(newClosure);
+      final isFullDaySubmit =
+          _isWholeVenueScope && _durationOption == DurationOption.fullDay;
 
-    if (!mounted) return;
+      final effectiveStartHour = isFullDaySubmit
+          ? AppConstants.operationalStartHour
+          : _startHour;
+      final effectiveEndHour = isFullDaySubmit
+          ? AppConstants.operationalEndHour
+          : _endHour;
+      final reasonTrimmed = _reasonController.text.trim();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        content: AppInfoNotice(
-          message: 'Penutupan disimpan.',
-          iconPath: AppIcons.circleCheck,
+      if (!isFullDaySubmit) {
+        if (effectiveStartHour == null) {
+          startErr = 'Pilih jam mulai.';
+        }
+        if (effectiveEndHour == null) {
+          endErr = 'Pilih jam selesai.';
+        } else if (effectiveStartHour != null &&
+            effectiveEndHour <= effectiveStartHour) {
+          endErr = 'Jam selesai harus setelah jam mulai.';
+        }
+      }
+
+      if (reasonTrimmed.isEmpty) {
+        reasonErr = 'Alasan wajib diisi.';
+      }
+
+      if (startErr != null || endErr != null || reasonErr != null) {
+        setState(() {
+          _startHourError = startErr;
+          _endHourError = endErr;
+          _reasonError = reasonErr;
+        });
+        return;
+      }
+
+      final newClosure = VenueClosure(
+        id: 'closure_${DateTime.now().millisecondsSinceEpoch}',
+        venueId: AppConfig.authRepository.currentUser?.venue?.id ?? '',
+        courtId: _selectedCourtId,
+        date: _selectedDate,
+        startHour: effectiveStartHour!,
+        endHour: effectiveEndHour!,
+        reason: reasonTrimmed,
+      );
+
+      // Step 1: Attempt to save without confirmation
+      var result = await _repository.addVenueClosure(
+        newClosure,
+        confirmed: false,
+      );
+
+      if (!mounted) return;
+
+      // Step 2: Handle conflict confirmation if needed
+      if (!result.saved && result.conflictCount > 0) {
+        final confirm = await AppModal.show<bool>(
+          context: context,
+          iconPath: AppIcons.circleAlert,
+          iconColor: context.appColors.dangerForeground,
+          title: 'Ada Booking di Waktu Ini',
+          message:
+              'Ada ${result.conflictCount} booking pada waktu ini. Booking tidak dibatalkan otomatis; hubungi pelanggan untuk menjadwal ulang atau membatalkan.',
+          primaryButtonLabel: 'Ya, Tutup',
+          onPrimaryPressed: () => Navigator.pop(context, true),
+          secondaryButtonLabel: 'Kembali',
+          onSecondaryPressed: () => Navigator.pop(context, false),
+        );
+
+        if (confirm != true || !mounted) return;
+
+        result = await _repository.addVenueClosure(
+          newClosure,
+          confirmed: true,
+        );
+      }
+
+      if (!mounted) return;
+
+      if (result.saved) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            content: AppInfoNotice(
+              message: 'Penutupan disimpan.',
+              iconPath: AppIcons.circleCheck,
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        _resetFormFields();
+        _fetchScheduleData();
+      }
+    } on ClosureOverlapException {
+      if (!mounted) return;
+      setState(() {
+        _overlapError = 'Waktu tersebut sudah ditutup.';
+        _endHourError = 'Waktu tersebut sudah ditutup.';
+      });
+    } on ClosureNotAdminException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: 'Anda tidak memiliki akses admin untuk penutupan ini.',
+            variant: AppInfoNoticeVariant.danger,
+            iconPath: AppIcons.circleAlert,
+          ),
+          duration: Duration(seconds: 3),
         ),
-        duration: Duration(seconds: 3),
-      ),
-    );
-
-    _resetFormFields();
-    setState(() {
-      _isSubmitting = false;
-    });
-    _fetchScheduleData();
+      );
+    } on CourtNetworkException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: 'Gagal menyimpan penutupan. Periksa jaringan internet Anda.',
+            variant: AppInfoNoticeVariant.danger,
+            iconPath: AppIcons.circleAlert,
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } on CourtServerException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: e.details ?? 'Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.',
+            variant: AppInfoNoticeVariant.danger,
+            iconPath: AppIcons.circleAlert,
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: AppInfoNotice(
+            message: 'Terjadi kesalahan. Silakan coba beberapa saat lagi.',
+            variant: AppInfoNoticeVariant.danger,
+            iconPath: AppIcons.circleAlert,
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   void _onReopenClosure(String closureId) async {
@@ -376,7 +452,11 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
     );
 
     if (confirm == true && mounted) {
-      await _repository.deleteVenueClosure(closureId);
+      try {
+        await _repository.deleteVenueClosure(closureId);
+      } catch (_) {
+        // Result is safe / idempotent: reload list anyway
+      }
 
       if (!mounted) return;
 
@@ -401,15 +481,17 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.appColors;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final nowWib = DateTime.now().toUtc().add(const Duration(hours: 7));
+    final today = DateTime(nowWib.year, nowWib.month, nowWib.day);
     final maxDate = today.add(const Duration(days: AppConstants.maxVenueClosureAdvanceDays));
 
     final scopeLabel = _isWholeVenueScope
         ? 'Seluruh $_venueName'
-        : (_selectedCourt?.name ?? 'Arena Futsal A');
+        : (_selectedCourt?.name ?? 'Lapangan');
 
     final formattedDateLong = DateFormatHelper.formatFullDate(_selectedDate);
+    final opHoursText =
+        '${AppConstants.operationalStartHour.toString().padLeft(2, '0')}.00 – ${AppConstants.operationalEndHour.toString().padLeft(2, '0')}.00';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -492,7 +574,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
                             ),
                             const SizedBox(height: 2.0),
                             Text(
-                              '08.00 – 24.00',
+                              opHoursText,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colors.textSecondary,
                               ),
@@ -505,7 +587,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
                         if (_isWholeVenueScope) ...[
                           _buildWholeVenueClosureCard(colors, theme),
                           const SizedBox(height: AppTheme.paddingLarge),
-                          _buildSetWholeVenueClosureCard(colors, theme, formattedDateLong),
+                          _buildSetWholeVenueClosureCard(colors, theme, formattedDateLong, opHoursText),
                         ] else ...[
                           _buildCourtUnavailableSlotsCard(colors, theme),
                           const SizedBox(height: AppTheme.paddingLarge),
@@ -586,8 +668,8 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
     AppCustomColors colors,
     ThemeData theme,
     String formattedDateLong,
+    String opHoursText,
   ) {
-    // If full day venue closure exists -> replace card with text
     if (_isFullDayVenueClosed) {
       return Container(
         width: double.infinity,
@@ -610,7 +692,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
 
     String summaryHoursText;
     if (_durationOption == DurationOption.fullDay) {
-      summaryHoursText = 'Sepanjang jam operasional, 08.00 – 24.00.';
+      summaryHoursText = 'Sepanjang jam operasional, $opHoursText.';
     } else {
       if (_startHour != null && _endHour != null) {
         final startStr = _startHour! < 10 ? '0$_startHour.00' : '$_startHour.00';
@@ -653,6 +735,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
                     _durationOption = val;
                     _startHourError = null;
                     _endHourError = null;
+                    _overlapError = null;
                   });
                 },
               ),
@@ -666,6 +749,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
                     _durationOption = val;
                     _startHourError = null;
                     _endHourError = null;
+                    _overlapError = null;
                   });
                 },
               ),
@@ -784,6 +868,15 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
           ),
           const SizedBox(height: 12.0),
 
+          if (_overlapError != null) ...[
+            AppInfoNotice(
+              message: _overlapError!,
+              variant: AppInfoNoticeVariant.danger,
+              iconPath: AppIcons.circleAlert,
+            ),
+            const SizedBox(height: 12.0),
+          ],
+
           // Submit Button
           InkWell(
             onTap: _isSubmitting ? null : _submitClosureForm,
@@ -878,10 +971,6 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
     ThemeData theme,
     String formattedDateLong,
   ) {
-    // Hidden rules:
-    // (a) venue closed full day -> "Seluruh [nama venue] ditutup seharian pada tanggal ini."
-    // (b) court closed full day -> "Lapangan ditutup seharian pada tanggal ini."
-    // If both exist, use (a).
     if (_isFullDayVenueClosed) {
       return Container(
         width: double.infinity,
@@ -918,7 +1007,7 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
       );
     }
 
-    final courtName = _selectedCourt?.name ?? 'Arena Futsal A';
+    final courtName = _selectedCourt?.name ?? 'Lapangan';
 
     return Container(
       width: double.infinity,
@@ -1005,6 +1094,15 @@ class _AdminScheduleScreenState extends State<AdminScheduleScreen> {
             },
           ),
           const SizedBox(height: 12.0),
+
+          if (_overlapError != null) ...[
+            AppInfoNotice(
+              message: _overlapError!,
+              variant: AppInfoNoticeVariant.danger,
+              iconPath: AppIcons.circleAlert,
+            ),
+            const SizedBox(height: 12.0),
+          ],
 
           // Submit Button
           InkWell(

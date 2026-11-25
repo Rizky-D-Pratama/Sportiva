@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../config/app_config.dart';
+import '../../constants/app_constants.dart';
 import '../../constants/app_images.dart';
 import '../../models/court.dart';
 import '../../models/unavailable_time_slot.dart';
@@ -12,9 +13,6 @@ import 'supabase_auth_repository.dart';
 
 /// Supabase implementation of CourtRepository for Sportiva
 class SupabaseCourtRepository implements CourtRepository {
-  /// Instance of FakeCourtRepository for temporary write operations and closures
-  final FakeCourtRepository _fakeRepo = FakeCourtRepository();
-
   /// Logs debug messages in kDebugMode only
   void _log(String message) {
     if (kDebugMode) {
@@ -353,13 +351,49 @@ class SupabaseCourtRepository implements CourtRepository {
     return MockData.welcomeGreeting;
   }
 
-  // SEMENTARA irisan 3: Closures & availability management delegates to FakeCourtRepository
   @override
   Future<List<VenueClosure>> getVenueClosures({
     required String venueId,
     required DateTime date,
   }) async {
-    return _fakeRepo.getVenueClosures(venueId: venueId, date: date);
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    try {
+      final response = await Supabase.instance.client
+          .from('closures')
+          .select()
+          .eq('venue_id', venueId)
+          .isFilter('court_id', null)
+          .eq('tanggal', dateStr)
+          .order('jam_mulai', ascending: true);
+
+      final list = response as List<dynamic>;
+      return list.map((item) {
+        final map = item as Map<String, dynamic>;
+        return VenueClosure(
+          id: map['id'] as String,
+          venueId: map['venue_id'] as String,
+          courtId: map['court_id'] as String?,
+          date: DateTime.parse(map['tanggal'] as String),
+          startHour: (map['jam_mulai'] as num).toInt(),
+          endHour: (map['jam_selesai'] as num).toInt(),
+          reason: (map['alasan'] as String? ?? '').trim(),
+        );
+      }).toList();
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in getVenueClosures: message=${e.message}, code=${e.code}');
+      throw CourtServerException(e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in getVenueClosures: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 
   @override
@@ -367,47 +401,173 @@ class SupabaseCourtRepository implements CourtRepository {
     required String courtId,
     required DateTime date,
   }) async {
-    return _fakeRepo.getMergedUnavailableSlots(courtId: courtId, date: date);
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    try {
+      final courtRes = await Supabase.instance.client
+          .from('courts')
+          .select('venue_id, venues(nama)')
+          .eq('id', courtId)
+          .maybeSingle();
+
+      final venueId = courtRes?['venue_id'] as String? ??
+          AppConfig.authRepository.currentUser?.venue?.id ??
+          '';
+
+      final venueMap = courtRes?['venues'] as Map<String, dynamic>?;
+      final fetchedVenueName = (venueMap?['nama'] as String?)?.trim();
+      final venueName = (fetchedVenueName != null && fetchedVenueName.isNotEmpty)
+          ? fetchedVenueName
+          : (AppConfig.authRepository.currentUser?.venue?.name.trim() ?? 'venue');
+
+      final slots = <UnavailableTimeSlot>[];
+
+      if (venueId.isNotEmpty) {
+        final availabilitySlots = await AppConfig.bookingRepository.getVenueAvailability(
+          venueId: venueId,
+          date: date,
+          courtId: courtId,
+        );
+        for (final s in availabilitySlots) {
+          if (s.statusType == SlotStatusType.booked || s.statusType == SlotStatusType.onHold) {
+            slots.add(s);
+          }
+        }
+      }
+
+      final closuresRes = await Supabase.instance.client
+          .from('closures')
+          .select()
+          .eq('venue_id', venueId)
+          .eq('tanggal', dateStr);
+
+      final closuresList = closuresRes as List<dynamic>;
+      for (final item in closuresList) {
+        final map = item as Map<String, dynamic>;
+        final itemCourtId = map['court_id'] as String?;
+
+        if (itemCourtId != null && itemCourtId != courtId) {
+          continue;
+        }
+
+        final isWholeVenue = itemCourtId == null;
+        final startH = (map['jam_mulai'] as num).toInt();
+        final endH = (map['jam_selesai'] as num).toInt();
+        final reason = (map['alasan'] as String? ?? '').trim();
+
+        final noteText = isWholeVenue
+            ? (reason.isNotEmpty
+                ? '$reason • Seluruh $venueName ditutup'
+                : 'Seluruh $venueName ditutup')
+            : (reason.isNotEmpty ? reason : 'Ditutup');
+
+        slots.add(UnavailableTimeSlot(
+          courtId: itemCourtId,
+          startHour: startH,
+          endHour: endH,
+          statusLabel: 'Ditutup',
+          note: noteText,
+          statusType: SlotStatusType.closed,
+          closureId: map['id'] as String,
+          sourceMark: isWholeVenue ? SlotSourceMark.venue : SlotSourceMark.court,
+        ));
+      }
+
+      slots.sort((a, b) => a.startHour.compareTo(b.startHour));
+      return slots;
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in getMergedUnavailableSlots: message=${e.message}, code=${e.code}');
+      throw CourtServerException(e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in getMergedUnavailableSlots: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 
   @override
-  Future<void> addVenueClosure(VenueClosure closure) async {
-    await _fakeRepo.addVenueClosure(closure);
+  Future<ClosureSaveResult> addVenueClosure(
+    VenueClosure closure, {
+    bool confirmed = false,
+  }) async {
+    final dateStr =
+        '${closure.date.year}-${closure.date.month.toString().padLeft(2, '0')}-${closure.date.day.toString().padLeft(2, '0')}';
+
+    try {
+      final response = await Supabase.instance.client.rpc(
+        'create_closure',
+        params: {
+          'p_court_id': closure.courtId,
+          'p_tanggal': dateStr,
+          'p_jam_mulai': closure.startHour,
+          'p_jam_selesai': closure.endHour,
+          'p_alasan': closure.reason,
+          'p_konfirmasi': confirmed,
+        },
+      );
+
+      final resMap = Map<String, dynamic>.from(response as Map<String, dynamic>);
+      final dibuat = resMap['dibuat'] as bool? ?? false;
+      final benturan = (resMap['benturan'] as num? ?? 0).toInt();
+      final id = resMap['id'] as String?;
+
+      return ClosureSaveResult(
+        saved: dibuat,
+        conflictCount: benturan,
+        closureId: id,
+      );
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in addVenueClosure: code=${e.code}, message=${e.message}');
+      if (e.code == 'BK012') {
+        throw const ClosureOverlapException();
+      }
+      if (e.code == 'BK010') {
+        throw const ClosureNotAdminException();
+      }
+      throw CourtServerException(e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in addVenueClosure: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException ||
+          e is ClosureOverlapException ||
+          e is ClosureNotAdminException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 
   @override
   Future<void> deleteVenueClosure(String closureId) async {
-    await _fakeRepo.deleteVenueClosure(closureId);
-  }
-
-  @override
-  Future<int> countConflictingBookings({
-    String? courtId,
-    required DateTime date,
-    required int startHour,
-    required int endHour,
-  }) async {
-    return _fakeRepo.countConflictingBookings(
-      courtId: courtId,
-      date: date,
-      startHour: startHour,
-      endHour: endHour,
-    );
-  }
-
-  @override
-  Future<bool> hasOverlappingClosure({
-    String? courtId,
-    required DateTime date,
-    required int startHour,
-    required int endHour,
-  }) async {
-    return _fakeRepo.hasOverlappingClosure(
-      courtId: courtId,
-      date: date,
-      startHour: startHour,
-      endHour: endHour,
-    );
+    try {
+      final response = await Supabase.instance.client.rpc(
+        'delete_closure',
+        params: {
+          'p_id': closureId,
+        },
+      );
+      _log('SUPABASE deleteVenueClosure response: $response');
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in deleteVenueClosure: code=${e.code}, message=${e.message}');
+      throw CourtServerException(e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in deleteVenueClosure: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 
   @override
@@ -415,7 +575,8 @@ class SupabaseCourtRepository implements CourtRepository {
     required String venueId,
     required DateTime date,
   }) async {
-    return _fakeRepo.isFullDayVenueClosed(venueId: venueId, date: date);
+    final closures = await getVenueClosures(venueId: venueId, date: date);
+    return closures.any((vc) => vc.isFullDay);
   }
 
   @override
@@ -423,6 +584,39 @@ class SupabaseCourtRepository implements CourtRepository {
     required String courtId,
     required DateTime date,
   }) async {
-    return _fakeRepo.isFullDayCourtClosed(courtId: courtId, date: date);
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    try {
+      final response = await Supabase.instance.client
+          .from('closures')
+          .select()
+          .eq('court_id', courtId)
+          .eq('tanggal', dateStr);
+
+      final list = response as List<dynamic>;
+      for (final item in list) {
+        final map = item as Map<String, dynamic>;
+        final startH = (map['jam_mulai'] as num).toInt();
+        final endH = (map['jam_selesai'] as num).toInt();
+        if (startH <= AppConstants.operationalStartHour &&
+            endH >= AppConstants.operationalEndHour) {
+          return true;
+        }
+      }
+      return false;
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in isFullDayCourtClosed: message=${e.message}, code=${e.code}');
+      throw CourtServerException(e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in isFullDayCourtClosed: $e');
+      if (isNetworkError(e)) {
+        throw const CourtNetworkException();
+      }
+      if (e is CourtServerException) {
+        rethrow;
+      }
+      throw CourtServerException(e.toString());
+    }
   }
 }

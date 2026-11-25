@@ -91,20 +91,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   }
 
   bool _isHourUnavailable(int hour) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final isToday = _selectedDate.year == today.year &&
-        _selectedDate.month == today.month &&
-        _selectedDate.day == today.day;
+    final nowWib = DateTime.now().toUtc().add(const Duration(hours: 7));
+    final todayWib = DateTime(nowWib.year, nowWib.month, nowWib.day);
+    final isToday = _selectedDate.year == todayWib.year &&
+        _selectedDate.month == todayWib.month &&
+        _selectedDate.day == todayWib.day;
 
     if (isToday) {
-      final slotStart = DateTime(
+      final slotStart = DateTime.utc(
         _selectedDate.year,
         _selectedDate.month,
         _selectedDate.day,
         hour,
       );
-      if (slotStart.difference(now).inMinutes < AppConstants.minBookingLeadTimeMinutes) {
+      if (slotStart.difference(nowWib).inMinutes < AppConstants.minBookingLeadTimeMinutes) {
         return true;
       }
     }

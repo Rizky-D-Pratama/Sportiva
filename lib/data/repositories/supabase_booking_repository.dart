@@ -198,6 +198,9 @@ class SupabaseBookingRepository implements BookingRepository {
       if (code == 'BK001' || code == 'BK002' || code == 'BK004') {
         throw BookingUnavailableException(code ?? 'BK_UNAVAILABLE', e.message);
       }
+      if (code == 'BK013') {
+        throw BookingSlotClosedException(e.message);
+      }
       throw BookingServerException(code, e.message);
     } catch (e) {
       _log('SUPABASE Exception in createBooking: $e');
@@ -232,6 +235,25 @@ class SupabaseBookingRepository implements BookingRepository {
       final list = response as List<dynamic>;
       final result = <UnavailableTimeSlot>[];
 
+      String? venueName;
+      final bool containsVenueClosure = list.any((item) =>
+          item['status'] == 'ditutup' && item['asal'] == 'venue');
+
+      if (containsVenueClosure) {
+        try {
+          final venueRes = await Supabase.instance.client
+              .from('venues')
+              .select('nama')
+              .eq('id', venueId)
+              .maybeSingle();
+          final vName = (venueRes?['nama'] as String?)?.trim();
+          if (vName != null && vName.isNotEmpty) {
+            venueName = vName;
+          }
+        } catch (_) {}
+      }
+      venueName ??= 'venue';
+
       for (final item in list) {
         final map = item as Map<String, dynamic>;
         final itemCourtId = map['court_id'] as String?;
@@ -243,6 +265,8 @@ class SupabaseBookingRepository implements BookingRepository {
         final startHour = (map['jam_mulai'] as num).toInt();
         final endHour = (map['jam_selesai'] as num).toInt();
         final status = map['status'] as String?;
+        final alasan = (map['alasan'] as String? ?? '').trim();
+        final asal = map['asal'] as String?;
 
         if (status == 'dipesan') {
           result.add(UnavailableTimeSlot(
@@ -252,6 +276,7 @@ class SupabaseBookingRepository implements BookingRepository {
             statusLabel: 'Dipesan',
             note: 'Tidak dapat dibooking',
             statusType: SlotStatusType.booked,
+            sourceMark: SlotSourceMark.court,
           ));
         } else if (status == 'belum_bayar') {
           result.add(UnavailableTimeSlot(
@@ -261,7 +286,29 @@ class SupabaseBookingRepository implements BookingRepository {
             statusLabel: 'Ditahan Sementara',
             note: 'Menunggu pembayaran - tidak dapat dipesan',
             statusType: SlotStatusType.onHold,
+            sourceMark: SlotSourceMark.court,
           ));
+        } else if (status == 'ditutup') {
+          final isVenueAsal = asal == 'venue';
+          final noteText = isVenueAsal
+              ? (alasan.isNotEmpty
+                  ? '$alasan • Seluruh $venueName ditutup'
+                  : 'Seluruh $venueName ditutup')
+              : (alasan.isNotEmpty ? alasan : 'Ditutup');
+          result.add(UnavailableTimeSlot(
+            courtId: itemCourtId,
+            startHour: startHour,
+            endHour: endHour,
+            statusLabel: 'Ditutup',
+            note: noteText,
+            statusType: SlotStatusType.closed,
+            sourceMark: isVenueAsal ? SlotSourceMark.venue : SlotSourceMark.court,
+          ));
+        } else {
+          throw BookingServerException(
+            null,
+            'Unknown availability status from server: $status',
+          );
         }
       }
 

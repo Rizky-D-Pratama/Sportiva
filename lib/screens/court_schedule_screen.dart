@@ -13,6 +13,32 @@ import '../widgets/app_info_notice.dart';
 import '../widgets/category_filter_chip.dart';
 import 'court_detail_screen.dart';
 
+class _HourlySlotStatus {
+  final int hour;
+  final String status;
+  final String type; // 'success', 'danger', 'warning', 'neutral'
+
+  const _HourlySlotStatus({
+    required this.hour,
+    required this.status,
+    required this.type,
+  });
+}
+
+class _MergedSlotRange {
+  final int startHour;
+  final int endHour;
+  final String status;
+  final String type;
+
+  const _MergedSlotRange({
+    required this.startHour,
+    required this.endHour,
+    required this.status,
+    required this.type,
+  });
+}
+
 /// Screen displaying court schedules and availability across dates
 class CourtScheduleScreen extends StatefulWidget {
   const CourtScheduleScreen({super.key});
@@ -34,8 +60,8 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _selectedDate = DateTime(now.year, now.month, now.day);
+    final nowWib = DateTime.now().toUtc().add(const Duration(hours: 7));
+    _selectedDate = DateTime(nowWib.year, nowWib.month, nowWib.day);
     _loadScheduleData();
   }
 
@@ -96,16 +122,16 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
         .toList();
   }
 
-  List<Map<String, dynamic>> _getSlotsForCourt(Court court, DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final isToday = date.year == today.year &&
-        date.month == today.month &&
-        date.day == today.day;
+  List<_MergedSlotRange> _getSlotsForCourt(Court court, DateTime date) {
+    final nowWib = DateTime.now().toUtc().add(const Duration(hours: 7));
+    final todayWib = DateTime(nowWib.year, nowWib.month, nowWib.day);
+    final isToday = date.year == todayWib.year &&
+        date.month == todayWib.month &&
+        date.day == todayWib.day;
 
     int cutoffHour = AppConstants.operationalStartHour;
     if (isToday) {
-      final lead = now.add(const Duration(minutes: AppConstants.minBookingLeadTimeMinutes));
+      final lead = nowWib.add(const Duration(minutes: AppConstants.minBookingLeadTimeMinutes));
       if (lead.minute == 0 && lead.second == 0 && lead.millisecond == 0) {
         cutoffHour = lead.hour;
       } else {
@@ -116,11 +142,9 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
     final venueSlots = _venueAvailabilityMap[court.venue.id] ?? [];
     final courtSlots = venueSlots.where((s) => s.courtId == null || s.courtId == court.id).toList();
 
-    // Map each hour from operationalStartHour to operationalEndHour-1 to status
-    final List<Map<String, dynamic>> hourlyStatuses = [];
+    final List<_HourlySlotStatus> hourlyStatuses = [];
 
     for (int h = AppConstants.operationalStartHour; h < AppConstants.operationalEndHour; h++) {
-      // Check server slots
       UnavailableTimeSlot? matchingSlot;
       for (final slot in courtSlots) {
         if (h >= slot.startHour && h < slot.endHour) {
@@ -131,52 +155,51 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
 
       if (matchingSlot != null) {
         if (matchingSlot.statusType == SlotStatusType.booked) {
-          hourlyStatuses.add({'hour': h, 'status': 'Dipesan', 'type': 'danger'});
+          hourlyStatuses.add(_HourlySlotStatus(hour: h, status: 'Dipesan', type: 'danger'));
+        } else if (matchingSlot.statusType == SlotStatusType.onHold) {
+          hourlyStatuses.add(_HourlySlotStatus(hour: h, status: 'Belum Bayar', type: 'warning'));
+        } else if (matchingSlot.statusType == SlotStatusType.closed) {
+          hourlyStatuses.add(_HourlySlotStatus(hour: h, status: 'Ditutup', type: 'neutral'));
         } else {
-          hourlyStatuses.add({'hour': h, 'status': 'Belum Bayar', 'type': 'warning'});
+          hourlyStatuses.add(_HourlySlotStatus(hour: h, status: 'Ditutup', type: 'neutral'));
         }
       } else {
         if (isToday && h < cutoffHour) {
-          hourlyStatuses.add({'hour': h, 'status': 'Terlewat', 'type': 'neutral'});
+          hourlyStatuses.add(_HourlySlotStatus(hour: h, status: 'Terlewat', type: 'neutral'));
         } else {
-          hourlyStatuses.add({'hour': h, 'status': 'Tersedia', 'type': 'success'});
+          hourlyStatuses.add(_HourlySlotStatus(hour: h, status: 'Tersedia', type: 'success'));
         }
       }
     }
 
-    // Merge contiguous hours with same status & type
-    final List<Map<String, dynamic>> mergedSlots = [];
+    final List<_MergedSlotRange> mergedSlots = [];
     if (hourlyStatuses.isEmpty) return mergedSlots;
 
-    int startH = hourlyStatuses[0]['hour'] as int;
-    String currentStatus = hourlyStatuses[0]['status'] as String;
-    String currentType = hourlyStatuses[0]['type'] as String;
+    int startH = hourlyStatuses[0].hour;
+    String currentStatus = hourlyStatuses[0].status;
+    String currentType = hourlyStatuses[0].type;
 
     for (int i = 1; i < hourlyStatuses.length; i++) {
       final item = hourlyStatuses[i];
-      final h = item['hour'] as int;
-      final st = item['status'] as String;
-      final tp = item['type'] as String;
-
-      if (st != currentStatus || tp != currentType) {
-        mergedSlots.add({
-          'start': startH,
-          'end': h,
-          'status': currentStatus,
-          'type': currentType,
-        });
-        startH = h;
-        currentStatus = st;
-        currentType = tp;
+      if (item.status != currentStatus || item.type != currentType) {
+        mergedSlots.add(_MergedSlotRange(
+          startHour: startH,
+          endHour: item.hour,
+          status: currentStatus,
+          type: currentType,
+        ));
+        startH = item.hour;
+        currentStatus = item.status;
+        currentType = item.type;
       }
     }
 
-    mergedSlots.add({
-      'start': startH,
-      'end': AppConstants.operationalEndHour,
-      'status': currentStatus,
-      'type': currentType,
-    });
+    mergedSlots.add(_MergedSlotRange(
+      startHour: startH,
+      endHour: AppConstants.operationalEndHour,
+      status: currentStatus,
+      type: currentType,
+    ));
 
     return mergedSlots;
   }
@@ -438,10 +461,10 @@ class _CourtScheduleScreenState extends State<CourtScheduleScreen> {
                         if (isExpanded) ...[
                           const SizedBox(height: 12.0),
                           ...slots.map((slot) {
-                            final startH = slot['start'] as int;
-                            final endH = slot['end'] as int;
-                            final status = slot['status'] as String;
-                            final type = slot['type'] as String;
+                            final startH = slot.startHour;
+                            final endH = slot.endHour;
+                            final status = slot.status;
+                            final type = slot.type;
 
                             final startStr = startH < 10 ? '0$startH.00' : '$startH.00';
                             final endStr = endH < 10 ? '0$endH.00' : '$endH.00';

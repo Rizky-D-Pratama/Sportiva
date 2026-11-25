@@ -13,6 +13,7 @@ class TimeSelectBottomSheet extends StatelessWidget {
   final int minHour;
   final int maxHour;
   final int? restrictAfterHour; // If specified, only hours strictly AFTER this hour can be selected
+  final bool allowCurrentHour; // If true (closure mode), current hour is allowed for today
 
   const TimeSelectBottomSheet({
     super.key,
@@ -23,28 +24,35 @@ class TimeSelectBottomSheet extends StatelessWidget {
     this.minHour = AppConstants.operationalStartHour,
     this.maxHour = AppConstants.operationalEndHour,
     this.restrictAfterHour,
+    this.allowCurrentHour = false,
   });
 
   bool _isHourUnavailable(int hour) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final isToday = selectedDate.year == today.year &&
-        selectedDate.month == today.month &&
-        selectedDate.day == today.day;
+    final nowWib = DateTime.now().toUtc().add(const Duration(hours: 7));
+    final todayWib = DateTime(nowWib.year, nowWib.month, nowWib.day);
+    final isToday = selectedDate.year == todayWib.year &&
+        selectedDate.month == todayWib.month &&
+        selectedDate.day == todayWib.day;
 
     if (restrictAfterHour != null && hour <= restrictAfterHour!) {
       return true;
     }
 
     if (isToday && restrictAfterHour == null) {
-      final slotStart = DateTime(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-        hour,
-      );
-      if (slotStart.difference(now).inMinutes < AppConstants.minBookingLeadTimeMinutes) {
-        return true;
+      if (allowCurrentHour) {
+        if (hour < nowWib.hour) {
+          return true;
+        }
+      } else {
+        final slotStart = DateTime.utc(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          hour,
+        );
+        if (slotStart.difference(nowWib).inMinutes < AppConstants.minBookingLeadTimeMinutes) {
+          return true;
+        }
       }
     }
 
