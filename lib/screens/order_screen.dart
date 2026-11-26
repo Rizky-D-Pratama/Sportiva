@@ -452,6 +452,8 @@ class OrderScreenState extends State<OrderScreen> {
     final theme = Theme.of(context);
     final colors = context.appColors;
     final isUnpaid = booking.status == BookingStatus.belumBayar;
+    final isRescheduled = booking.status == BookingStatus.sudahBayar &&
+        booking.jadwalAwalTanggal != null;
     final isBusy = _busyBookingIds.contains(booking.id);
 
     return GestureDetector(
@@ -490,6 +492,7 @@ class OrderScreenState extends State<OrderScreen> {
                   // Header row: Kode booking & Status Badge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         booking.bookingCode,
@@ -498,11 +501,23 @@ class OrderScreenState extends State<OrderScreen> {
                           fontSize: 10.0,
                         ),
                       ),
-                      AppBadge(
-                        label: isUnpaid ? 'Belum Bayar' : 'Sudah Bayar',
-                        variant: isUnpaid
-                            ? AppBadgeVariant.warning
-                            : AppBadgeVariant.success,
+                      Wrap(
+                        spacing: 6.0,
+                        runSpacing: 4.0,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          if (isRescheduled)
+                            const AppBadge(
+                              label: 'Jadwal diubah',
+                              variant: AppBadgeVariant.warning,
+                            ),
+                          AppBadge(
+                            label: isUnpaid ? 'Belum Bayar' : 'Sudah Bayar',
+                            variant: isUnpaid
+                                ? AppBadgeVariant.warning
+                                : AppBadgeVariant.success,
+                          ),
+                        ],
                       ),
                     ],
                   ),

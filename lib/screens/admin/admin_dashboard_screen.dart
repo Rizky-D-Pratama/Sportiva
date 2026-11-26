@@ -12,12 +12,14 @@ import '../../widgets/admin_booking_card.dart';
 import '../../widgets/admin_stat_card.dart';
 import '../../widgets/app_badge.dart';
 import '../../widgets/app_image.dart';
+import '../../widgets/app_info_notice.dart';
 import '../../widgets/app_modal.dart';
 import '../../widgets/app_notification_bell.dart';
 import '../../widgets/weekly_bar_chart_card.dart';
 import '../booking_detail_screen.dart';
 import 'admin_bookings_screen.dart';
 import 'admin_court_form_screen.dart';
+import 'admin_reschedule_booking_screen.dart';
 import 'admin_schedule_screen.dart';
 
 /// Admin Dashboard Screen displaying greeting header, summary stat cards,
@@ -79,8 +81,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       iconPath: AppIcons.circleAlert,
       iconColor: context.appColors.dangerForeground,
-      title: 'Batalkan Booking?',
-      message: 'Booking pelanggan akan dibatalkan. Anda tidak dapat mengembalikannya.',
+      title: 'Batalkan Pemesanan?',
+      message: 'Pemesanan pelanggan akan dibatalkan. Anda tidak dapat mengembalikannya.',
       primaryButtonLabel: 'Ya, Batalkan',
       onPrimaryPressed: () {
         Navigator.pop(context);
@@ -89,6 +91,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       secondaryButtonLabel: 'Kembali',
       onSecondaryPressed: () => Navigator.pop(context),
     );
+  }
+
+  Future<void> _openRescheduleScreen(Booking booking) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdminRescheduleBookingScreen(booking: booking),
+      ),
+    );
+
+    if (result == true && mounted) {
+      _fetchDashboard();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          content: AppInfoNotice(
+            message: 'Jadwal pemesanan diubah.',
+            variant: AppInfoNoticeVariant.success,
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _openAddCourtForm() async {
@@ -208,7 +234,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Expanded(
                     child: AdminStatCard(
                       value: data.totalBookingMonth.toString(),
-                      label: 'Total Booking $monthName',
+                      label: 'Total Pemesanan $monthName',
                       iconPath: AppIcons.calendarCheck,
                     ),
                   ),
@@ -216,7 +242,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Expanded(
                     child: AdminStatCard(
                       value: data.todayBookingCount.toString(),
-                      label: 'Booking Hari Ini',
+                      label: 'Pemesanan Hari Ini',
                       iconPath: AppIcons.calendar,
                     ),
                   ),
@@ -246,8 +272,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
               // 3. Weekly Bar Chart Card
               WeeklyBarChartCard(
-                title: 'Booking minggu ini',
-                badgeText: '${data.totalWeeklyBookings} Booking',
+                title: 'Pemesanan minggu ini',
+                badgeText: '${data.totalWeeklyBookings} Pemesanan',
                 values: data.weeklyBookingCounts.map((v) => v.toDouble()).toList(),
                 valueLabels: data.weeklyBookingCounts
                     .map((v) => v.toString())
@@ -313,7 +339,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Booking Terbaru',
+                    'Pemesanan Terbaru',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontSize: 17.0,
                       fontWeight: FontWeight.w600,
@@ -375,6 +401,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         },
                         onCancel: booking.status == BookingStatus.belumBayar
                             ? () => _showCancelConfirmationModal(booking)
+                            : null,
+                        onReschedule: booking.status == BookingStatus.sudahBayar
+                            ? () => _openRescheduleScreen(booking)
                             : null,
                       ),
                     );

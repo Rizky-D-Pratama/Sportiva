@@ -7,6 +7,7 @@ import '../widgets/app_badge.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_header.dart';
 import '../widgets/app_image.dart';
+import '../widgets/app_info_notice.dart';
 import '../widgets/app_info_row.dart';
 import '../widgets/app_sticky_bottom_bar.dart';
 import 'booking_ticket_screen.dart';
@@ -71,6 +72,29 @@ class BookingDetailScreen extends StatelessWidget {
         ? DateFormatHelper.formatShortDateWithTime(booking.paidAt!)
         : '-';
 
+    final isRescheduled = booking.status == BookingStatus.sudahBayar &&
+        booking.jadwalAwalTanggal != null &&
+        booking.jadwalAwalJam != null;
+
+    String? rescheduledNoticeText;
+    if (isRescheduled) {
+      final parts = booking.jadwalAwalTanggal!.split('-');
+      final awalDt = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      final awalTanggalText = DateFormatHelper.formatShortDate(awalDt);
+      final awalStartHStr = booking.jadwalAwalJam!.toString().padLeft(2, '0');
+      final awalEndHStr =
+          (booking.jadwalAwalJam! + booking.durationHours).toString().padLeft(2, '0');
+      final semulaStr = '$awalTanggalText • $awalStartHStr.00 – $awalEndHStr.00 WIB';
+      final sekarangStr = '${booking.date} • ${booking.timeRange}';
+
+      rescheduledNoticeText =
+          'Jadwal booking diubah\nAdmin mengubah jadwal booking ini. Semula: $semulaStr. Sekarang: $sekarangStr. Hubungi venue jika jadwal baru tidak sesuai.';
+    }
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
@@ -97,6 +121,14 @@ class BookingDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (rescheduledNoticeText != null) ...[
+                      AppInfoNotice(
+                        message: rescheduledNoticeText,
+                        variant: AppInfoNoticeVariant.success,
+                      ),
+                      const SizedBox(height: 16.0),
+                    ],
+
                     // 1. Booking Info Card
                     Container(
                       width: double.infinity,

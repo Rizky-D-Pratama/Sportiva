@@ -1,6 +1,7 @@
 import '../models/admin_dashboard_data.dart';
 import '../models/booking.dart';
 import '../models/court.dart';
+import '../models/reschedule_option.dart';
 import '../models/unavailable_time_slot.dart';
 
 /// Payment session response model returned from Edge Function create-booking-payment
@@ -82,6 +83,18 @@ class BookingNotAdminException extends BookingException {
   const BookingNotAdminException([super.message]);
 }
 
+class BookingNotReschedulableException extends BookingException {
+  const BookingNotReschedulableException([super.message]);
+}
+
+class BookingInvalidInputException extends BookingException {
+  const BookingInvalidInputException([super.message]);
+}
+
+class BookingDateOutOfRangeException extends BookingException {
+  const BookingDateOutOfRangeException([super.message]);
+}
+
 /// Interface for Booking repository operations
 abstract class BookingRepository {
   /// Fetches bookings for the current logged-in user using RPC `get_my_bookings`
@@ -119,4 +132,17 @@ abstract class BookingRepository {
 
   /// Fetches dashboard summary statistics and recent bookings using RPC `get_admin_dashboard`
   Future<AdminDashboardData> getAdminDashboard();
+
+  /// Fetches reschedule options for admin using RPC `get_reschedule_options`
+  Future<List<RescheduleOption>> getRescheduleOptions({
+    required String bookingId,
+    required DateTime date,
+  });
+
+  /// Reschedules a booking for admin using RPC `reschedule_booking`
+  Future<RescheduleResult> rescheduleBooking({
+    required String bookingId,
+    required DateTime date,
+    required int startHour,
+  });
 }

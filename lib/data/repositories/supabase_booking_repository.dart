@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/admin_dashboard_data.dart';
 import '../../models/booking.dart';
 import '../../models/court.dart';
+import '../../models/reschedule_option.dart';
 import '../../models/unavailable_time_slot.dart';
 import '../../utils/date_format_helper.dart';
 import '../../utils/payment_method_helper.dart';
@@ -53,6 +54,17 @@ class SupabaseBookingRepository implements BookingRepository {
     final metodePembayaran = json['metode_pembayaran'] as String?;
     final detailMetode = json['detail_metode'] as String?;
     final dibayarPadaStr = json['dibayar_pada'] as String?;
+
+    // Reschedule keys (from get_my_bookings)
+    final jadwalAwalTanggal = json['jadwal_awal_tanggal'] as String?;
+    final jadwalAwalJamRaw = json['jadwal_awal_jam'];
+    final jadwalAwalJam =
+        jadwalAwalJamRaw != null ? (jadwalAwalJamRaw as num).toInt() : null;
+    final dijadwalUlangPadaStr = json['dijadwal_ulang_pada'] as String?;
+    DateTime? dijadwalUlangPada;
+    if (dijadwalUlangPadaStr != null && dijadwalUlangPadaStr.isNotEmpty) {
+      dijadwalUlangPada = DateFormatHelper.parseUtcToWib(dijadwalUlangPadaStr);
+    }
 
     final paymentMethod = PaymentMethodHelper.getLabel(metodePembayaran, detailMetode);
 
@@ -134,6 +146,9 @@ class SupabaseBookingRepository implements BookingRepository {
       courtImageUrl: courtImageUrl,
       fullDateText: fullDateText,
       ticketDateText: ticketDateText,
+      jadwalAwalTanggal: jadwalAwalTanggal,
+      jadwalAwalJam: jadwalAwalJam,
+      dijadwalUlangPada: dijadwalUlangPada,
     );
   }
 
@@ -560,6 +575,90 @@ class SupabaseBookingRepository implements BookingRepository {
       if (e is BookingException) {
         rethrow;
       }
+      throw BookingServerException(null, e.toString());
+    }
+  }
+
+  @override
+  Future<List<RescheduleOption>> getRescheduleOptions({
+    required String bookingId,
+    required DateTime date,
+  }) async {
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    try {
+      final response = await Supabase.instance.client.rpc(
+        'get_reschedule_options',
+        params: {
+          'p_booking_id': bookingId,
+          'p_tanggal': dateStr,
+        },
+      );
+
+      final list = response as List<dynamic>;
+      return list
+          .map((item) => RescheduleOption.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in getRescheduleOptions: code=${e.code}, message=${e.message}');
+      final code = e.code;
+      if (code == 'BK007') throw const BookingUnauthorizedException();
+      if (code == 'BK010') throw const BookingNotAdminException();
+      if (code == 'BK008') throw BookingNotFoundException(e.message);
+      if (code == 'BK003') throw const BookingDateOutOfRangeException();
+      if (code == 'BK004') throw BookingUnavailableException('BK004', e.message);
+      throw BookingServerException(code, e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in getRescheduleOptions: $e');
+      if (isNetworkError(e)) throw const BookingNetworkException();
+      if (e is BookingException) rethrow;
+      throw BookingServerException(null, e.toString());
+    }
+  }
+
+  @override
+  Future<RescheduleResult> rescheduleBooking({
+    required String bookingId,
+    required DateTime date,
+    required int startHour,
+  }) async {
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    try {
+      final response = await Supabase.instance.client.rpc(
+        'reschedule_booking',
+        params: {
+          'p_booking_id': bookingId,
+          'p_tanggal': dateStr,
+          'p_jam_mulai': startHour,
+        },
+      );
+
+      _log('SUPABASE rescheduleBooking response: $response');
+      if (response == 'dijadwal_ulang') {
+        return RescheduleResult.dijadwalUlang;
+      }
+      return RescheduleResult.tidakBerubah;
+    } on PostgrestException catch (e) {
+      _log('SUPABASE PostgrestException in rescheduleBooking: code=${e.code}, message=${e.message}');
+      final code = e.code;
+      if (code == 'BK007') throw const BookingUnauthorizedException();
+      if (code == 'BK010') throw const BookingNotAdminException();
+      if (code == 'BK008') throw BookingNotFoundException(e.message);
+      if (code == 'BK014') throw BookingNotReschedulableException(e.message);
+      if (code == 'BK001') throw BookingUnavailableException('BK001', e.message);
+      if (code == 'BK002') throw BookingUnavailableException('BK002', e.message);
+      if (code == 'BK003') throw const BookingDateOutOfRangeException();
+      if (code == 'BK004') throw BookingUnavailableException('BK004', e.message);
+      if (code == 'BK005') throw const BookingInvalidInputException();
+      if (code == 'BK013') throw const BookingSlotClosedException();
+      throw BookingServerException(code, e.message);
+    } catch (e) {
+      _log('SUPABASE Exception in rescheduleBooking: $e');
+      if (isNetworkError(e)) throw const BookingNetworkException();
+      if (e is BookingException) rethrow;
       throw BookingServerException(null, e.toString());
     }
   }

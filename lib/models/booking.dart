@@ -42,6 +42,11 @@ class Booking {
   final String? fullDateText;
   final String? ticketDateText;
 
+  // Reschedule fields (from RPC get_my_bookings)
+  final String? jadwalAwalTanggal;
+  final int? jadwalAwalJam;
+  final DateTime? dijadwalUlangPada;
+
   const Booking({
     required this.id,
     required this.bookingCode,
@@ -72,6 +77,9 @@ class Booking {
     this.courtImageUrl,
     this.fullDateText,
     this.ticketDateText,
+    this.jadwalAwalTanggal,
+    this.jadwalAwalJam,
+    this.dijadwalUlangPada,
   });
 
   /// Formatted price helper e.g. "Rp165.000"
@@ -122,6 +130,9 @@ class Booking {
     String? courtImageUrl,
     String? fullDateText,
     String? ticketDateText,
+    String? jadwalAwalTanggal,
+    int? jadwalAwalJam,
+    DateTime? dijadwalUlangPada,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -153,6 +164,9 @@ class Booking {
       courtImageUrl: courtImageUrl ?? this.courtImageUrl,
       fullDateText: fullDateText ?? this.fullDateText,
       ticketDateText: ticketDateText ?? this.ticketDateText,
+      jadwalAwalTanggal: jadwalAwalTanggal ?? this.jadwalAwalTanggal,
+      jadwalAwalJam: jadwalAwalJam ?? this.jadwalAwalJam,
+      dijadwalUlangPada: dijadwalUlangPada ?? this.dijadwalUlangPada,
     );
   }
 }

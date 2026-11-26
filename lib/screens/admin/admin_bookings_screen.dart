@@ -12,10 +12,12 @@ import '../../widgets/app_bottom_sheet.dart';
 import '../../widgets/app_calendar.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_header.dart';
+import '../../widgets/app_info_notice.dart';
 import '../../widgets/dropdown_chip.dart';
 import '../../widgets/app_search_bar.dart';
 import '../../widgets/sheet_action_buttons.dart';
 import '../booking_detail_screen.dart';
+import 'admin_reschedule_booking_screen.dart';
 
 /// Admin Screen for Booking Management (Manajemen Booking)
 class AdminBookingsScreen extends StatefulWidget {
@@ -337,6 +339,30 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
     );
   }
 
+  Future<void> _openRescheduleScreen(Booking booking) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdminRescheduleBookingScreen(booking: booking),
+      ),
+    );
+
+    if (result == true && mounted) {
+      _fetchBookings();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          content: AppInfoNotice(
+            message: 'Jadwal pemesanan diubah.',
+            variant: AppInfoNoticeVariant.success,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -366,7 +392,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
     final hasSearch = _searchQuery.trim().isNotEmpty;
 
     final infoRowText = hasSearch
-        ? 'Hasil pencarian • ${_adminBookings.length} booking'
+        ? 'Hasil pencarian • ${_adminBookings.length} pemesanan'
         : '${_selectedDate.day} ${DateFormatHelper.monthNames[_selectedDate.month - 1]} ${_selectedDate.year} • ${_adminBookings.length} booking';
 
     return Scaffold(
@@ -381,7 +407,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                 vertical: AppTheme.paddingSmall,
               ),
               child: const AppHeader(
-                title: 'Manajemen Booking',
+                title: 'Pemesanan',
                 showNotificationBell: true,
               ),
             ),
@@ -403,7 +429,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                     // Search Bar
                     AppSearchBar(
                       controller: _searchController,
-                      hintText: 'Cari ID booking atau nama...',
+                      hintText: 'Cari kode pemesanan atau nama...',
                       onChanged: _onSearchChanged,
                     ),
                     const SizedBox(height: 12.0),
@@ -494,6 +520,9 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                                 ? () {
                                     // Batalkan on Belum bayar does nothing
                                   }
+                                : null,
+                            onReschedule: booking.status == BookingStatus.sudahBayar
+                                ? () => _openRescheduleScreen(booking)
                                 : null,
                           ),
                         );

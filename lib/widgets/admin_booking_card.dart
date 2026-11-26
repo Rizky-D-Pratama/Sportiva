@@ -10,12 +10,14 @@ class AdminBookingCard extends StatelessWidget {
   final Booking booking;
   final VoidCallback onViewDetail;
   final VoidCallback? onCancel;
+  final VoidCallback? onReschedule;
 
   const AdminBookingCard({
     super.key,
     required this.booking,
     required this.onViewDetail,
     this.onCancel,
+    this.onReschedule,
   });
 
   @override
@@ -37,6 +39,7 @@ class AdminBookingCard extends StatelessWidget {
     };
 
     final isBelumBayar = booking.status == BookingStatus.belumBayar;
+    final isSudahBayar = booking.status == BookingStatus.sudahBayar;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -164,6 +167,23 @@ class AdminBookingCard extends StatelessWidget {
                             fontSize: 11.0,
                             fontWeight: FontWeight.w600,
                             color: colors.successForeground,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12.0),
+                  ],
+                  if (isSudahBayar && onReschedule != null) ...[
+                    InkWell(
+                      onTap: onReschedule,
+                      borderRadius: BorderRadius.circular(4.0),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                        child: Text(
+                          'Ubah Jadwal',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
